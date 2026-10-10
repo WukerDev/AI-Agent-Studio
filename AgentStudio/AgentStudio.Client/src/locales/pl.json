@@ -1,0 +1,27 @@
+{
+  "layout": {
+    "header": {
+      "title": "AgentStudio"
+    },
+    "sidebar": {
+      "files": "Pliki",
+      "agents": "Agenci",
+      "settings": "Ustawienia",
+      "console": "Konsola",
+      "output": "Wyjście"
+    },
+    "leftDrawer": {
+      "filesEmpty": "Brak plików w projekcie.",
+      "agentsEmpty": "Przeciągnij dostępnych agentów na płótno.",
+      "settingsEmpty": "Brak konfiguracji."
+    },
+    "bottomPanel": {
+      "console": "Konsola",
+      "output": "Wyjście",
+      "close": "Zamknij"
+    },
+    "canvas": {
+      "placeholder": "Przeciągnij agentów tutaj"
+    }
+  }
+}

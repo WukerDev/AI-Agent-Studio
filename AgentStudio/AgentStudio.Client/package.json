@@ -17,6 +17,7 @@
     "luxon": "^3.7.2",
     "vue": "^3.5.42",
     "vue-i18n": "^11.4.13",
+    "vue-router": "^5.4.0",
     "vuetify": "^4.2.4"
   },
   "devDependencies": {
