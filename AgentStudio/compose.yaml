@@ -1,0 +1,7 @@
+﻿services:
+  agentstudio.service:
+    image: agentstudio.service
+    build:
+      context: .
+      dockerfile: AgentStudio.Service/Dockerfile
+
