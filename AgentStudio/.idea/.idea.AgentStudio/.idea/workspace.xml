@@ -10,23 +10,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/LandingPage.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppBottomPanel.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppConsole.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppFooter.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppHeader.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppLeftDrawer.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppSidebar.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/locales/en.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/locales/pl.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/router/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/workflows/ci.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/App.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/vite.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/Program.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,28 +56,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Users\\Wikto\\RiderProjects\\ProgramowanieZespo-owe\\AgentStudio\\AgentStudio.Client\\node_modules\\typescript\\lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Wikto\\RiderProjects\\ProgramowanieZespo-owe\\AgentStudio\\AgentStudio.Client\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "vue.recent.templates": [
-      "Vue Composition API Component"
+  &quot;keyToStringList&quot;: {
+    &quot;vue.recent.templates&quot;: [
+      &quot;Vue Composition API Component&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected=".NET Project.AgentStudio.Service">
     <configuration name="AgentStudio.Client" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="" />
@@ -229,7 +216,8 @@
       <option name="presentableId" value="Default" />
       <updated>1791621140804</updated>
       <workItem from="1791621142130" duration="653000" />
-      <workItem from="1791622284697" duration="3700000" />
+      <workItem from="1791622284697" duration="4021000" />
+      <workItem from="1792233414760" duration="609000" />
     </task>
     <task id="LOCAL-00001" summary="Init">
       <option name="closed" value="true" />
@@ -247,7 +235,15 @@
       <option name="project" value="LOCAL" />
       <updated>1791621502145</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Poprawka">
+      <option name="closed" value="true" />
+      <created>1791626116957</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1791626116957</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -259,7 +255,8 @@
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="Init" />
     <MESSAGE value="Init architektury" />
-    <option name="LAST_COMMIT_MESSAGE" value="Init architektury" />
+    <MESSAGE value="Poprawka" />
+    <option name="LAST_COMMIT_MESSAGE" value="Poprawka" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -276,18 +273,6 @@
           <properties exception="System.Threading.ThreadAbortException" breakIfHandledByOtherCode="false" displayValue="System.Threading.ThreadAbortException" />
           <option name="timeStamp" value="3" />
         </breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue</url>
-          <line>67</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue</url>
-          <line>62</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="5" />
-        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
