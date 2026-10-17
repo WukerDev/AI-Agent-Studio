@@ -14,7 +14,7 @@ export function setupRouter() {
         history: createWebHistory(import.meta.env.BASE_URL),
         routes
     })
-
+//@ts-ignore
     router.beforeEach((_to, _from, next) => {
         const authStore = useAuth()
 

@@ -26,11 +26,15 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="DpaMonitoringSettings">
+    <option name="firstShow" value="false" />
+  </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Vue Composition API Component" />
         <option value="TypeScript File" />
+        <option value="JSON File" />
       </list>
     </option>
   </component>
@@ -52,10 +56,27 @@
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/AgentStudio.Client/Program.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Gateway/Program.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Program.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Data/ApplicationDbContext.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Data/Entities/AgentNodeEntity.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Interceptors/ValidationInterceptor.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Service/Program.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Program.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Security/IUserContext.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Security/UserContext.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Services/AgentFlowServiceImplementation.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Service/Services/AgentFlowServiceImplementation.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Validators/SaveAgentNodeRequestValidator.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/appsettings.json" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/hubs/EventsHub.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
+  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
+  <component name="KubernetesApiProvider"><![CDATA[{
+  "isMigrated": true
+}]]></component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0
 }</component>
@@ -319,7 +340,39 @@
       <option name="project" value="LOCAL" />
       <updated>1792236794065</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="dodanie configów">
+      <option name="closed" value="true" />
+      <created>1792237485535</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1792237485535</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Ekran wylogowania">
+      <option name="closed" value="true" />
+      <created>1792237653839</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1792237653839</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Działający backend">
+      <option name="closed" value="true" />
+      <created>1792238954893</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1792238954893</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Poprawka backa">
+      <option name="closed" value="true" />
+      <created>1792239630484</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1792239630484</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

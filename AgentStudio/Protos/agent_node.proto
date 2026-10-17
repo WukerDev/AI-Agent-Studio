@@ -11,6 +11,7 @@ service AgentFlowService {
   rpc GetAgentNodes (GetAgentNodesRequest) returns (GetAgentNodesResponse);
 }
 
+
 message ExecuteWorkflowRequest {
   string flow_id = 1;
 }
@@ -25,9 +26,7 @@ message GetExplorerRequest {
   string path = 1;
 }
 
-message GetExplorerResponse {
-  repeated ExplorerItem items = 1;
-}
+
 
 message ExplorerItem {
   string name = 1;
@@ -55,7 +54,13 @@ message GetAgentNodesRequest {
 }
 
 message GetAgentNodesResponse {
-  repeated AgentNode nodes = 1;
+  bool success = 1;
+  string message = 2;
+}
+
+message GetExplorerResponse {
+  bool success = 1;
+  string message = 2;
 }
 
 message AgentNode {

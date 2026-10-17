@@ -14,10 +14,22 @@
       </Content>
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="FluentValidation" Version="12.2.0" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
         <PackageReference Include="Grpc.AspNetCore" Version="2.60.0" />
+        <PackageReference Include="Grpc.AspNetCore.Web" Version="2.84.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+        <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+        <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="10.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <Protobuf Include="Protos\agent_node.proto" GrpcServices="Server" />
+        <Protobuf Include="../Protos/agent_node.proto" GrpcServices="Server" />
     </ItemGroup>
 </Project>
