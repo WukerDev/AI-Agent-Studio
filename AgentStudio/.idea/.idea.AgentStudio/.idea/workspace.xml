@@ -9,18 +9,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Data/ApplicationDbContext.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Data/Entities/AgentNodeEntity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Security/IUserContext.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Security/UserContext.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Services/AgentFlowServiceImplementation.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Services/AgentFlowServiceImplementation.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/appsettings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Protos/agent_node.proto" beforeDir="false" afterPath="$PROJECT_DIR$/Protos/agent_node.proto" afterDir="false" />
-    </list>
+    <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -64,6 +53,7 @@
     <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Security/IUserContext.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Security/UserContext.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Services/AgentFlowServiceImplementation.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Service/Services/AgentFlowServiceImplementation.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Validators/SaveAgentNodeRequestValidator.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Service/appsettings.json" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Service/hubs/EventsHub.cs" root0="FORCE_HIGHLIGHTING" />
@@ -320,7 +310,15 @@
       <option name="project" value="LOCAL" />
       <updated>1792238954893</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Poprawka backa">
+      <option name="closed" value="true" />
+      <created>1792239630484</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1792239630484</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -339,7 +337,8 @@
     <MESSAGE value="dodanie configów" />
     <MESSAGE value="Ekran wylogowania" />
     <MESSAGE value="Działający backend" />
-    <option name="LAST_COMMIT_MESSAGE" value="Działający backend" />
+    <MESSAGE value="Poprawka backa" />
+    <option name="LAST_COMMIT_MESSAGE" value="Poprawka backa" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

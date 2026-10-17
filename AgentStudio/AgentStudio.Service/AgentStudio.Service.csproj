@@ -30,6 +30,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Protobuf Include="..\Protos\agent_node.proto" GrpcServices="Server" />
+        <Protobuf Include="../Protos/agent_node.proto" GrpcServices="Server" />
     </ItemGroup>
 </Project>

@@ -13,7 +13,7 @@ const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes
 })
-
+//@ts-ignore
 router.beforeEach((to, from, next) => {
     const authStore = useAuthStore()
 
