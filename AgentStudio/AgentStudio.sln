@@ -9,6 +9,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{12F2483E-65CE-4B8F-8D8B-2A8297F720B5}"
 	ProjectSection(SolutionItems) = preProject
 		compose.yaml = compose.yaml
+		.github\workflows\ci.yml = .github\workflows\ci.yml
 	EndProjectSection
 EndProject
 Global

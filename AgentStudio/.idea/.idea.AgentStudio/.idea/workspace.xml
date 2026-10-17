@@ -9,12 +9,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.github/workflows/ci.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/Program.cs" afterDir="false" />
-    </list>
+    <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -217,7 +212,7 @@
       <updated>1791621140804</updated>
       <workItem from="1791621142130" duration="653000" />
       <workItem from="1791622284697" duration="4021000" />
-      <workItem from="1792233414760" duration="609000" />
+      <workItem from="1792233414760" duration="957000" />
     </task>
     <task id="LOCAL-00001" summary="Init">
       <option name="closed" value="true" />
@@ -243,7 +238,15 @@
       <option name="project" value="LOCAL" />
       <updated>1791626116957</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="CICD">
+      <option name="closed" value="true" />
+      <created>1792234193715</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1792234193715</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -256,7 +259,8 @@
     <MESSAGE value="Init" />
     <MESSAGE value="Init architektury" />
     <MESSAGE value="Poprawka" />
-    <option name="LAST_COMMIT_MESSAGE" value="Poprawka" />
+    <MESSAGE value="CICD" />
+    <option name="LAST_COMMIT_MESSAGE" value="CICD" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
