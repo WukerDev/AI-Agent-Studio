@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { AuthViewModel } from '../../AuthViewModel'
 
 const { t } = useI18n()
+const authViewModel = new AuthViewModel()
+
+function handleLogout() {
+  authViewModel.logout()
+}
 </script>
 
 <template>
@@ -13,11 +19,24 @@ const { t } = useI18n()
 
       <v-spacer></v-spacer>
 
-      <v-btn icon>
-        <v-avatar color="primary" size="32">
-          <span class="text-white text-caption">WK</span>
-        </v-avatar>
-      </v-btn>
+      <v-menu offset-y>
+        <template v-slot:activator="{ props }">
+          <v-btn icon v-bind="props">
+            <v-avatar color="primary" size="32">
+              <span class="text-white text-caption">WK</span>
+            </v-avatar>
+          </v-btn>
+        </template>
+
+        <v-list>
+          <v-list-item @click="handleLogout">
+            <template v-slot:prepend>
+              <v-icon icon="mdi-logout" class="mr-2"></v-icon>
+            </template>
+            <v-list-item-title>{{ t('layout.header.logout') }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </div>
   </v-app-bar>
 </template>

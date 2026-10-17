@@ -5,7 +5,7 @@ export class AuthViewModel {
 
     public get isAuthenticated(): boolean {
         return this.authStore.isAuthenticated;
-    }
+    }   
 
     public get username(): string {
         return this.authStore.username;
