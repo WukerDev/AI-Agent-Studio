@@ -73,7 +73,7 @@ Głównym założeniem systemu jest pełna separacja warstwy prezentacji od logi
 ### Faza 1: Architektura i Infrastruktura Bazowa
 - [ ] Przygotowanie środowiska uruchomieniowego `docker-compose` (PostgreSQL, Keycloak, Grafana).
 - [ ] Konfiguracja Realmów i klientów OIDC w Keycloak.
-- [ ] Inicjalizacja szablonów mikroserwisów w .NET 11 oraz projektu bazowego Vue 3 + Vuetify + Pinia.
+- [x] Inicjalizacja szablonów mikroserwisów w .NET 11 oraz projektu bazowego Vue 3 + Vuetify + Pinia.
 - [ ] Zdefiniowanie wspólnego repozytorium kontraktów **Protocol Buffers (`.proto`)** oraz skonfigurowanie generatorów kodu dla C# (.NET 11) i TypeScript (**gRPC-Web**).
 
 ### Faza 2: Rdzeń Backendowy i Silnik Agentów (MS Agents AI + MCP)
