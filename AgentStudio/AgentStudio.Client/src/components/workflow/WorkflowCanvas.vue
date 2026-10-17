@@ -3,8 +3,8 @@ defineOptions({
   name: 'WorkflowCanvas'
 })
 
-import { ref } from 'vue'
-import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { ref, watch } from 'vue'
+import { VueFlow, useVueFlow, type Node, type Edge } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
@@ -12,31 +12,38 @@ import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 import '@vue-flow/controls/dist/style.css'
 import '@vue-flow/minimap/dist/style.css'
+import { GlobalViewModel } from '../../GlobalViewModel'
 
-const { onPaneReady } = useVueFlow()
+const { onPaneReady, onNodeDragStop } = useVueFlow()
+const globalViewModel = new GlobalViewModel()
 
-const nodes = ref([
-  {
-    id: '1',
-    type: 'input',
-    label: 'Użytkownik',
-    position: { x: 250, y: 100 },
-  },
-  {
-    id: '2',
-    label: 'Agent LLM',
-    position: { x: 250, y: 250 },
-  }
-])
+const nodes = ref<Node[]>([])
+const edges = ref<Edge[]>([])
 
-const edges = ref([
-  {
-    id: 'e1-2',
-    source: '1',
-    target: '2',
-    animated: true
-  }
-])
+watch(() => globalViewModel.nodes, (newNodes) => {
+  nodes.value = newNodes.map(node => ({
+    id: node.id,
+    label: node.name,
+    position: { x: node.position?.x ?? 0, y: node.position?.y ?? 0 },
+    data: { ...node }
+  }))
+}, { immediate: true, deep: true })
+
+onNodeDragStop((event) => {
+  const draggedNode = event.node
+  const originalData = draggedNode.data
+
+  globalViewModel.saveNode({
+    id: draggedNode.id,
+    name: originalData.name,
+    type: originalData.type,
+    position: { x: draggedNode.position.x, y: draggedNode.position.y },
+    modelConfig: originalData.modelConfig,
+    systemPrompt: originalData.systemPrompt,
+    endpoint: originalData.endpoint,
+    mcpConfig: originalData.mcpConfig
+  })
+})
 
 onPaneReady((vueFlowInstance) => {
   vueFlowInstance.fitView()
@@ -44,18 +51,18 @@ onPaneReady((vueFlowInstance) => {
 </script>
 
 <template>
-    <VueFlow
-        :nodes="nodes"
-        :edges="edges"
-        :default-viewport="{ zoom: 1 }"
-        :min-zoom="0.2"
-        :max-zoom="4"
-        fit-view-on-init
-    >
-      <Background/>
-      <Controls />
-      <MiniMap />
-    </VueFlow>
+  <VueFlow
+      :nodes="nodes"
+      :edges="edges"
+      :default-viewport="{ zoom: 1 }"
+      :min-zoom="0.2"
+      :max-zoom="4"
+      fit-view-on-init
+  >
+    <Background/>
+    <Controls />
+    <MiniMap />
+  </VueFlow>
 </template>
 
 <style scoped>

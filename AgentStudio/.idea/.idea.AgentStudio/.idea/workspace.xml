@@ -12,11 +12,7 @@
     <option name="flavorId" value="CMakePlainProjectFlavor" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/GlobalViewModel.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/store.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -390,7 +386,15 @@
       <option name="project" value="LOCAL" />
       <updated>1792239932361</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="globalviemodel">
+      <option name="closed" value="true" />
+      <created>1792240990310</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1792240990310</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -412,7 +416,8 @@
     <MESSAGE value="Poprawka backa" />
     <MESSAGE value="Budowanie" />
     <MESSAGE value="keycloak config" />
-    <option name="LAST_COMMIT_MESSAGE" value="Budowanie" />
+    <MESSAGE value="globalviemodel" />
+    <option name="LAST_COMMIT_MESSAGE" value="globalviemodel" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
