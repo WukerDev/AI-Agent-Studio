@@ -1,11 +1,108 @@
 ﻿using AgentStudio.Service.Services;
+using AgentStudio.Service.Hubs;
+using AgentStudio.Service.Interceptors;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
+using System.Security.Claims;
 
-var builder = WebApplication.CreateBuilder(args);
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables()
+    .Build();
 
-builder.Services.AddGrpc();
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(configuration["Elasticsearch:Uri"] ?? "http://localhost:9200"))
+    {
+        AutoRegisterTemplate = true,
+        IndexFormat = configuration["Elasticsearch:IndexFormat"] ?? "agentstudio-logs-{0:yyyy.MM.dd}"
+    })
+    .CreateLogger();
 
-var app = builder.Build();
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
 
-app.MapGrpcService<AgentFlowServiceImplementation>();
+    builder.Host.UseSerilog();
 
-app.Run();
+    builder.Services.AddValidatorsFromAssemblyContaining<ValidationInterceptor>();
+
+    builder.Services.AddGrpc(options =>
+    {
+        options.Interceptors.Add<ValidationInterceptor>();
+    });
+    
+    builder.Services.AddSignalR();
+    
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = builder.Configuration["Keycloak:Authority"];
+            options.Audience = builder.Configuration["Keycloak:Audience"];
+            options.RequireHttpsMetadata = false;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = true,
+                ValidateIssuer = true,
+                ValidateLifetime = true
+            };
+        });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("RequireAgentFlowScope", policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim("scope", "agent-flow-write");
+        });
+    });
+
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAll", policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials()
+                  .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding");
+        });
+    });
+
+    var app = builder.Build();
+
+    app.UseSerilogRequestLogging();
+
+    app.UseCors("AllowAll");
+
+    app.UseRouting();
+
+    app.UseGrpcWeb();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapGrpcService<AgentFlowServiceImplementation>()
+       .EnableGrpcWeb()
+       .RequireAuthorization("RequireAgentFlowScope");
+
+    app.MapHub<EventsHub>("/events")
+       .RequireAuthorization();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

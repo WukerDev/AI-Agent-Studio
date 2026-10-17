@@ -10,26 +10,30 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/AuthViewModel.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/auth.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/events.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Interceptors/ValidationInterceptor.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Services/AgentFlowServiceImplementation.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Validators/SaveAgentNodeRequestValidator.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/appsettings.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/hubs/EventsHub.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/router/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/router/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="DpaMonitoringSettings">
+    <option name="firstShow" value="false" />
+  </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Vue Composition API Component" />
         <option value="TypeScript File" />
+        <option value="JSON File" />
       </list>
     </option>
   </component>
@@ -51,10 +55,22 @@
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/AgentStudio.Client/Program.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Gateway/Program.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Interceptors/ValidationInterceptor.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Program.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Service/Program.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Services/AgentFlowServiceImplementation.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Validators/SaveAgentNodeRequestValidator.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/appsettings.json" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/AgentStudio.Service/hubs/EventsHub.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
+  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
+  <component name="KubernetesApiProvider"><![CDATA[{
+  "isMigrated": true
+}]]></component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0
 }</component>
@@ -65,6 +81,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    ".NET Project.AgentStudio.Service.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
@@ -274,7 +291,23 @@
       <option name="project" value="LOCAL" />
       <updated>1792236794065</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="dodanie configów">
+      <option name="closed" value="true" />
+      <created>1792237485535</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1792237485535</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Ekran wylogowania">
+      <option name="closed" value="true" />
+      <created>1792237653839</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1792237653839</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -290,7 +323,9 @@
     <MESSAGE value="CICD" />
     <MESSAGE value="Dodanie budowania proto i pliku proto" />
     <MESSAGE value="Proto" />
-    <option name="LAST_COMMIT_MESSAGE" value="Proto" />
+    <MESSAGE value="dodanie configów" />
+    <MESSAGE value="Ekran wylogowania" />
+    <option name="LAST_COMMIT_MESSAGE" value="Ekran wylogowania" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
