@@ -3,7 +3,7 @@ defineOptions({
   name: 'WorkflowCanvas'
 })
 
-import { ref, watch } from 'vue'
+import { shallowRef, watch } from 'vue'
 import { VueFlow, useVueFlow, type Node, type Edge } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
@@ -12,20 +12,21 @@ import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 import '@vue-flow/controls/dist/style.css'
 import '@vue-flow/minimap/dist/style.css'
-import { GlobalViewModel } from '../../GlobalViewModel'
+import { GlobalViewModel } from '../viewmodels/GlobalViewModel'
 
 const { onPaneReady, onNodeDragStop } = useVueFlow()
 const globalViewModel = new GlobalViewModel()
 
-const nodes = ref<Node[]>([])
-const edges = ref<Edge[]>([])
+const nodes = shallowRef<Node[]>([])
+const edges = shallowRef<Edge[]>([])
 
 watch(() => globalViewModel.nodes, (newNodes) => {
+  //@ts-ignore
   nodes.value = newNodes.map(node => ({
     id: node.id,
     label: node.name,
     position: { x: node.position?.x ?? 0, y: node.position?.y ?? 0 },
-    data: { ...node }
+    data: JSON.parse(JSON.stringify(node))
   }))
 }, { immediate: true, deep: true })
 
