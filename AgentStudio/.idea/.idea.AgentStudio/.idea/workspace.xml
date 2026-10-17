@@ -10,12 +10,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/AuthViewModel.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/auth.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/events.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Protos/agent.proto" beforeDir="false" afterPath="$PROJECT_DIR$/Protos/agent_node.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/router/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/router/index.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,6 +29,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Vue Composition API Component" />
+        <option value="TypeScript File" />
       </list>
     </option>
   </component>
@@ -48,6 +52,7 @@
     <setting file="file://$PROJECT_DIR$/AgentStudio.Client/Program.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Gateway/Program.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/AgentStudio.Service/Program.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Service/Program.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProjectColorInfo">{
@@ -71,7 +76,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\JetBrains Rider 2025.2.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "ts.external.directory.path": "C:\\Users\\Wikto\\RiderProjects\\ProgramowanieZespo-owe\\AgentStudio\\AgentStudio.Client\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -253,7 +258,23 @@
       <option name="project" value="LOCAL" />
       <updated>1792234193715</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Dodanie budowania proto i pliku proto">
+      <option name="closed" value="true" />
+      <created>1792236628487</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1792236628487</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Proto">
+      <option name="closed" value="true" />
+      <created>1792236794065</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1792236794065</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -267,7 +288,9 @@
     <MESSAGE value="Init architektury" />
     <MESSAGE value="Poprawka" />
     <MESSAGE value="CICD" />
-    <option name="LAST_COMMIT_MESSAGE" value="CICD" />
+    <MESSAGE value="Dodanie budowania proto i pliku proto" />
+    <MESSAGE value="Proto" />
+    <option name="LAST_COMMIT_MESSAGE" value="Proto" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -1,24 +1,28 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import WorkflowCanvas from '../components/workflow/WorkflowCanvas.vue'
-
-const SettingsView = { template: '<div class="pa-6 text-h5">Ekran ustawień projektu</div>' }
+import { useAuthStore } from '../auth'
 
 const routes: RouteRecordRaw[] = [
     {
         path: '/',
         name: 'Editor',
-        component: WorkflowCanvas
+        component: () => import('../components/workflow/WorkflowCanvas.vue')
     },
-    {
-        path: '/settings',
-        name: 'Settings',
-        component: SettingsView
-    }
 ]
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory(import.meta.env.BASE_URL),
     routes
+})
+
+router.beforeEach((to, from, next) => {
+    const authStore = useAuthStore()
+
+    if (!authStore.isAuthenticated) {
+        authStore.login()
+        return
+    }
+
+    next()
 })
 
 export default router
