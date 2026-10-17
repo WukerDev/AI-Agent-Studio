@@ -24,15 +24,18 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '11.0.x'
-
+        
     - name: Restore .NET dependencies
-      run: dotnet restore AgentStudio.sln
+      run: dotnet restore AgentStudio/AgentStudio.sln
+
+    - name: Build Solution
+      run: dotnet build AgentStudio/AgentStudio.sln -c Release --no-restore
 
     - name: Build AgentStudio.Gateway
-      run: dotnet build AgentStudio.Gateway/AgentStudio.Gateway.csproj -c Release --no-restore
+      run: dotnet build AgentStudio/AgentStudio.Gateway/AgentStudio.Gateway.csproj -c Release --no-restore
 
     - name: Build AgentStudio.Service
-      run: dotnet build AgentStudio.Service/AgentStudio.Service.csproj -c Release --no-restore
+      run: dotnet build AgentStudio/AgentStudio.Service/AgentStudio.Service.csproj -c Release --no-restore
 
-    - name: Build AgentStudio.Client (with NPM)
+    - name: Build AgentStudio/AgentStudio.Client (with NPM)
       run: dotnet build AgentStudio.Client/AgentStudio.Client.csproj -c Release --no-restore
