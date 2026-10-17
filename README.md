@@ -70,25 +70,25 @@ Głównym założeniem systemu jest pełna separacja warstwy prezentacji od logi
 
 ## 🗺️ Plan Projektu (Roadmapa)
 
-### Faza 1: Architektura i Infrastruktura Bazowa
+### Faza 1: Architektura i Infrastruktura Bazowa do 24.10
 - [ ] Przygotowanie środowiska uruchomieniowego `docker-compose` (PostgreSQL, Keycloak, Grafana).
 - [ ] Konfiguracja Realmów i klientów OIDC w Keycloak.
 - [x] Inicjalizacja szablonów mikroserwisów w .NET 11 oraz projektu bazowego Vue 3 + Vuetify + Pinia.
 - [ ] Zdefiniowanie wspólnego repozytorium kontraktów **Protocol Buffers (`.proto`)** oraz skonfigurowanie generatorów kodu dla C# (.NET 11) i TypeScript (**gRPC-Web**).
 
-### Faza 2: Rdzeń Backendowy i Silnik Agentów (MS Agents AI + MCP)
+### Faza 2: Rdzeń Backendowy i Silnik Agentów (MS Agents AI + MCP) do 7.11
 - [ ] Implementacja warstwy danych w PostgreSQL (zapis konfiguracji agentów, historii uruchomień, definicji grafów).
 - [ ] Stworzenie mikroserwisu orkiestracji opartego o **MS Agents AI**.
 - [ ] Implementacja dynamicznego konektora **MCP**, pozwalającego na podpinanie zewnętrznych serwerów narzędziowych z internetu.
 - [ ] Obsługa wyboru modeli, nadpisywania endpointów oraz wstrzykiwania promptów systemowych w czasie rzeczywistym.
 
-### Faza 3: Warstwa Wizualna i Kreator VueFlow
+### Faza 3: Warstwa Wizualna i Kreator VueFlow do  21.11
 - [ ] Stworzenie architektury Store'ów (Pinia) oraz ViewModeli zarządzających stanem kreatora i wywołaniami **gRPC-Web**.
 - [ ] Implementacja kanwy **VueFlow** wraz z niestandardowymi węzłami (Węzeł Agenta, Węzeł Modelu, Węzeł Promptu, Konektor MCP).
 - [ ] Budowa paneli konfiguracyjnych w Vuetify dla poszczególnych węzłów.
 - [ ] Pełna integracja systemu tłumaczeń (i18n) oraz formatowania stref czasowych i logów (Luxon).
 
-### Faza 4: Integracja, Telemetria i Testy
+### Faza 4: Integracja, Telemetria i Testy  05.12
 - [ ] Spinanie warstwy frontendowej z mikroserwisami za pomocą **gRPC-Web** (obsługa wywołań unarnych oraz streamingu odpowiedzi agentów).
 - [ ] Wdrożenie eksporterów OpenTelemetry w .NET 11 i budowa dashboardów diagnostycznych w **Grafanie**.
 - [ ] Testy E2E kreatora, testy obciążeniowe komunikacji gRPC / Protobuf oraz weryfikacja bezpieczeństwa połączeń MCP.
