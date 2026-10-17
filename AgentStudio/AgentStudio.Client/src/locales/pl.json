@@ -1,7 +1,8 @@
 {
   "layout": {
     "header": {
-      "title": "AgentStudio"
+      "title": "AgentStudio",
+      "logout": "Wyloguj"
     },
     "sidebar": {
       "files": "Pliki",

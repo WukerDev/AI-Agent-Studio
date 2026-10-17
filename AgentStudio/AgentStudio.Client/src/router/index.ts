@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { useAuthStore } from '../auth'
+import { useAuth } from '../auth'
 
 const routes: RouteRecordRaw[] = [
     {
@@ -9,20 +9,22 @@ const routes: RouteRecordRaw[] = [
     },
 ]
 
-const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
-    routes
-})
+export function setupRouter() {
+    const router = createRouter({
+        history: createWebHistory(import.meta.env.BASE_URL),
+        routes
+    })
 
-router.beforeEach((to, from, next) => {
-    const authStore = useAuthStore()
+    router.beforeEach((_to, _from, next) => {
+        const authStore = useAuth()
 
-    if (!authStore.isAuthenticated) {
-        authStore.login()
-        return
-    }
+        if (!authStore.isAuthenticated) {
+            authStore.login()
+            return
+        }
 
-    next()
-})
+        next()
+    })
 
-export default router
+    return router
+}

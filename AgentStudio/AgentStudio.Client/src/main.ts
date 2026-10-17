@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
-import router from './router'
+import  {setupRouter} from './router'
 import 'vuetify/styles'
 import { createVuetify, type ThemeDefinition } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -10,7 +10,7 @@ import '@mdi/font/css/materialdesignicons.css'
 import './style.css'
 import App from './App.vue'
 import pl from './locales/pl.json'
-import { useAuthStore } from './auth'
+import {useAuth} from './auth'
 
 const agentStudioDarkTheme: ThemeDefinition = {
     dark: true,
@@ -46,17 +46,17 @@ const vuetify = createVuetify({
     }
 })
 
-const pinia = createPinia()
-const app = createApp(App)
+const { initAuth } = useAuth()
 
-app.use(pinia)
-app.use(i18n)
-app.use(router)
-app.use(vuetify)
+initAuth().then(() => {
+    const app = createApp(App)
+    const pinia = createPinia()
+    const router = setupRouter()
 
-const authStore = useAuthStore()
-
-authStore.initAuth().then(() => {
+    app.use(pinia)
+    app.use(i18n)
+    app.use(router)
+    app.use(vuetify)
     app.mount('#app')
 }).catch(() => {
     console.error('AUTH_MOUNT_ERROR')

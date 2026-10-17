@@ -8,15 +8,16 @@
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
+  <component name="CMakeProjectFlavorService">
+    <option name="flavorId" value="CMakePlainProjectFlavor" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="6a140afb-87cf-47f1-9db7-fc90dca8eff2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/AuthViewModel.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/auth.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/events.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/AuthViewModel.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/AuthViewModel.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/auth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/locales/pl.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/locales/pl.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/router/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/router/index.ts" afterDir="false" />
     </list>
@@ -65,18 +66,26 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "JavaScript Debug.run JavaScript.executor": "Debug",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "cidr.known.project.marker": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "main",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Users\\Wikto\\RiderProjects\\ProgramowanieZespo-owe\\AgentStudio\\AgentStudio.Client\\node_modules\\typescript\\lib",
+    "npm.install.executor": "Run",
+    "npm.run.executor": "Run",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "ts.external.directory.path": "C:\\Users\\Maciej\\RiderProjects\\AI-Agent-Studio\\AgentStudio\\AgentStudio.Client\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -85,16 +94,33 @@
     ]
   }
 }]]></component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="js.build_tools.npm" />
+      </set>
+    </option>
+    <option name="configurationStatuses">
+      <map>
+        <entry key="js.build_tools.npm">
+          <value>
+            <map>
+              <entry key="install" value="STOPPED" />
+              <entry key="run" value="STOPPED" />
+            </map>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="RunManager" selected=".NET Project.AgentStudio.Service">
     <configuration name="AgentStudio.Client" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="" />
       <option name="PROGRAM_PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="" />
       <option name="PASS_PARENT_ENVS" value="1" />
-      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="ENV_FILE_PATHS" value="" />
       <option name="REDIRECT_INPUT_PATH" value="" />
-      <option name="PTY_MODE" value="Auto" />
       <option name="MIXED_MODE_DEBUG" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
@@ -114,10 +140,8 @@
       <option name="PROGRAM_PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="" />
       <option name="PASS_PARENT_ENVS" value="1" />
-      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="ENV_FILE_PATHS" value="" />
       <option name="REDIRECT_INPUT_PATH" value="" />
-      <option name="PTY_MODE" value="Auto" />
       <option name="MIXED_MODE_DEBUG" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
@@ -137,10 +161,8 @@
       <option name="PROGRAM_PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="" />
       <option name="PASS_PARENT_ENVS" value="1" />
-      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="ENV_FILE_PATHS" value="" />
       <option name="REDIRECT_INPUT_PATH" value="" />
-      <option name="PTY_MODE" value="Auto" />
       <option name="MIXED_MODE_DEBUG" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
@@ -154,6 +176,9 @@
       <method v="2">
         <option name="Build" />
       </method>
+    </configuration>
+    <configuration name="run JavaScript" type="JavascriptDebugType" engineId="98ca6316-2f89-46d9-a9e5-fa9e2b0625b3" uri="http://localhost:5173">
+      <method v="2" />
     </configuration>
     <configuration name="AgentStudio.Client/Dockerfile" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
       <deployment type="dockerfile">
@@ -212,6 +237,26 @@
         </settings>
       </deployment>
       <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
+      <method v="2" />
+    </configuration>
+    <configuration name="install" type="js.build_tools.npm">
+      <package-json value="$PROJECT_DIR$/AgentStudio.Client/package.json" />
+      <command value="install" />
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="run" type="js.build_tools.npm" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/AgentStudio.Client/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <EXTENSION ID="com.intellij.lang.javascript.buildTools.npm.rc.StartBrowserRunConfigurationExtension">
+        <browser name="98ca6316-2f89-46d9-a9e5-fa9e2b0625b3" start="true" with-js-debugger="true" url="http://localhost:5173" />
+      </EXTENSION>
       <method v="2" />
     </configuration>
   </component>
@@ -290,7 +335,8 @@
     <MESSAGE value="CICD" />
     <MESSAGE value="Dodanie budowania proto i pliku proto" />
     <MESSAGE value="Proto" />
-    <option name="LAST_COMMIT_MESSAGE" value="Proto" />
+    <MESSAGE value="keycloak config" />
+    <option name="LAST_COMMIT_MESSAGE" value="keycloak config" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -309,5 +355,9 @@
         </breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

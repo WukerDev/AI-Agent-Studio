@@ -1,73 +1,78 @@
-import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { createSharedComposable } from '@vueuse/core';
 import Keycloak from 'keycloak-js';
-import { useConfigStore } from './config';
+import {useConfig} from "./config.ts";
 
 let keycloakInstance: Keycloak | null = null;
 
-export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        isAuthenticated: false,
-        token: '',
-        username: ''
-    }),
-    actions: {
-        async initAuth() {
-            const configStore = useConfigStore();
+export const useAuth = createSharedComposable(() => {
+    const isAuthenticated = ref(false);
+    const token = ref('');
+    const username = ref('');
 
-            keycloakInstance = new Keycloak({
-                url: configStore.getAuthUrl,
-                realm: configStore.getAuthRealm,
-                clientId: configStore.getAuthClientId
-            });
-
-            try {
-                const authenticated = await keycloakInstance.init({
-                    onLoad: 'login-required',
-                    checkLoginIframe: false
-                });
-
-                this.isAuthenticated = authenticated;
-
-                if (authenticated) {
-                    await this.setTokenData();
-
-                    setInterval(() => {
-                        keycloakInstance?.updateToken(70).then((refreshed) => {
-                            if (refreshed) {
-                                this.setTokenData();
-                            }
-                        }).catch(() => {
-                            this.logout();
-                        });
-                    }, 60000);
-                }
-            } catch (error) {
-                throw new Error('AUTH_INIT_ERROR');
+    async function setTokenData() {
+        if (keycloakInstance?.token) {
+            token.value = keycloakInstance.token;
+        }
+        if (keycloakInstance?.authenticated) {
+            const profile = await keycloakInstance.loadUserProfile();
+            if (profile.username) {
+                username.value = profile.username;
             }
-        },
-        async setTokenData() {
-            if (keycloakInstance?.token) {
-                this.token = keycloakInstance.token;
-            }
-            if (keycloakInstance?.authenticated) {
-                const profile = await keycloakInstance.loadUserProfile();
-                if (profile.username) {
-                    this.username = profile.username;
-                }
-            }
-        },
-        login() {
-            if (keycloakInstance) {
-                keycloakInstance.login();
-            }
-        },
-        logout() {
-            if (keycloakInstance) {
-                keycloakInstance.logout();
-            }
-            this.isAuthenticated = false;
-            this.token = '';
-            this.username = '';
         }
     }
+
+    async function initAuth() {
+        const config = useConfig();
+        keycloakInstance = new Keycloak({
+            url: config.getAuthUrl,
+            realm: config.getAuthRealm,
+            clientId: config.getAuthClientId
+        });
+
+        try {
+            const authenticated = await keycloakInstance.init({
+                onLoad: 'login-required',
+            });
+
+            isAuthenticated.value = authenticated;
+
+            if (authenticated) {
+                await setTokenData();
+
+                setInterval(() => {
+                    keycloakInstance?.updateToken(70).then((refreshed) => {
+                        if (refreshed) {
+                            setTokenData();
+                        }
+                    }).catch(() => {
+                        logout();
+                    });
+                }, 60000);
+            }
+        } catch (error) {
+            throw new Error('AUTH_INIT_ERROR');
+        }
+    }
+
+    function login() {
+        keycloakInstance?.login();
+    }
+
+    function logout() {
+        keycloakInstance?.logout();
+        isAuthenticated.value = false;
+        token.value = '';
+        username.value = '';
+    }
+
+    return {
+        isAuthenticated,
+        token,
+        username,
+        initAuth,
+        setTokenData,
+        login,
+        logout
+    };
 });
