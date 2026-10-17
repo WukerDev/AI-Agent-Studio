@@ -38,4 +38,4 @@ jobs:
       run: dotnet build AgentStudio/AgentStudio.Service/AgentStudio.Service.csproj -c Release --no-restore
 
     - name: Build AgentStudio/AgentStudio.Client (with NPM)
-      run: dotnet build AgentStudio.Client/AgentStudio.Client.csproj -c Release --no-restore
+      run: dotnet build AgentStudio/AgentStudio.Client/AgentStudio.Client.csproj -c Release --no-restore
