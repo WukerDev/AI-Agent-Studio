@@ -5,8 +5,40 @@ package agentstudio.v1;
 option csharp_namespace = "AgentStudio.Service.Protos";
 
 service AgentFlowService {
+  rpc ExecuteWorkflow (ExecuteWorkflowRequest) returns (ExecuteWorkflowResponse);
+  rpc GetExplorer (GetExplorerRequest) returns (GetExplorerResponse);
   rpc SaveAgentNode (SaveAgentNodeRequest) returns (SaveAgentNodeResponse);
   rpc GetAgentNodes (GetAgentNodesRequest) returns (GetAgentNodesResponse);
+}
+
+message ExecuteWorkflowRequest {
+  string flow_id = 1;
+}
+
+message ExecuteWorkflowResponse {
+  bool success = 1;
+  string execution_id = 2;
+  string result_message = 3;
+}
+
+message GetExplorerRequest {
+  string path = 1;
+}
+
+message GetExplorerResponse {
+  repeated ExplorerItem items = 1;
+}
+
+message ExplorerItem {
+  string name = 1;
+  string path = 2;
+  ItemType type = 3;
+}
+
+enum ItemType {
+  ITEM_TYPE_UNSPECIFIED = 0;
+  ITEM_TYPE_FILE = 1;
+  ITEM_TYPE_FOLDER = 2;
 }
 
 message SaveAgentNodeRequest {
