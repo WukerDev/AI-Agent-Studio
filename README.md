@@ -71,8 +71,10 @@ Głównym założeniem systemu jest pełna separacja warstwy prezentacji od logi
 ## 🗺️ Plan Projektu (Roadmapa)
 
 ### Faza 1: Architektura i Infrastruktura Bazowa do 24.10
-- [ ] Przygotowanie środowiska uruchomieniowego `docker-compose` (PostgreSQL, Keycloak, Grafana).
-- [ ] Konfiguracja Realmów i klientów OIDC w Keycloak.
+- [x] Przygotowanie środowiska uruchomieniowego `docker-compose` (PostgreSQL, Keycloak, Grafana).
+- [x] Konfiguracja Realmów i klientów OIDC w Keycloak.
+- [x] Definicja CI/CD budowania serwisów
+- [ ] Implementacja GRPC i Keycloak po froncie
 - [x] Inicjalizacja szablonów mikroserwisów w .NET 11 oraz projektu bazowego Vue 3 + Vuetify + Pinia.
 - [ ] Zdefiniowanie wspólnego repozytorium kontraktów **Protocol Buffers (`.proto`)** oraz skonfigurowanie generatorów kodu dla C# (.NET 11) i TypeScript (**gRPC-Web**).
 

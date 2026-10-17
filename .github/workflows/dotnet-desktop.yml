@@ -1,0 +1,41 @@
+name: CI Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Setup .NET 11
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '11.0.x'
+        
+    - name: Restore .NET dependencies
+      run: dotnet restore AgentStudio/AgentStudio.sln
+
+    - name: Build Solution
+      run: dotnet build AgentStudio/AgentStudio.sln -c Release --no-restore
+
+    - name: Build AgentStudio.Gateway
+      run: dotnet build AgentStudio/AgentStudio.Gateway/AgentStudio.Gateway.csproj -c Release --no-restore
+
+    - name: Build AgentStudio.Service
+      run: dotnet build AgentStudio/AgentStudio.Service/AgentStudio.Service.csproj -c Release --no-restore
+
+    - name: Build AgentStudio/AgentStudio.Client (with NPM)
+      run: dotnet build AgentStudio/AgentStudio.Client/AgentStudio.Client.csproj -c Release --no-restore
