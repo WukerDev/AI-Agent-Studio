@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -13,5 +13,11 @@
         <Link>.dockerignore</Link>
       </Content>
     </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.60.0" />
+    </ItemGroup>
 
+    <ItemGroup>
+        <Protobuf Include="Protos\agent_node.proto" GrpcServices="Server" />
+    </ItemGroup>
 </Project>

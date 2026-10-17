@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package agentstudio.v1;
+
+option csharp_namespace = "AgentStudio.Service.Protos";
+
+service AgentFlowService {
+  rpc SaveAgentNode (SaveAgentNodeRequest) returns (SaveAgentNodeResponse);
+  rpc GetAgentNodes (GetAgentNodesRequest) returns (GetAgentNodesResponse);
+}
+
+message SaveAgentNodeRequest {
+  AgentNode node = 1;
+}
+
+message SaveAgentNodeResponse {
+  string id = 1;
+  bool success = 2;
+}
+
+message GetAgentNodesRequest {
+  string flow_id = 1;
+}
+
+message GetAgentNodesResponse {
+  repeated AgentNode nodes = 1;
+}
+
+message AgentNode {
+  string id = 1;
+  string name = 2;
+  NodeType type = 3;
+  Position position = 4;
+  ModelConfig model_config = 5;
+  string system_prompt = 6;
+  string endpoint = 7;
+  McpConfig mcp_config = 8;
+}
+
+enum NodeType {
+  NODE_TYPE_UNSPECIFIED = 0;
+  NODE_TYPE_AGENT = 1;
+  NODE_TYPE_MODEL = 2;
+  NODE_TYPE_PROMPT = 3;
+  NODE_TYPE_MCP_CONNECTOR = 4;
+}
+
+message Position {
+  double x = 1;
+  double y = 2;
+}
+
+message ModelConfig {
+  string provider = 1;
+  string model_name = 2;
+  float temperature = 3;
+}
+
+message McpConfig {
+  string server_url = 1;
+  string auth_token = 2;
+  repeated string enabled_tools = 3;
+}
