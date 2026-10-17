@@ -6,15 +6,27 @@ import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AgentFlowService } from "./agent_node";
 import type { GetAgentNodesResponse } from "./agent_node";
 import type { GetAgentNodesRequest } from "./agent_node";
-import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { SaveAgentNodeResponse } from "./agent_node";
 import type { SaveAgentNodeRequest } from "./agent_node";
+import type { GetExplorerResponse } from "./agent_node";
+import type { GetExplorerRequest } from "./agent_node";
+import { stackIntercept } from "@protobuf-ts/runtime-rpc";
+import type { ExecuteWorkflowResponse } from "./agent_node";
+import type { ExecuteWorkflowRequest } from "./agent_node";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
  * @generated from protobuf service agentstudio.v1.AgentFlowService
  */
 export interface IAgentFlowServiceClient {
+    /**
+     * @generated from protobuf rpc: ExecuteWorkflow
+     */
+    executeWorkflow(input: ExecuteWorkflowRequest, options?: RpcOptions): UnaryCall<ExecuteWorkflowRequest, ExecuteWorkflowResponse>;
+    /**
+     * @generated from protobuf rpc: GetExplorer
+     */
+    getExplorer(input: GetExplorerRequest, options?: RpcOptions): UnaryCall<GetExplorerRequest, GetExplorerResponse>;
     /**
      * @generated from protobuf rpc: SaveAgentNode
      */
@@ -34,17 +46,31 @@ export class AgentFlowServiceClient implements IAgentFlowServiceClient, ServiceI
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
+     * @generated from protobuf rpc: ExecuteWorkflow
+     */
+    executeWorkflow(input: ExecuteWorkflowRequest, options?: RpcOptions): UnaryCall<ExecuteWorkflowRequest, ExecuteWorkflowResponse> {
+        const method = this.methods[0], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ExecuteWorkflowRequest, ExecuteWorkflowResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetExplorer
+     */
+    getExplorer(input: GetExplorerRequest, options?: RpcOptions): UnaryCall<GetExplorerRequest, GetExplorerResponse> {
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetExplorerRequest, GetExplorerResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: SaveAgentNode
      */
     saveAgentNode(input: SaveAgentNodeRequest, options?: RpcOptions): UnaryCall<SaveAgentNodeRequest, SaveAgentNodeResponse> {
-        const method = this.methods[0], opt = this._transport.mergeOptions(options);
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
         return stackIntercept<SaveAgentNodeRequest, SaveAgentNodeResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: GetAgentNodes
      */
     getAgentNodes(input: GetAgentNodesRequest, options?: RpcOptions): UnaryCall<GetAgentNodesRequest, GetAgentNodesResponse> {
-        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetAgentNodesRequest, GetAgentNodesResponse>("unary", this._transport, method, opt, input);
     }
 }
