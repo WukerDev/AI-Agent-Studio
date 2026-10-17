@@ -1,11 +1,11 @@
 import * as signalR from '@microsoft/signalr';
-import { useConfigStore } from './config';
+import { useConfig } from './config';
 
 class EventsService {
     private connection: signalR.HubConnection | null = null;
 
     public async connect() {
-        const configStore = useConfigStore();
+        const configStore = useConfig();
         const eventsUrl = configStore.getEventsUrl;
 
         this.connection = new signalR.HubConnectionBuilder()
