@@ -74,9 +74,10 @@ Głównym założeniem systemu jest pełna separacja warstwy prezentacji od logi
 - [x] Przygotowanie środowiska uruchomieniowego `docker-compose` (PostgreSQL, Keycloak, Grafana).
 - [x] Konfiguracja Realmów i klientów OIDC w Keycloak.
 - [x] Definicja CI/CD budowania serwisów
-- [ ] Implementacja GRPC i Keycloak po froncie
+- [x] Implementacja GRPC i Keycloak po froncie
+- [ ] Dodanie Eventów SignalR
 - [x] Inicjalizacja szablonów mikroserwisów w .NET 11 oraz projektu bazowego Vue 3 + Vuetify + Pinia.
-- [ ] Zdefiniowanie wspólnego repozytorium kontraktów **Protocol Buffers (`.proto`)** oraz skonfigurowanie generatorów kodu dla C# (.NET 11) i TypeScript (**gRPC-Web**).
+- [x] Zdefiniowanie wspólnego repozytorium kontraktów **Protocol Buffers (`.proto`)** oraz skonfigurowanie generatorów kodu dla C# (.NET 11) i TypeScript (**gRPC-Web**).
 
 ### Faza 2: Rdzeń Backendowy i Silnik Agentów (MS Agents AI + MCP) do 7.11
 - [ ] Implementacja warstwy danych w PostgreSQL (zapis konfiguracji agentów, historii uruchomień, definicji grafów).
