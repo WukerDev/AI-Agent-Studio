@@ -1,8 +1,9 @@
 using FluentValidation;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace AgentStudio.Service.Interceptors;
+namespace AgentStudio.Service.Application;
 
 public class ValidationInterceptor : Interceptor
 {

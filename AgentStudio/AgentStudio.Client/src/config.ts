@@ -11,13 +11,26 @@ export interface AppConfig {
 }
 
 export const useConfig = createSharedComposable(() => {
+    const isBrowser = typeof window !== 'undefined';
+    const isDevVite = isBrowser && (window.location.port === '5173' || window.location.port === '4173');
+    
+    const defaultGatewayUrl = isBrowser && !isDevVite
+        ? window.location.origin
+        : (import.meta.env.VITE_GATEWAY_URL || 'http://localhost:5000');
+
+    const defaultAuthUrl = import.meta.env.VITE_AUTH_URL || (
+        isBrowser && !isDevVite
+            ? window.location.origin
+            : 'http://localhost:8080'
+    );
+
     const state = reactive<AppConfig>({
-        backendUrl: 'http://localhost:5000',
-        eventsUrl: 'http://localhost:5000/events',
-        grpcUrl: 'http://localhost:5000',
-        authUrl: 'http://localhost:8080',
-        authRealm: 'agent-studio',
-        authClientId: 'portal'
+        backendUrl: defaultGatewayUrl,
+        eventsUrl: `${defaultGatewayUrl}/events`,
+        grpcUrl: defaultGatewayUrl,
+        authUrl: defaultAuthUrl,
+        authRealm: import.meta.env.VITE_AUTH_REALM || 'agent-studio',
+        authClientId: import.meta.env.VITE_AUTH_CLIENT_ID || 'portal'
     });
 
     function updateConfig(newConfig: Partial<AppConfig>) {

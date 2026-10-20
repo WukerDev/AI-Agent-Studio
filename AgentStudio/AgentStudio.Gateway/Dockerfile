@@ -1,6 +1,8 @@
-﻿FROM mcr.microsoft.com/dotnet/runtime:11.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS base
 USER $APP_UID
 WORKDIR /app
+EXPOSE 5000
+ENV ASPNETCORE_HTTP_PORTS=5000
 
 FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 ARG BUILD_CONFIGURATION=Release

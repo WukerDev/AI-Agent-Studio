@@ -9,11 +9,13 @@ service AgentFlowService {
   rpc GetExplorer (GetExplorerRequest) returns (GetExplorerResponse);
   rpc SaveAgentNode (SaveAgentNodeRequest) returns (SaveAgentNodeResponse);
   rpc GetAgentNodes (GetAgentNodesRequest) returns (GetAgentNodesResponse);
+  rpc SaveWorkflowEdges (SaveWorkflowEdgesRequest) returns (SaveWorkflowEdgesResponse);
+  rpc GetWorkflowEdges (GetWorkflowEdgesRequest) returns (GetWorkflowEdgesResponse);
 }
-
 
 message ExecuteWorkflowRequest {
   string flow_id = 1;
+  string input_message = 2;
 }
 
 message ExecuteWorkflowResponse {
@@ -25,8 +27,6 @@ message ExecuteWorkflowResponse {
 message GetExplorerRequest {
   string path = 1;
 }
-
-
 
 message ExplorerItem {
   string name = 1;
@@ -42,6 +42,7 @@ enum ItemType {
 
 message SaveAgentNodeRequest {
   AgentNode node = 1;
+  string flow_id = 2;
 }
 
 message SaveAgentNodeResponse {
@@ -56,11 +57,13 @@ message GetAgentNodesRequest {
 message GetAgentNodesResponse {
   bool success = 1;
   string message = 2;
+  repeated AgentNode nodes = 3;
 }
 
 message GetExplorerResponse {
   bool success = 1;
   string message = 2;
+  repeated ExplorerItem items = 3;
 }
 
 message AgentNode {
@@ -72,6 +75,7 @@ message AgentNode {
   string system_prompt = 6;
   string endpoint = 7;
   McpConfig mcp_config = 8;
+  string flow_id = 9;
 }
 
 enum NodeType {
@@ -97,4 +101,31 @@ message McpConfig {
   string server_url = 1;
   string auth_token = 2;
   repeated string enabled_tools = 3;
+}
+
+message WorkflowEdge {
+  string id = 1;
+  string flow_id = 2;
+  string source_node_id = 3;
+  string source_handle = 4;
+  string target_node_id = 5;
+  string target_handle = 6;
+}
+
+message SaveWorkflowEdgesRequest {
+  string flow_id = 1;
+  repeated WorkflowEdge edges = 2;
+}
+
+message SaveWorkflowEdgesResponse {
+  bool success = 1;
+}
+
+message GetWorkflowEdgesRequest {
+  string flow_id = 1;
+}
+
+message GetWorkflowEdgesResponse {
+  bool success = 1;
+  repeated WorkflowEdge edges = 2;
 }

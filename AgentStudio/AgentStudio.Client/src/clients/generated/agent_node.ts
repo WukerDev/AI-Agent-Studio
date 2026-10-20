@@ -19,6 +19,10 @@ export interface ExecuteWorkflowRequest {
      * @generated from protobuf field: string flow_id = 1
      */
     flowId: string;
+    /**
+     * @generated from protobuf field: string input_message = 2
+     */
+    inputMessage: string;
 }
 /**
  * @generated from protobuf message agentstudio.v1.ExecuteWorkflowResponse
@@ -71,6 +75,10 @@ export interface SaveAgentNodeRequest {
      * @generated from protobuf field: agentstudio.v1.AgentNode node = 1
      */
     node?: AgentNode;
+    /**
+     * @generated from protobuf field: string flow_id = 2
+     */
+    flowId: string;
 }
 /**
  * @generated from protobuf message agentstudio.v1.SaveAgentNodeResponse
@@ -106,6 +114,10 @@ export interface GetAgentNodesResponse {
      * @generated from protobuf field: string message = 2
      */
     message: string;
+    /**
+     * @generated from protobuf field: repeated agentstudio.v1.AgentNode nodes = 3
+     */
+    nodes: AgentNode[];
 }
 /**
  * @generated from protobuf message agentstudio.v1.GetExplorerResponse
@@ -119,6 +131,10 @@ export interface GetExplorerResponse {
      * @generated from protobuf field: string message = 2
      */
     message: string;
+    /**
+     * @generated from protobuf field: repeated agentstudio.v1.ExplorerItem items = 3
+     */
+    items: ExplorerItem[];
 }
 /**
  * @generated from protobuf message agentstudio.v1.AgentNode
@@ -156,6 +172,10 @@ export interface AgentNode {
      * @generated from protobuf field: agentstudio.v1.McpConfig mcp_config = 8
      */
     mcpConfig?: McpConfig;
+    /**
+     * @generated from protobuf field: string flow_id = 9
+     */
+    flowId: string;
 }
 /**
  * @generated from protobuf message agentstudio.v1.Position
@@ -205,6 +225,79 @@ export interface McpConfig {
     enabledTools: string[];
 }
 /**
+ * @generated from protobuf message agentstudio.v1.WorkflowEdge
+ */
+export interface WorkflowEdge {
+    /**
+     * @generated from protobuf field: string id = 1
+     */
+    id: string;
+    /**
+     * @generated from protobuf field: string flow_id = 2
+     */
+    flowId: string;
+    /**
+     * @generated from protobuf field: string source_node_id = 3
+     */
+    sourceNodeId: string;
+    /**
+     * @generated from protobuf field: string source_handle = 4
+     */
+    sourceHandle: string;
+    /**
+     * @generated from protobuf field: string target_node_id = 5
+     */
+    targetNodeId: string;
+    /**
+     * @generated from protobuf field: string target_handle = 6
+     */
+    targetHandle: string;
+}
+/**
+ * @generated from protobuf message agentstudio.v1.SaveWorkflowEdgesRequest
+ */
+export interface SaveWorkflowEdgesRequest {
+    /**
+     * @generated from protobuf field: string flow_id = 1
+     */
+    flowId: string;
+    /**
+     * @generated from protobuf field: repeated agentstudio.v1.WorkflowEdge edges = 2
+     */
+    edges: WorkflowEdge[];
+}
+/**
+ * @generated from protobuf message agentstudio.v1.SaveWorkflowEdgesResponse
+ */
+export interface SaveWorkflowEdgesResponse {
+    /**
+     * @generated from protobuf field: bool success = 1
+     */
+    success: boolean;
+}
+/**
+ * @generated from protobuf message agentstudio.v1.GetWorkflowEdgesRequest
+ */
+export interface GetWorkflowEdgesRequest {
+    /**
+     * @generated from protobuf field: string flow_id = 1
+     */
+    flowId: string;
+}
+/**
+ * @generated from protobuf message agentstudio.v1.GetWorkflowEdgesResponse
+ */
+export interface GetWorkflowEdgesResponse {
+    /**
+     * @generated from protobuf field: bool success = 1
+     */
+    success: boolean;
+    /**
+     * @generated from protobuf field: repeated agentstudio.v1.WorkflowEdge edges = 2
+     */
+    edges: WorkflowEdge[];
+}
+/**
  * @generated from protobuf enum agentstudio.v1.ItemType
  */
 export enum ItemType {
@@ -250,12 +343,14 @@ export enum NodeType {
 class ExecuteWorkflowRequest$Type extends MessageType<ExecuteWorkflowRequest> {
     constructor() {
         super("agentstudio.v1.ExecuteWorkflowRequest", [
-            { no: 1, name: "flow_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "flow_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "input_message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<ExecuteWorkflowRequest>): ExecuteWorkflowRequest {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.flowId = "";
+        message.inputMessage = "";
         if (value !== undefined)
             reflectionMergePartial<ExecuteWorkflowRequest>(this, message, value);
         return message;
@@ -267,6 +362,9 @@ class ExecuteWorkflowRequest$Type extends MessageType<ExecuteWorkflowRequest> {
             switch (fieldNo) {
                 case /* string flow_id */ 1:
                     message.flowId = reader.string();
+                    break;
+                case /* string input_message */ 2:
+                    message.inputMessage = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -283,6 +381,9 @@ class ExecuteWorkflowRequest$Type extends MessageType<ExecuteWorkflowRequest> {
         /* string flow_id = 1; */
         if (message.flowId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.flowId);
+        /* string input_message = 2; */
+        if (message.inputMessage !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.inputMessage);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -470,11 +571,13 @@ export const ExplorerItem = new ExplorerItem$Type();
 class SaveAgentNodeRequest$Type extends MessageType<SaveAgentNodeRequest> {
     constructor() {
         super("agentstudio.v1.SaveAgentNodeRequest", [
-            { no: 1, name: "node", kind: "message", T: () => AgentNode }
+            { no: 1, name: "node", kind: "message", T: () => AgentNode },
+            { no: 2, name: "flow_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<SaveAgentNodeRequest>): SaveAgentNodeRequest {
         const message = globalThis.Object.create((this.messagePrototype!));
+        message.flowId = "";
         if (value !== undefined)
             reflectionMergePartial<SaveAgentNodeRequest>(this, message, value);
         return message;
@@ -486,6 +589,9 @@ class SaveAgentNodeRequest$Type extends MessageType<SaveAgentNodeRequest> {
             switch (fieldNo) {
                 case /* agentstudio.v1.AgentNode node */ 1:
                     message.node = AgentNode.internalBinaryRead(reader, reader.uint32(), options, message.node);
+                    break;
+                case /* string flow_id */ 2:
+                    message.flowId = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -502,6 +608,9 @@ class SaveAgentNodeRequest$Type extends MessageType<SaveAgentNodeRequest> {
         /* agentstudio.v1.AgentNode node = 1; */
         if (message.node)
             AgentNode.internalBinaryWrite(message.node, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string flow_id = 2; */
+        if (message.flowId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.flowId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -619,13 +728,15 @@ class GetAgentNodesResponse$Type extends MessageType<GetAgentNodesResponse> {
     constructor() {
         super("agentstudio.v1.GetAgentNodesResponse", [
             { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "nodes", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => AgentNode }
         ]);
     }
     create(value?: PartialMessage<GetAgentNodesResponse>): GetAgentNodesResponse {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.success = false;
         message.message = "";
+        message.nodes = [];
         if (value !== undefined)
             reflectionMergePartial<GetAgentNodesResponse>(this, message, value);
         return message;
@@ -640,6 +751,9 @@ class GetAgentNodesResponse$Type extends MessageType<GetAgentNodesResponse> {
                     break;
                 case /* string message */ 2:
                     message.message = reader.string();
+                    break;
+                case /* repeated agentstudio.v1.AgentNode nodes */ 3:
+                    message.nodes.push(AgentNode.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -659,6 +773,9 @@ class GetAgentNodesResponse$Type extends MessageType<GetAgentNodesResponse> {
         /* string message = 2; */
         if (message.message !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.message);
+        /* repeated agentstudio.v1.AgentNode nodes = 3; */
+        for (let i = 0; i < message.nodes.length; i++)
+            AgentNode.internalBinaryWrite(message.nodes[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -674,13 +791,15 @@ class GetExplorerResponse$Type extends MessageType<GetExplorerResponse> {
     constructor() {
         super("agentstudio.v1.GetExplorerResponse", [
             { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "items", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => ExplorerItem }
         ]);
     }
     create(value?: PartialMessage<GetExplorerResponse>): GetExplorerResponse {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.success = false;
         message.message = "";
+        message.items = [];
         if (value !== undefined)
             reflectionMergePartial<GetExplorerResponse>(this, message, value);
         return message;
@@ -695,6 +814,9 @@ class GetExplorerResponse$Type extends MessageType<GetExplorerResponse> {
                     break;
                 case /* string message */ 2:
                     message.message = reader.string();
+                    break;
+                case /* repeated agentstudio.v1.ExplorerItem items */ 3:
+                    message.items.push(ExplorerItem.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -714,6 +836,9 @@ class GetExplorerResponse$Type extends MessageType<GetExplorerResponse> {
         /* string message = 2; */
         if (message.message !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.message);
+        /* repeated agentstudio.v1.ExplorerItem items = 3; */
+        for (let i = 0; i < message.items.length; i++)
+            ExplorerItem.internalBinaryWrite(message.items[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -735,7 +860,8 @@ class AgentNode$Type extends MessageType<AgentNode> {
             { no: 5, name: "model_config", kind: "message", T: () => ModelConfig },
             { no: 6, name: "system_prompt", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 7, name: "endpoint", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 8, name: "mcp_config", kind: "message", T: () => McpConfig }
+            { no: 8, name: "mcp_config", kind: "message", T: () => McpConfig },
+            { no: 9, name: "flow_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<AgentNode>): AgentNode {
@@ -745,6 +871,7 @@ class AgentNode$Type extends MessageType<AgentNode> {
         message.type = 0;
         message.systemPrompt = "";
         message.endpoint = "";
+        message.flowId = "";
         if (value !== undefined)
             reflectionMergePartial<AgentNode>(this, message, value);
         return message;
@@ -777,6 +904,9 @@ class AgentNode$Type extends MessageType<AgentNode> {
                     break;
                 case /* agentstudio.v1.McpConfig mcp_config */ 8:
                     message.mcpConfig = McpConfig.internalBinaryRead(reader, reader.uint32(), options, message.mcpConfig);
+                    break;
+                case /* string flow_id */ 9:
+                    message.flowId = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -814,6 +944,9 @@ class AgentNode$Type extends MessageType<AgentNode> {
         /* agentstudio.v1.McpConfig mcp_config = 8; */
         if (message.mcpConfig)
             McpConfig.internalBinaryWrite(message.mcpConfig, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* string flow_id = 9; */
+        if (message.flowId !== "")
+            writer.tag(9, WireType.LengthDelimited).string(message.flowId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1005,6 +1138,297 @@ class McpConfig$Type extends MessageType<McpConfig> {
  * @generated MessageType for protobuf message agentstudio.v1.McpConfig
  */
 export const McpConfig = new McpConfig$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WorkflowEdge$Type extends MessageType<WorkflowEdge> {
+    constructor() {
+        super("agentstudio.v1.WorkflowEdge", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "flow_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "source_node_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "source_handle", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "target_node_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "target_handle", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<WorkflowEdge>): WorkflowEdge {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.id = "";
+        message.flowId = "";
+        message.sourceNodeId = "";
+        message.sourceHandle = "";
+        message.targetNodeId = "";
+        message.targetHandle = "";
+        if (value !== undefined)
+            reflectionMergePartial<WorkflowEdge>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WorkflowEdge): WorkflowEdge {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string id */ 1:
+                    message.id = reader.string();
+                    break;
+                case /* string flow_id */ 2:
+                    message.flowId = reader.string();
+                    break;
+                case /* string source_node_id */ 3:
+                    message.sourceNodeId = reader.string();
+                    break;
+                case /* string source_handle */ 4:
+                    message.sourceHandle = reader.string();
+                    break;
+                case /* string target_node_id */ 5:
+                    message.targetNodeId = reader.string();
+                    break;
+                case /* string target_handle */ 6:
+                    message.targetHandle = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WorkflowEdge, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
+        /* string flow_id = 2; */
+        if (message.flowId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.flowId);
+        /* string source_node_id = 3; */
+        if (message.sourceNodeId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.sourceNodeId);
+        /* string source_handle = 4; */
+        if (message.sourceHandle !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.sourceHandle);
+        /* string target_node_id = 5; */
+        if (message.targetNodeId !== "")
+            writer.tag(5, WireType.LengthDelimited).string(message.targetNodeId);
+        /* string target_handle = 6; */
+        if (message.targetHandle !== "")
+            writer.tag(6, WireType.LengthDelimited).string(message.targetHandle);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.WorkflowEdge
+ */
+export const WorkflowEdge = new WorkflowEdge$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SaveWorkflowEdgesRequest$Type extends MessageType<SaveWorkflowEdgesRequest> {
+    constructor() {
+        super("agentstudio.v1.SaveWorkflowEdgesRequest", [
+            { no: 1, name: "flow_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "edges", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => WorkflowEdge }
+        ]);
+    }
+    create(value?: PartialMessage<SaveWorkflowEdgesRequest>): SaveWorkflowEdgesRequest {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.flowId = "";
+        message.edges = [];
+        if (value !== undefined)
+            reflectionMergePartial<SaveWorkflowEdgesRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: SaveWorkflowEdgesRequest): SaveWorkflowEdgesRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string flow_id */ 1:
+                    message.flowId = reader.string();
+                    break;
+                case /* repeated agentstudio.v1.WorkflowEdge edges */ 2:
+                    message.edges.push(WorkflowEdge.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: SaveWorkflowEdgesRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string flow_id = 1; */
+        if (message.flowId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.flowId);
+        /* repeated agentstudio.v1.WorkflowEdge edges = 2; */
+        for (let i = 0; i < message.edges.length; i++)
+            WorkflowEdge.internalBinaryWrite(message.edges[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.SaveWorkflowEdgesRequest
+ */
+export const SaveWorkflowEdgesRequest = new SaveWorkflowEdgesRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SaveWorkflowEdgesResponse$Type extends MessageType<SaveWorkflowEdgesResponse> {
+    constructor() {
+        super("agentstudio.v1.SaveWorkflowEdgesResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<SaveWorkflowEdgesResponse>): SaveWorkflowEdgesResponse {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.success = false;
+        if (value !== undefined)
+            reflectionMergePartial<SaveWorkflowEdgesResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: SaveWorkflowEdgesResponse): SaveWorkflowEdgesResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: SaveWorkflowEdgesResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.SaveWorkflowEdgesResponse
+ */
+export const SaveWorkflowEdgesResponse = new SaveWorkflowEdgesResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetWorkflowEdgesRequest$Type extends MessageType<GetWorkflowEdgesRequest> {
+    constructor() {
+        super("agentstudio.v1.GetWorkflowEdgesRequest", [
+            { no: 1, name: "flow_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<GetWorkflowEdgesRequest>): GetWorkflowEdgesRequest {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.flowId = "";
+        if (value !== undefined)
+            reflectionMergePartial<GetWorkflowEdgesRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: GetWorkflowEdgesRequest): GetWorkflowEdgesRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string flow_id */ 1:
+                    message.flowId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: GetWorkflowEdgesRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string flow_id = 1; */
+        if (message.flowId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.flowId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.GetWorkflowEdgesRequest
+ */
+export const GetWorkflowEdgesRequest = new GetWorkflowEdgesRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetWorkflowEdgesResponse$Type extends MessageType<GetWorkflowEdgesResponse> {
+    constructor() {
+        super("agentstudio.v1.GetWorkflowEdgesResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "edges", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => WorkflowEdge }
+        ]);
+    }
+    create(value?: PartialMessage<GetWorkflowEdgesResponse>): GetWorkflowEdgesResponse {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.success = false;
+        message.edges = [];
+        if (value !== undefined)
+            reflectionMergePartial<GetWorkflowEdgesResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: GetWorkflowEdgesResponse): GetWorkflowEdgesResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* repeated agentstudio.v1.WorkflowEdge edges */ 2:
+                    message.edges.push(WorkflowEdge.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: GetWorkflowEdgesResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* repeated agentstudio.v1.WorkflowEdge edges = 2; */
+        for (let i = 0; i < message.edges.length; i++)
+            WorkflowEdge.internalBinaryWrite(message.edges[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.GetWorkflowEdgesResponse
+ */
+export const GetWorkflowEdgesResponse = new GetWorkflowEdgesResponse$Type();
 /**
  * @generated ServiceType for protobuf service agentstudio.v1.AgentFlowService
  */
@@ -1012,5 +1436,7 @@ export const AgentFlowService = new ServiceType("agentstudio.v1.AgentFlowService
     { name: "ExecuteWorkflow", options: {}, I: ExecuteWorkflowRequest, O: ExecuteWorkflowResponse },
     { name: "GetExplorer", options: {}, I: GetExplorerRequest, O: GetExplorerResponse },
     { name: "SaveAgentNode", options: {}, I: SaveAgentNodeRequest, O: SaveAgentNodeResponse },
-    { name: "GetAgentNodes", options: {}, I: GetAgentNodesRequest, O: GetAgentNodesResponse }
+    { name: "GetAgentNodes", options: {}, I: GetAgentNodesRequest, O: GetAgentNodesResponse },
+    { name: "SaveWorkflowEdges", options: {}, I: SaveWorkflowEdgesRequest, O: SaveWorkflowEdgesResponse },
+    { name: "GetWorkflowEdges", options: {}, I: GetWorkflowEdgesRequest, O: GetWorkflowEdgesResponse }
 ]);

@@ -1,7 +1,7 @@
 using AgentStudio.Service.Protos;
 using FluentValidation;
 
-namespace AgentStudio.Service.Validators;
+namespace AgentStudio.Service.Application;
 
 public class SaveAgentNodeRequestValidator : AbstractValidator<SaveAgentNodeRequest>
 {

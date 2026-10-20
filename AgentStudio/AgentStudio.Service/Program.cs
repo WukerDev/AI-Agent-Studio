@@ -1,31 +1,45 @@
-﻿using AgentStudio.Service.Services;
-using AgentStudio.Service.Hubs;
-using AgentStudio.Service.Interceptors;
+using AgentStudio.Service.Application;
+using AgentStudio.Service.Infrastructure;
+using AgentStudio.Service.Model;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using System.Security.Claims;
-using AgentStudio.Service.Data;
-using AgentStudio.Service.Security;
 using Microsoft.EntityFrameworkCore;
 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables()
     .Build();
 
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .WriteTo.Console()
-    .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(configuration["Elasticsearch:Uri"] ?? "http://localhost:9200"))
+try
+{
+    var elasticUri = configuration["Elasticsearch:Uri"];
+    var loggerConfig = new LoggerConfiguration()
+        .Enrich.FromLogContext()
+        .WriteTo.Console();
+
+    if (!string.IsNullOrEmpty(elasticUri))
     {
-        AutoRegisterTemplate = true,
-        IndexFormat = configuration["Elasticsearch:IndexFormat"] ?? "agentstudio-logs-{0:yyyy.MM.dd}"
-    })
-    .CreateLogger();
+        loggerConfig.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUri))
+        {
+            AutoRegisterTemplate = true,
+            IndexFormat = configuration["Elasticsearch:IndexFormat"] ?? "agentstudio-logs-{0:yyyy.MM.dd}"
+        });
+    }
+
+    Log.Logger = loggerConfig.CreateLogger();
+}
+catch
+{
+    Log.Logger = new LoggerConfiguration()
+        .WriteTo.Console()
+        .CreateLogger();
+}
 
 try
 {
@@ -41,6 +55,7 @@ try
     });
     
     builder.Services.AddSignalR();
+    builder.Services.AddSingleton<IUserIdProvider, KeycloakUserIdProvider>();
     
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -50,9 +65,22 @@ try
             options.RequireHttpsMetadata = false;
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateAudience = true,
-                ValidateIssuer = true,
+                ValidateAudience = false,
+                ValidateIssuer = false,
                 ValidateLifetime = true
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/events"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
             };
         });
 
@@ -61,7 +89,6 @@ try
         options.AddPolicy("RequireAgentFlowScope", policy =>
         {
             policy.RequireAuthenticatedUser();
-            policy.RequireClaim("scope", "agent-flow-write");
         });
     });
 
@@ -81,13 +108,38 @@ try
     
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<IUserContext, UserContext>();
+    builder.Services.AddScoped<IMcpClientService, McpClientService>();
+    builder.Services.AddScoped<IAgentEngine, AgentEngine>();
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+        var dbProvider = builder.Configuration["DatabaseProvider"] ?? "Npgsql";
+        var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
+
+        if (dbProvider.Equals("InMemory", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(connStr))
+        {
+            options.UseInMemoryDatabase(builder.Configuration["InMemoryDbName"] ?? "AgentStudio_InMemoryDb");
+        }
+        else
+        {
+            options.UseNpgsql(connStr);
+        }
     });
 
     var app = builder.Build();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        try
+        {
+            db.Database.EnsureCreated();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Could not ensure database is created at startup (PostgreSQL may be offline)");
+        }
+    }
 
     app.UseSerilogRequestLogging();
 
@@ -117,3 +169,5 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+public partial class Program { }

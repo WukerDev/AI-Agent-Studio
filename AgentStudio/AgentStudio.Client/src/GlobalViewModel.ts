@@ -1,9 +1,10 @@
 import { DateTime } from 'luxon'
-import { useGlobalStore } from './store'
+import { useGlobalStore, type ExecutionLog } from './store'
 import {
     NodeType,
     ItemType,
     type AgentNode,
+    type WorkflowEdge,
     type ExplorerItem
 } from './clients/generated/agent_node'
 
@@ -12,6 +13,10 @@ export class GlobalViewModel {
 
     public get nodes(): AgentNode[] {
         return this.globalStore.nodes
+    }
+
+    public get edges(): WorkflowEdge[] {
+        return this.globalStore.edges
     }
 
     public get explorerItems(): ExplorerItem[] {
@@ -42,12 +47,25 @@ export class GlobalViewModel {
         return this.globalStore.errorKey
     }
 
+    public get executionLogs(): ExecutionLog[] {
+        return this.globalStore.executionLogs
+    }
+
+    public get executionStatus(): string {
+        return this.globalStore.executionStatus
+    }
+
+    public get executionOutput(): string {
+        return this.globalStore.executionOutput
+    }
+
     public async initialize(): Promise<void> {
         await this.globalStore.initializeRealtimeAndGrpc()
     }
 
-    public async executeWorkflow(flowId: string): Promise<void> {
-        await this.globalStore.executeWorkflow({ flowId })
+    public async executeWorkflow(flowId?: string, inputMessage?: string): Promise<void> {
+        const targetFlowId = flowId || this.globalStore.currentFlowId || 'default-flow'
+        await this.globalStore.executeWorkflow({ flowId: targetFlowId, inputMessage: inputMessage ?? '' })
     }
 
     public async loadExplorer(path: string): Promise<void> {
@@ -55,25 +73,93 @@ export class GlobalViewModel {
     }
 
     public async saveNode(node: AgentNode): Promise<void> {
-        await this.globalStore.saveAgentNode({ node })
+        await this.globalStore.saveAgentNode({
+            node,
+            flowId: this.globalStore.currentFlowId || 'default-flow'
+        })
     }
 
     public async loadNodes(flowId: string): Promise<void> {
         await this.globalStore.getAgentNodes({ flowId })
     }
 
+    public async saveEdges(edges: WorkflowEdge[], flowId?: string): Promise<void> {
+        const targetFlowId = flowId || this.globalStore.currentFlowId || 'default-flow'
+        await this.globalStore.saveWorkflowEdges({ flowId: targetFlowId, edges })
+    }
+
+    public async loadEdges(flowId: string): Promise<void> {
+        await this.globalStore.getWorkflowEdges({ flowId })
+    }
+
+    public async addNode(type: NodeType, position = { x: 250, y: 150 }, name?: string): Promise<void> {
+        const defaultNames: Record<NodeType, string> = {
+            [NodeType.UNSPECIFIED]: 'New Node',
+            [NodeType.AGENT]: 'AI Agent',
+            [NodeType.MODEL]: 'LLM Model',
+            [NodeType.PROMPT]: 'System Prompt',
+            [NodeType.MCP_CONNECTOR]: 'MCP Tools Connector'
+        }
+
+        const newNode: AgentNode = {
+            id: `node_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            name: name || defaultNames[type] || 'New Node',
+            type,
+            position,
+            flowId: this.globalStore.currentFlowId || 'default-flow',
+            systemPrompt: type === NodeType.PROMPT ? 'You are an intelligent AI Agent.' : '',
+            endpoint: '',
+            modelConfig: type === NodeType.MODEL ? {
+                provider: 'OpenAI',
+                modelName: 'gpt-4o',
+                temperature: 0.7
+            } : undefined,
+            mcpConfig: type === NodeType.MCP_CONNECTOR ? {
+                serverUrl: 'http://localhost:8000/mcp',
+                authToken: '',
+                enabledTools: []
+            } : undefined
+        }
+
+        this.globalStore.nodes = [...this.globalStore.nodes, newNode]
+        await this.saveNode(newNode)
+    }
+
+    public async removeNode(nodeId: string): Promise<void> {
+        this.globalStore.nodes = this.globalStore.nodes.filter(n => n.id !== nodeId)
+        this.globalStore.edges = this.globalStore.edges.filter(
+            e => e.sourceNodeId !== nodeId && e.targetNodeId !== nodeId
+        )
+        await this.saveEdges(this.globalStore.edges)
+    }
+
     public getNodeColor(type: NodeType): string {
         switch (type) {
             case NodeType.AGENT:
-                return 'primary'
+                return '#E63946'
             case NodeType.MODEL:
-                return 'info'
+                return '#2196F3'
             case NodeType.PROMPT:
-                return 'warning'
+                return '#FB8C00'
             case NodeType.MCP_CONNECTOR:
-                return 'success'
+                return '#4CAF50'
             default:
-                return 'secondary'
+                return '#9E9E9E'
+        }
+    }
+
+    public getNodeIcon(type: NodeType): string {
+        switch (type) {
+            case NodeType.AGENT:
+                return 'mdi-robot'
+            case NodeType.MODEL:
+                return 'mdi-brain'
+            case NodeType.PROMPT:
+                return 'mdi-script-text-outline'
+            case NodeType.MCP_CONNECTOR:
+                return 'mdi-connection'
+            default:
+                return 'mdi-shape'
         }
     }
 
@@ -107,5 +193,12 @@ export class GlobalViewModel {
         return DateTime.fromMillis(this.globalStore.lastSyncMillis)
             .setLocale('pl')
             .toLocaleString(DateTime.TIME_WITH_SECONDS)
+    }
+
+    public formatTimestamp(isoString: string): string {
+        if (!isoString) return ''
+        return DateTime.fromISO(isoString)
+            .setLocale('pl')
+            .toFormat('HH:mm:ss')
     }
 }

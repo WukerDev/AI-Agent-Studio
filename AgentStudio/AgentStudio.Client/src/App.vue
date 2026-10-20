@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppSidebar from './components/layout/AppSidebar.vue'
 import AppLeftDrawer from './components/layout/AppLeftDrawer.vue'
 import AppBottomPanel from './components/layout/AppBottomPanel.vue'
+import AppNotificationSnackbar from './components/layout/AppNotificationSnackbar.vue'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas.vue'
+import { GlobalViewModel } from './GlobalViewModel'
+
+const globalViewModel = new GlobalViewModel()
 
 const isBottomPanelOpen = ref(false)
 const activeBottomTab = ref<string | null>(null)
@@ -31,6 +35,10 @@ const toggleLeftPanel = (tab: string): void => {
     isLeftPanelOpen.value = true
   }
 }
+
+onMounted(() => {
+  globalViewModel.initialize()
+})
 </script>
 
 <template>
@@ -55,10 +63,12 @@ const toggleLeftPanel = (tab: string): void => {
         v-model:tab="activeBottomTab"
     />
 
-    <v-main class="bg-grey-lighten-4 d-flex flex-column">
+    <v-main class="d-flex flex-column">
       <div class="flex-grow-1 position-relative">
         <WorkflowCanvas />
       </div>
     </v-main>
+
+    <AppNotificationSnackbar />
   </v-app>
 </template>

@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/runtime:11.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS base
 USER $APP_UID
 WORKDIR /app
 
@@ -6,6 +6,7 @@ FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["AgentStudio.Service/AgentStudio.Service.csproj", "AgentStudio.Service/"]
+COPY ["Protos/", "Protos/"]
 RUN dotnet restore "AgentStudio.Service/AgentStudio.Service.csproj"
 COPY . .
 WORKDIR "/src/AgentStudio.Service"

@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
-import  {setupRouter} from './router'
+import { setupRouter } from './router'
 import 'vuetify/styles'
 import { createVuetify, type ThemeDefinition } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -10,7 +10,8 @@ import '@mdi/font/css/materialdesignicons.css'
 import './style.css'
 import App from './App.vue'
 import pl from './locales/pl.json'
-import {useAuth} from './auth'
+import en from './locales/en.json'
+import { useAuth } from './auth'
 
 const agentStudioDarkTheme: ThemeDefinition = {
     dark: true,
@@ -26,12 +27,27 @@ const agentStudioDarkTheme: ThemeDefinition = {
     }
 }
 
-const i18n = createI18n({
+const agentStudioLightTheme: ThemeDefinition = {
+    dark: false,
+    colors: {
+        background: '#F8FAFC',
+        surface: '#FFFFFF',
+        primary: '#E63946',
+        secondary: '#E2E8F0',
+        error: '#EF4444',
+        info: '#3B82F6',
+        success: '#10B981',
+        warning: '#F59E0B',
+    }
+}
+
+export const i18n = createI18n({
     legacy: false,
     locale: 'pl',
-    fallbackLocale: 'pl',
+    fallbackLocale: 'en',
     messages: {
-        pl
+        pl,
+        en
     }
 })
 
@@ -42,13 +58,12 @@ const vuetify = createVuetify({
         defaultTheme: 'agentStudioDarkTheme',
         themes: {
             agentStudioDarkTheme,
+            agentStudioLightTheme
         }
     }
 })
 
-const { initAuth } = useAuth()
-
-initAuth().then(() => {
+function mountApp() {
     const app = createApp(App)
     const pinia = createPinia()
     const router = setupRouter()
@@ -58,6 +73,15 @@ initAuth().then(() => {
     app.use(router)
     app.use(vuetify)
     app.mount('#app')
-}).catch(() => {
-    console.error('AUTH_MOUNT_ERROR')
-})
+}
+
+const { initAuth } = useAuth()
+
+initAuth()
+    .then(() => {
+        mountApp()
+    })
+    .catch((err) => {
+        console.warn('[AgentStudio] Keycloak IAM unavailable or offline, continuing in guest mode:', err)
+        mountApp()
+    })

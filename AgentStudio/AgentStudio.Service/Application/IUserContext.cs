@@ -1,4 +1,4 @@
-namespace AgentStudio.Service.Security;
+namespace AgentStudio.Service.Application;
 
 public interface IUserContext
 {

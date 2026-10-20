@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,7 +6,9 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-var distDirectory = Path.Combine(builder.Environment.ContentRootPath, "src", "dist");
+var distDirectory = Directory.Exists(Path.Combine(builder.Environment.ContentRootPath, "dist"))
+    ? Path.Combine(builder.Environment.ContentRootPath, "dist")
+    : Path.Combine(builder.Environment.ContentRootPath, "src", "dist");
 
 if (!Directory.Exists(distDirectory))
 {

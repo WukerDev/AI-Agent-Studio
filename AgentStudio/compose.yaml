@@ -1,9 +1,42 @@
-﻿services:
+services:
+  agentstudio.gateway:
+    image: agentstudio.gateway
+    build:
+      context: .
+      dockerfile: AgentStudio.Gateway/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=5000
+    depends_on:
+      - agentstudio.service
+      - agentstudio.client
+      - keycloak
+
+  agentstudio.client:
+    image: agentstudio.client
+    build:
+      context: .
+      dockerfile: AgentStudio.Client/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=8080
+
   agentstudio.service:
     image: agentstudio.service
     build:
       context: .
       dockerfile: AgentStudio.Service/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=agents;Username=keycloak;Password=keycloak_password
+      - Keycloak__Authority=http://keycloak:8080/realms/agent-studio
+      - Keycloak__Audience=portal
+    depends_on:
+      - postgres
+      - keycloak
 
   postgres:
     image: postgres:15

@@ -4,6 +4,10 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AgentFlowService } from "./agent_node";
+import type { GetWorkflowEdgesResponse } from "./agent_node";
+import type { GetWorkflowEdgesRequest } from "./agent_node";
+import type { SaveWorkflowEdgesResponse } from "./agent_node";
+import type { SaveWorkflowEdgesRequest } from "./agent_node";
 import type { GetAgentNodesResponse } from "./agent_node";
 import type { GetAgentNodesRequest } from "./agent_node";
 import type { SaveAgentNodeResponse } from "./agent_node";
@@ -35,6 +39,14 @@ export interface IAgentFlowServiceClient {
      * @generated from protobuf rpc: GetAgentNodes
      */
     getAgentNodes(input: GetAgentNodesRequest, options?: RpcOptions): UnaryCall<GetAgentNodesRequest, GetAgentNodesResponse>;
+    /**
+     * @generated from protobuf rpc: SaveWorkflowEdges
+     */
+    saveWorkflowEdges(input: SaveWorkflowEdgesRequest, options?: RpcOptions): UnaryCall<SaveWorkflowEdgesRequest, SaveWorkflowEdgesResponse>;
+    /**
+     * @generated from protobuf rpc: GetWorkflowEdges
+     */
+    getWorkflowEdges(input: GetWorkflowEdgesRequest, options?: RpcOptions): UnaryCall<GetWorkflowEdgesRequest, GetWorkflowEdgesResponse>;
 }
 /**
  * @generated from protobuf service agentstudio.v1.AgentFlowService
@@ -72,5 +84,19 @@ export class AgentFlowServiceClient implements IAgentFlowServiceClient, ServiceI
     getAgentNodes(input: GetAgentNodesRequest, options?: RpcOptions): UnaryCall<GetAgentNodesRequest, GetAgentNodesResponse> {
         const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetAgentNodesRequest, GetAgentNodesResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: SaveWorkflowEdges
+     */
+    saveWorkflowEdges(input: SaveWorkflowEdgesRequest, options?: RpcOptions): UnaryCall<SaveWorkflowEdgesRequest, SaveWorkflowEdgesResponse> {
+        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        return stackIntercept<SaveWorkflowEdgesRequest, SaveWorkflowEdgesResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetWorkflowEdges
+     */
+    getWorkflowEdges(input: GetWorkflowEdgesRequest, options?: RpcOptions): UnaryCall<GetWorkflowEdgesRequest, GetWorkflowEdgesResponse> {
+        const method = this.methods[5], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetWorkflowEdgesRequest, GetWorkflowEdgesResponse>("unary", this._transport, method, opt, input);
     }
 }

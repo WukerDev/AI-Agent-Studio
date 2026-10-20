@@ -1,35 +1,66 @@
 import { defineStore } from 'pinia'
 import * as signalR from '@microsoft/signalr'
-import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport'
 import type { RpcOptions } from '@protobuf-ts/runtime-rpc'
 import { DateTime } from 'luxon'
+import { getGrpcClient, createGrpcOptions } from './clients/grpc'
 import { AgentFlowServiceClient } from './clients/generated/agent_node.client'
 import type {
     AgentNode,
     ExplorerItem,
+    WorkflowEdge,
     ExecuteWorkflowRequest,
     GetExplorerRequest,
     SaveAgentNodeRequest,
-    GetAgentNodesRequest
+    GetAgentNodesRequest,
+    SaveWorkflowEdgesRequest,
+    GetWorkflowEdgesRequest
 } from './clients/generated/agent_node'
 import { useConfig } from './config'
 import { useAuth } from './auth'
+import { useNotificationStore } from './notifications'
 
 let hubConnection: signalR.HubConnection | null = null
-let grpcClient: AgentFlowServiceClient | null = null
+
+export interface ExecutionLog {
+    timestamp: string
+    level: string
+    message: string
+    data?: any
+}
+
+export interface GlobalStoreState {
+    nodes: AgentNode[]
+    edges: WorkflowEdge[]
+    explorerItems: ExplorerItem[]
+    currentFlowId: string
+    currentExplorerPath: string
+    activeExecutionId: string
+    lastSavedNodeId: string
+    isGrpcLoading: boolean
+    isSignalRConnected: boolean
+    errorKey: string
+    lastSyncMillis: number
+    executionLogs: ExecutionLog[]
+    executionStatus: string
+    executionOutput: string
+}
 
 export const useGlobalStore = defineStore('global', {
     state: (): GlobalStoreState => ({
         nodes: [],
+        edges: [],
         explorerItems: [],
-        currentFlowId: '',
-        currentExplorerPath: '',
+        currentFlowId: 'default-flow',
+        currentExplorerPath: '/',
         activeExecutionId: '',
         lastSavedNodeId: '',
         isGrpcLoading: false,
         isSignalRConnected: false,
         errorKey: '',
-        lastSyncMillis: 0
+        lastSyncMillis: 0,
+        executionLogs: [],
+        executionStatus: 'Idle',
+        executionOutput: ''
     }),
     actions: {
         async initializeRealtimeAndGrpc(): Promise<void> {
@@ -37,43 +68,90 @@ export const useGlobalStore = defineStore('global', {
             await this.connectSignalR()
         },
         async executeWorkflow(request: ExecuteWorkflowRequest): Promise<void> {
+            const notif = useNotificationStore()
+            this.executionLogs = []
+            this.executionStatus = 'Starting'
+            this.executionOutput = ''
+
             await this.runGrpcCommand(async (client, options) => {
                 const call = await client.executeWorkflow(request, options)
-                if (!call.response.success) {
+                if (call.response.success) {
+                    this.activeExecutionId = call.response.executionId
+                    this.executionStatus = 'Running'
+                    notif.info(`Agent flow started: ${call.response.executionId.substring(0, 8)}...`)
+                } else {
                     this.errorKey = 'error.grpc.execute_workflow_failed'
+                    this.executionStatus = 'Failed'
+                    notif.error('Workflow execution trigger failed')
                 }
             })
         },
         async getExplorer(request: GetExplorerRequest): Promise<void> {
             await this.runGrpcCommand(async (client, options) => {
                 const call = await client.getExplorer(request, options)
-                if (!call.response.success) {
+                if (call.response.success && call.response.items) {
+                    this.explorerItems = call.response.items
+                } else if (!call.response.success) {
                     this.errorKey = 'error.grpc.get_explorer_failed'
                 }
             })
         },
         async saveAgentNode(request: SaveAgentNodeRequest): Promise<void> {
+            if (request.node) {
+                const idx = this.nodes.findIndex(n => n.id === request.node?.id)
+                if (idx >= 0) {
+                    this.nodes[idx] = request.node
+                } else {
+                    this.nodes.push(request.node)
+                }
+            }
+            const notif = useNotificationStore()
             await this.runGrpcCommand(async (client, options) => {
                 const call = await client.saveAgentNode(request, options)
-                if (!call.response.success) {
+                if (call.response.success) {
+                    this.lastSavedNodeId = call.response.id
+                    notif.success(`Node "${request.node?.name || call.response.id}" saved`)
+                } else {
                     this.errorKey = 'error.grpc.save_node_failed'
+                    notif.error('Failed to save node')
                 }
             })
         },
         async getAgentNodes(request: GetAgentNodesRequest): Promise<void> {
             await this.runGrpcCommand(async (client, options) => {
                 const call = await client.getAgentNodes(request, options)
-                if (!call.response.success) {
+                if (call.response.success && call.response.nodes) {
+                    this.nodes = call.response.nodes
+                } else if (!call.response.success) {
                     this.errorKey = 'error.grpc.get_nodes_failed'
                 }
             })
         },
-        setupGrpcClient(): void {
-            const configStore = useConfig()
-            const transport = new GrpcWebFetchTransport({
-                baseUrl: configStore.getGrpcUrl as string
+        async saveWorkflowEdges(request: SaveWorkflowEdgesRequest): Promise<void> {
+            this.edges = request.edges
+            const notif = useNotificationStore()
+            await this.runGrpcCommand(async (client, options) => {
+                const call = await client.saveWorkflowEdges(request, options)
+                if (call.response.success) {
+                    notif.success(`Workflow connections saved (${request.edges.length})`)
+                } else {
+                    this.errorKey = 'error.grpc.save_edges_failed'
+                    notif.error('Failed to save connections')
+                }
             })
-            grpcClient = new AgentFlowServiceClient(transport)
+        },
+        async getWorkflowEdges(request: GetWorkflowEdgesRequest): Promise<void> {
+            await this.runGrpcCommand(async (client, options) => {
+                const call = await client.getWorkflowEdges(request, options)
+                if (call.response.success && call.response.edges) {
+                    this.edges = call.response.edges
+                } else if (!call.response.success) {
+                    this.errorKey = 'error.grpc.get_edges_failed'
+                }
+            })
+        },
+        setupGrpcClient(): void {
+            getGrpcClient()
         },
         async connectSignalR(): Promise<void> {
             const configStore = useConfig()
@@ -81,7 +159,6 @@ export const useGlobalStore = defineStore('global', {
 
             hubConnection = new signalR.HubConnectionBuilder()
                 .withUrl(configStore.getEventsUrl as string, {
-
                     accessTokenFactory: () => authStore.token.value
                 })
                 .withAutomaticReconnect()
@@ -102,6 +179,8 @@ export const useGlobalStore = defineStore('global', {
                 return
             }
 
+            const notif = useNotificationStore()
+
             hubConnection.on('NodeSaved', (payload: NodeSavedEventPayload) => {
                 this.lastSavedNodeId = payload.nodeId
                 this.updateSyncTimestamp()
@@ -113,9 +192,41 @@ export const useGlobalStore = defineStore('global', {
                 this.updateSyncTimestamp()
             })
 
+            hubConnection.on('WorkflowEdgesLoaded', (payload: WorkflowEdgesLoadedEventPayload) => {
+                this.currentFlowId = payload.flowId
+                this.edges = payload.edges
+                this.updateSyncTimestamp()
+            })
+
+            hubConnection.on('WorkflowEdgesSaved', () => {
+                this.updateSyncTimestamp()
+            })
+
             hubConnection.on('WorkflowStarted', (payload: WorkflowStartedEventPayload) => {
                 this.activeExecutionId = payload.executionId
+                this.executionStatus = 'Running'
                 this.updateSyncTimestamp()
+            })
+
+            hubConnection.on('WorkflowExecutionProgress', (payload: WorkflowExecutionProgressPayload) => {
+                if (payload.log) {
+                    this.executionLogs.push(payload.log)
+                }
+                this.updateSyncTimestamp()
+            })
+
+            hubConnection.on('WorkflowExecutionFinished', (payload: WorkflowExecutionFinishedPayload) => {
+                this.executionStatus = payload.success ? 'Completed' : 'Failed'
+                if (payload.output) {
+                    this.executionOutput = payload.output
+                }
+                this.updateSyncTimestamp()
+
+                if (payload.success) {
+                    notif.success('Agent Workflow completed execution!')
+                } else {
+                    notif.error(payload.error || 'Agent Workflow failed.')
+                }
             })
 
             hubConnection.on('ExplorerLoaded', (payload: ExplorerLoadedEventPayload) => {
@@ -130,38 +241,31 @@ export const useGlobalStore = defineStore('global', {
 
             hubConnection.onreconnected(() => {
                 this.isSignalRConnected = true
+                notif.info('Realtime SignalR reconnected')
             })
         },
         async runGrpcCommand(
             action: (client: AgentFlowServiceClient, options: RpcOptions) => Promise<void>
         ): Promise<void> {
-            if (!grpcClient) {
-                this.setupGrpcClient()
-            }
-            if (!grpcClient) {
-                this.errorKey = 'error.grpc.client_not_initialized'
-                return
-            }
+            const client = getGrpcClient()
+            const notif = useNotificationStore()
 
             this.isGrpcLoading = true
             this.errorKey = ''
 
             try {
-                const options = this.createAuthOptions()
-                await action(grpcClient, options)
-            } catch {
+                const options = createGrpcOptions()
+                await action(client, options)
+            } catch (err: any) {
+                console.error('[gRPC Call Error]', err)
                 this.errorKey = 'error.grpc.request_failed'
+                notif.error(`gRPC error: ${err?.message || 'Request failed'}`)
             } finally {
                 this.isGrpcLoading = false
             }
         },
         createAuthOptions(): RpcOptions {
-            const authStore = useAuth()
-            return {
-                meta: {
-                    Authorization: `Bearer ${authStore.token}`
-                }
-            }
+            return createGrpcOptions()
         },
         updateSyncTimestamp(): void {
             this.lastSyncMillis = DateTime.now().toMillis()
@@ -169,21 +273,9 @@ export const useGlobalStore = defineStore('global', {
     }
 })
 
-export interface GlobalStoreState {
-    nodes: AgentNode[]
-    explorerItems: ExplorerItem[]
-    currentFlowId: string
-    currentExplorerPath: string
-    activeExecutionId: string
-    lastSavedNodeId: string
-    isGrpcLoading: boolean
-    isSignalRConnected: boolean
-    errorKey: string
-    lastSyncMillis: number
-}
-
 interface NodeSavedEventPayload {
     nodeId: string
+    flowId?: string
 }
 
 interface AgentNodesLoadedEventPayload {
@@ -191,8 +283,27 @@ interface AgentNodesLoadedEventPayload {
     nodes: AgentNode[]
 }
 
+interface WorkflowEdgesLoadedEventPayload {
+    flowId: string
+    edges: WorkflowEdge[]
+}
+
 interface WorkflowStartedEventPayload {
     executionId: string
+    flowId?: string
+}
+
+interface WorkflowExecutionProgressPayload {
+    executionId: string
+    flowId: string
+    log: ExecutionLog
+}
+
+interface WorkflowExecutionFinishedPayload {
+    executionId: string
+    success: boolean
+    output?: string
+    error?: string
 }
 
 interface ExplorerLoadedEventPayload {

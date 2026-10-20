@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
+import { GlobalViewModel } from '../../GlobalViewModel'
 
 const props = defineProps<{
   modelValue: boolean
@@ -13,6 +14,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const globalViewModel = new GlobalViewModel()
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -27,6 +29,19 @@ const activeTab = computed({
 const closePanel = (): void => {
   isOpen.value = false
 }
+
+function getLogLevelColor(level: string): string {
+  switch (level?.toLowerCase()) {
+    case 'error':
+      return 'error'
+    case 'warning':
+      return 'warning'
+    case 'info':
+      return 'info'
+    default:
+      return 'grey'
+  }
+}
 </script>
 
 <template>
@@ -39,7 +54,17 @@ const closePanel = (): void => {
   >
     <v-toolbar density="compact" color="surface">
       <v-tabs v-model="activeTab" density="compact" color="primary">
-        <v-tab value="console">{{ t('layout.bottomPanel.console') }}</v-tab>
+        <v-tab value="console">
+          <v-badge
+            v-if="globalViewModel.executionLogs.length > 0"
+            color="primary"
+            :content="globalViewModel.executionLogs.length"
+            inline
+          >
+            {{ t('layout.bottomPanel.console') }}
+          </v-badge>
+          <span v-else>{{ t('layout.bottomPanel.console') }}</span>
+        </v-tab>
         <v-tab value="output">{{ t('layout.bottomPanel.output') }}</v-tab>
       </v-tabs>
 
@@ -50,19 +75,42 @@ const closePanel = (): void => {
 
     <v-window v-model="activeTab" class="fill-height">
       <v-window-item value="console" class="fill-height">
-        <v-container fluid class="fill-height align-start bg-black text-white pa-4 font-monospace">
-          <div>> dotnet run AgentStudio.dll...</div>
-        </v-container>
+        <div class="fill-height overflow-y-auto bg-black text-white pa-4 font-monospace text-caption">
+          <div v-if="globalViewModel.executionLogs.length === 0" class="text-grey">
+            > Ready. Run workflow to stream real-time agent execution telemetry...
+          </div>
+          <div
+            v-for="(log, idx) in globalViewModel.executionLogs"
+            :key="idx"
+            class="d-flex align-start py-1"
+          >
+            <span class="text-grey mr-2">[{{ globalViewModel.formatTimestamp(log.timestamp) }}]</span>
+            <v-chip size="x-small" :color="getLogLevelColor(log.level)" variant="flat" class="mr-2 text-uppercase">
+              {{ log.level }}
+            </v-chip>
+            <span class="flex-grow-1 text-grey-lighten-2">{{ log.message }}</span>
+          </div>
+        </div>
       </v-window-item>
 
       <v-window-item value="output" class="fill-height">
-        <v-container fluid class="fill-height align-start bg-grey-lighten-4 pa-4 font-monospace">
-          <div class="text-body-2 text-medium-emphasis">
-            [11:03:38] Semantic Kernel initialized.<br/>
-            [11:03:39] Agent workflow compiled successfully.
+        <div class="fill-height overflow-y-auto bg-grey-darken-4 pa-4 font-monospace text-body-2">
+          <div v-if="globalViewModel.executionOutput" class="text-white whitespace-pre-wrap">
+            {{ globalViewModel.executionOutput }}
           </div>
-        </v-container>
+          <div v-else class="text-grey-lighten-1">
+            Status: {{ globalViewModel.executionStatus }}
+            <br />
+            No agent response generated yet.
+          </div>
+        </div>
       </v-window-item>
     </v-window>
   </v-navigation-drawer>
 </template>
+
+<style scoped>
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+</style>

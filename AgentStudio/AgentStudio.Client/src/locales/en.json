@@ -1,0 +1,36 @@
+{
+  "layout": {
+    "header": {
+      "title": "AgentStudio",
+      "logout": "Logout"
+    },
+    "sidebar": {
+      "files": "Files",
+      "agents": "Agents & Nodes",
+      "settings": "Settings",
+      "console": "Console",
+      "output": "Output"
+    },
+    "leftDrawer": {
+      "filesEmpty": "No files found in project.",
+      "agentsEmpty": "Click or drag nodes below to add them to your canvas.",
+      "settingsEmpty": "No configurations."
+    },
+    "bottomPanel": {
+      "console": "Console",
+      "output": "Output",
+      "close": "Close"
+    },
+    "canvas": {
+      "placeholder": "Drag and drop agent nodes here",
+      "addNode": "Add Node",
+      "runWorkflow": "Run Agent Flow"
+    }
+  },
+  "nodes": {
+    "agent": "AI Agent",
+    "model": "LLM Model",
+    "prompt": "System Prompt",
+    "mcp": "MCP Tools Connector"
+  }
+}

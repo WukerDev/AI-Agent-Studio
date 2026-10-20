@@ -1,4 +1,4 @@
-name: CI Build
+name: CI Build & Test
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,11 +31,5 @@ jobs:
     - name: Build Solution
       run: dotnet build AgentStudio/AgentStudio.sln -c Release --no-restore
 
-    - name: Build AgentStudio.Gateway
-      run: dotnet build AgentStudio/AgentStudio.Gateway/AgentStudio.Gateway.csproj -c Release --no-restore
-
-    - name: Build AgentStudio.Service
-      run: dotnet build AgentStudio/AgentStudio.Service/AgentStudio.Service.csproj -c Release --no-restore
-
-    - name: Build AgentStudio/AgentStudio.Client (with NPM)
-      run: dotnet build AgentStudio/AgentStudio.Client/AgentStudio.Client.csproj -c Release --no-restore
+    - name: Run Integration Tests (gRPC, SignalR, Testcontainers)
+      run: dotnet test AgentStudio/AgentStudio.Service.Tests/AgentStudio.Service.Tests.csproj -c Release --no-build --verbosity normal

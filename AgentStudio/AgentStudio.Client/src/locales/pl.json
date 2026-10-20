@@ -6,14 +6,14 @@
     },
     "sidebar": {
       "files": "Pliki",
-      "agents": "Agenci",
+      "agents": "Węzły i Agenci",
       "settings": "Ustawienia",
       "console": "Konsola",
       "output": "Wyjście"
     },
     "leftDrawer": {
       "filesEmpty": "Brak plików w projekcie.",
-      "agentsEmpty": "Przeciągnij dostępnych agentów na płótno.",
+      "agentsEmpty": "Kliknij lub przeciągnij węzły poniżej, aby dodać je do płótna.",
       "settingsEmpty": "Brak konfiguracji."
     },
     "bottomPanel": {
@@ -22,7 +22,15 @@
       "close": "Zamknij"
     },
     "canvas": {
-      "placeholder": "Przeciągnij agentów tutaj"
+      "placeholder": "Przeciągnij agentów tutaj",
+      "addNode": "Dodaj Węzeł",
+      "runWorkflow": "Uruchom Przepływ"
     }
+  },
+  "nodes": {
+    "agent": "Węzeł Agenta",
+    "model": "Węzeł Modelu",
+    "prompt": "Węzeł Promptu",
+    "mcp": "Konektor MCP"
   }
 }

@@ -14,16 +14,14 @@ export function setupRouter() {
         history: createWebHistory(import.meta.env.BASE_URL),
         routes
     })
-//@ts-ignore
-    router.beforeEach((_to, _from, next) => {
+
+    router.beforeEach((_to, _from) => {
         const authStore = useAuth()
 
         if (!authStore.isAuthenticated) {
             authStore.login()
-            return
+            return false
         }
-
-        next()
     })
 
     return router
