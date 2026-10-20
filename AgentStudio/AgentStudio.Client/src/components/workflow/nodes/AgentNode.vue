@@ -17,23 +17,24 @@ const emit = defineEmits<{
   <div class="custom-node agent-node" :class="{ selected: props.selected }">
     <Handle type="target" :position="Position.Top" class="node-handle" />
 
-    <div class="node-header d-flex align-center justify-space-between px-3 py-2">
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-robot" size="small" class="mr-2" color="white" />
-        <span class="text-caption font-weight-bold text-white">{{ props.data.name || 'AI Agent' }}</span>
+    <div class="node-header d-flex align-center justify-space-between px-2 py-1">
+      <div class="d-flex align-center overflow-hidden mr-1">
+        <v-icon icon="mdi-robot" size="14" class="mr-1.5 flex-shrink-0" color="white" />
+        <span class="node-title text-truncate">{{ props.data.name || 'AI Agent' }}</span>
       </div>
-      <div class="d-flex align-center">
-        <v-btn icon="mdi-cog" size="x-small" variant="text" color="white" @click.stop="emit('configure', props.data)" />
-        <v-btn icon="mdi-delete" size="x-small" variant="text" color="white" @click.stop="emit('delete', props.id)" />
+      <div class="d-flex align-center flex-shrink-0">
+        <v-btn icon="mdi-cog" size="20" variant="text" color="white" class="node-action-btn" @click.stop="emit('configure', props.data)" />
+        <v-btn icon="mdi-delete" size="20" variant="text" color="white" class="node-action-btn" @click.stop="emit('delete', props.id)" />
       </div>
     </div>
 
-    <div class="node-body pa-3">
-      <div class="text-caption text-grey-lighten-1 mb-1">
-        {{ props.data.systemPrompt ? props.data.systemPrompt.slice(0, 50) + '...' : 'Autonomous AI agent execution node' }}
+    <div class="node-body px-2 py-1.5">
+      <div class="node-desc text-truncate mb-1">
+        {{ props.data.systemPrompt ? props.data.systemPrompt.slice(0, 36) + '...' : 'Autonomous Agent Core' }}
       </div>
-      <div class="d-flex gap-1 mt-2">
-        <v-chip size="x-small" color="primary" variant="flat">Agent Core</v-chip>
+      <div class="d-flex align-center justify-space-between">
+        <span class="badge-tag">AGENT</span>
+        <v-icon icon="mdi-chevron-double-right" size="10" color="grey" />
       </div>
     </div>
 
@@ -43,14 +44,14 @@ const emit = defineEmits<{
 
 <style scoped>
 .custom-node {
-  min-width: 220px;
-  max-width: 280px;
-  background-color: #1E293B;
-  border-radius: 8px;
-  border: 1px solid #334155;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  width: 165px;
+  background-color: #111827;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
   font-family: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
+  user-select: none;
 }
 
 .custom-node.selected {
@@ -60,14 +61,43 @@ const emit = defineEmits<{
 
 .agent-node .node-header {
   background-color: #E63946;
-  border-top-left-radius: 7px;
-  border-top-right-radius: 7px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  height: 26px;
+}
+
+.node-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.node-desc {
+  font-size: 10px;
+  color: #9CA3AF;
+}
+
+.badge-tag {
+  font-size: 9px;
+  font-weight: 700;
+  color: #F87171;
+  background: rgba(239, 68, 68, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.node-action-btn {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  padding: 0 !important;
 }
 
 .node-handle {
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
   background-color: #E63946;
-  border: 2px solid #FFFFFF;
+  border: 1.5px solid #FFFFFF;
 }
 </style>

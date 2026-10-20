@@ -153,4 +153,69 @@ describe('End-to-End Frontend Workflow & Canvas State', () => {
         expect(vm.getExplorerItemColor(ItemType.FILE)).toBe('info')
         expect(vm.getExplorerItemColor(ItemType.FOLDER)).toBe('warning')
     })
+
+    it('E2E Flow 6: Should create file and folder items and support drag-and-drop reordering and folder nesting', () => {
+        // Arrange
+        expect(vm.explorerItems).toHaveLength(0)
+
+        // Act
+        vm.createExplorerItem('main.agentflow', ItemType.FILE, '/')
+        vm.createExplorerItem('config.json', ItemType.FILE, '/')
+        vm.createExplorerItem('prompts', ItemType.FOLDER, '/')
+
+        // Assert
+        expect(vm.explorerItems).toHaveLength(3)
+        expect(vm.explorerItems[0].name).toBe('main.agentflow')
+        expect(vm.explorerItems[1].name).toBe('config.json')
+        expect(vm.explorerItems[2].name).toBe('prompts')
+
+        // Act
+        vm.reorderExplorerItems(0, 1)
+
+        // Assert
+        expect(vm.explorerItems[0].name).toBe('config.json')
+        expect(vm.explorerItems[1].name).toBe('main.agentflow')
+
+        // Act
+        const targetFolder = vm.explorerItems[2]
+        vm.moveExplorerItem(1, targetFolder)
+
+        // Assert
+        expect(vm.explorerItems[1].path).toBe('/prompts/main.agentflow')
+    })
+
+    it('E2E Flow 7: Should add node with custom argument parameters via drag and drop payload', async () => {
+        // Arrange
+        const initialCount = vm.nodes.length
+
+        // Act
+        await vm.addNode(
+            NodeType.MODEL,
+            { x: 220, y: 180 },
+            'OpenAI GPT-4o Preset',
+            {
+                modelConfig: { provider: 'OpenAI', modelName: 'gpt-4o', temperature: 0.3 }
+            }
+        )
+
+        await vm.addNode(
+            NodeType.PROMPT,
+            { x: 400, y: 180 },
+            'User Input Argument',
+            {
+                systemPrompt: 'Argument query: {{input}}'
+            }
+        )
+
+        // Assert
+        expect(vm.nodes).toHaveLength(initialCount + 2)
+        const modelNode = vm.nodes.find(n => n.name === 'OpenAI GPT-4o Preset')
+        expect(modelNode).toBeDefined()
+        expect(modelNode?.modelConfig?.modelName).toBe('gpt-4o')
+        expect(modelNode?.modelConfig?.temperature).toBe(0.3)
+
+        const promptNode = vm.nodes.find(n => n.name === 'User Input Argument')
+        expect(promptNode).toBeDefined()
+        expect(promptNode?.systemPrompt).toBe('Argument query: {{input}}')
+    })
 })

@@ -72,6 +72,24 @@ export class GlobalViewModel {
         await this.globalStore.getExplorer({ path })
     }
 
+    public createExplorerItem(name: string, type: ItemType, parentPath = '/'): void {
+        const cleanParent = parentPath.endsWith('/') && parentPath.length > 1 ? parentPath.slice(0, -1) : parentPath
+        const item: ExplorerItem = {
+            name,
+            path: cleanParent === '/' ? `/${name}` : `${cleanParent}/${name}`,
+            type
+        }
+        this.globalStore.addExplorerItem(item)
+    }
+
+    public reorderExplorerItems(fromIndex: number, toIndex: number): void {
+        this.globalStore.reorderExplorerItems(fromIndex, toIndex)
+    }
+
+    public moveExplorerItem(sourceIndex: number, targetFolder: ExplorerItem): void {
+        this.globalStore.moveExplorerItem(sourceIndex, targetFolder)
+    }
+
     public async saveNode(node: AgentNode): Promise<void> {
         await this.globalStore.saveAgentNode({
             node,
@@ -92,7 +110,7 @@ export class GlobalViewModel {
         await this.globalStore.getWorkflowEdges({ flowId })
     }
 
-    public async addNode(type: NodeType, position = { x: 250, y: 150 }, name?: string): Promise<void> {
+    public async addNode(type: NodeType, position = { x: 250, y: 150 }, name?: string, customConfig?: Partial<AgentNode>): Promise<void> {
         const defaultNames: Record<NodeType, string> = {
             [NodeType.UNSPECIFIED]: 'New Node',
             [NodeType.AGENT]: 'AI Agent',
@@ -107,19 +125,24 @@ export class GlobalViewModel {
             type,
             position,
             flowId: this.globalStore.currentFlowId || 'default-flow',
-            systemPrompt: type === NodeType.PROMPT ? 'You are an intelligent AI Agent.' : '',
-            endpoint: '',
-            modelConfig: type === NodeType.MODEL ? {
+            systemPrompt: customConfig?.systemPrompt ?? (type === NodeType.PROMPT ? 'You are an intelligent AI Agent.' : ''),
+            endpoint: customConfig?.endpoint ?? '',
+            modelConfig: customConfig?.modelConfig ?? (type === NodeType.MODEL ? {
                 provider: 'OpenAI',
                 modelName: 'gpt-4o',
                 temperature: 0.7
-            } : undefined,
-            mcpConfig: type === NodeType.MCP_CONNECTOR ? {
+            } : undefined),
+            mcpConfig: customConfig?.mcpConfig ?? (type === NodeType.MCP_CONNECTOR ? {
                 serverUrl: 'http://localhost:8000/mcp',
                 authToken: '',
                 enabledTools: []
-            } : undefined
+            } : undefined),
+            ...customConfig
         }
+        newNode.id = `node_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+        newNode.position = position
+        newNode.type = type
+        if (name) newNode.name = name
 
         this.globalStore.nodes = [...this.globalStore.nodes, newNode]
         await this.saveNode(newNode)

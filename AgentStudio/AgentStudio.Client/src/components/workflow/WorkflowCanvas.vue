@@ -21,7 +21,7 @@ import McpNode from './nodes/McpNode.vue'
 import NodeConfigDialog from './NodeConfigDialog.vue'
 import { useNotificationStore } from '../../notifications'
 
-const { onPaneReady, onNodeDragStop, onConnect, fitView } = useVueFlow()
+const { onPaneReady, onNodeDragStop, onConnect, fitView, screenToFlowCoordinate, project } = useVueFlow()
 const globalViewModel = new GlobalViewModel()
 const notifStore = useNotificationStore()
 
@@ -136,8 +136,26 @@ function handleNodeDelete(nodeId: string) {
 }
 
 function handleAddNode(type: NodeType) {
-  const offset = nodes.value.length * 30
-  globalViewModel.addNode(type, { x: 200 + offset, y: 150 + offset })
+  const count = nodes.value.length
+  globalViewModel.addNode(type, {
+    x: 200 + (count % 4) * 200,
+    y: 150 + Math.floor(count / 4) * 120
+  })
+}
+
+function getMiniMapNodeColor(node: any): string {
+  switch (node.type) {
+    case 'agent':
+      return '#E63946'
+    case 'model':
+      return '#2196F3'
+    case 'prompt':
+      return '#FB8C00'
+    case 'mcp':
+      return '#4CAF50'
+    default:
+      return '#64748B'
+  }
 }
 
 function handleExecuteWorkflow() {
@@ -161,6 +179,67 @@ function handleClearCanvas() {
   notifStore.info('Canvas cleared')
 }
 
+function getDropCoordinates(event: DragEvent) {
+  const clientPos = { x: event.clientX, y: event.clientY }
+  if (typeof screenToFlowCoordinate === 'function') {
+    return screenToFlowCoordinate(clientPos)
+  }
+  if (typeof project === 'function') {
+    const canvasBounds = (event.currentTarget as HTMLElement)?.getBoundingClientRect?.()
+    if (canvasBounds) {
+      return project({
+        x: event.clientX - canvasBounds.left,
+        y: event.clientY - canvasBounds.top
+      })
+    }
+    return project(clientPos)
+  }
+  return clientPos
+}
+
+function onDragOver(event: DragEvent) {
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'copy'
+  }
+}
+
+function onDrop(event: DragEvent) {
+  event.preventDefault()
+  const rawData = event.dataTransfer?.getData('application/json')
+  if (!rawData) return
+
+  try {
+    const payload = JSON.parse(rawData)
+    const pos = getDropCoordinates(event)
+
+    if (payload.itemType === 'file') {
+      const fileName = payload.item?.name || 'File Context'
+      globalViewModel.addNode(
+        NodeType.PROMPT,
+        pos,
+        fileName,
+        {
+          systemPrompt: `Context from ${fileName}:\n[Attach document / prompt data here]`,
+          endpoint: payload.item?.path || ''
+        }
+      )
+      notifStore.info(`Added file "${fileName}" as context node`)
+      return
+    }
+
+    if (payload.type !== undefined) {
+      const type = payload.type as NodeType
+      const name = payload.name
+      const customConfig = payload.customConfig || {}
+      globalViewModel.addNode(type, pos, name, customConfig)
+      notifStore.info(`Added node "${name || 'New Node'}" to canvas`)
+    }
+  } catch (err) {
+    console.error('Failed to process drop on canvas', err)
+  }
+}
+
 const executionStatusColor = computed(() => {
   switch (globalViewModel.executionStatus) {
     case 'Running':
@@ -177,7 +256,7 @@ const executionStatusColor = computed(() => {
 </script>
 
 <template>
-  <div class="canvas-container">
+  <div class="canvas-container" @dragover.prevent="onDragOver" @drop="onDrop">
     <div class="floating-toolbar d-flex align-center gap-2 pa-2">
       <v-menu offset-y>
         <template v-slot:activator="{ props: menuProps }">
@@ -262,7 +341,7 @@ const executionStatusColor = computed(() => {
     >
       <Background pattern-color="#334155" :gap="16" />
       <Controls />
-      <MiniMap />
+      <MiniMap :node-color="getMiniMapNodeColor" mask-color="rgba(15, 23, 42, 0.75)" />
 
       <template #node-agent="nodeProps">
         <AgentNode v-bind="nodeProps" @configure="openNodeConfig" @delete="handleNodeDelete" />
@@ -345,9 +424,69 @@ const executionStatusColor = computed(() => {
   left: 16px;
   right: 16px;
   z-index: 10;
-  background-color: rgba(23, 33, 54, 0.85);
-  backdrop-filter: blur(8px);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(12px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+:deep(.vue-flow__controls) {
+  background-color: #172136 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  overflow: hidden !important;
+}
+
+:deep(.vue-flow__controls-button) {
+  background-color: #172136 !important;
+  border-bottom: 1px solid #334155 !important;
+  fill: #94A3B8 !important;
+  color: #94A3B8 !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+:deep(.vue-flow__controls-button:last-child) {
+  border-bottom: none !important;
+}
+
+:deep(.vue-flow__controls-button:hover) {
+  background-color: #1E293B !important;
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+:deep(.vue-flow__controls-button svg) {
+  fill: #94A3B8 !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+:deep(.vue-flow__controls-button:hover svg) {
+  fill: #FFFFFF !important;
+}
+
+:deep(.vue-flow__minimap) {
+  background-color: #0B1120 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+  overflow: hidden !important;
+}
+
+:deep(.vue-flow__minimap-mask) {
+  fill: rgba(15, 23, 42, 0.75) !important;
+  stroke: #E63946 !important;
+  stroke-width: 2px !important;
+}
+
+:deep(.vue-flow__minimap-node) {
+  fill: #334155 !important;
+  stroke: none !important;
 }
 </style>

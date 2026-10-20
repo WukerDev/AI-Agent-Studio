@@ -1,0 +1,80 @@
+.vue-flow__controls {
+  background-color: #172136 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  overflow: hidden !important;
+}
+
+.vue-flow__controls-button {
+  background-color: #172136 !important;
+  border-bottom: 1px solid #334155 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  fill: #94A3B8 !important;
+  color: #94A3B8 !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background-color 0.15s ease, fill 0.15s ease !important;
+}
+
+.vue-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+.vue-flow__controls-button:hover {
+  background-color: #1E293B !important;
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+.vue-flow__controls-button svg {
+  fill: #94A3B8 !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.vue-flow__controls-button:hover svg {
+  fill: #FFFFFF !important;
+}
+
+.vue-flow__minimap {
+  background-color: #0B1120 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+  overflow: hidden !important;
+}
+
+.vue-flow__minimap-mask {
+  fill: rgba(15, 23, 42, 0.75) !important;
+  stroke: #E63946 !important;
+  stroke-width: 2px !important;
+}
+
+.vue-flow__minimap-node {
+  fill: #334155 !important;
+  stroke: none !important;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

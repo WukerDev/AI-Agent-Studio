@@ -87,6 +87,7 @@ export const useGlobalStore = defineStore('global', {
             })
         },
         async getExplorer(request: GetExplorerRequest): Promise<void> {
+            this.currentExplorerPath = request.path || '/'
             await this.runGrpcCommand(async (client, options) => {
                 const call = await client.getExplorer(request, options)
                 if (call.response.success && call.response.items) {
@@ -95,6 +96,19 @@ export const useGlobalStore = defineStore('global', {
                     this.errorKey = 'error.grpc.get_explorer_failed'
                 }
             })
+        },
+        addExplorerItem(item: ExplorerItem): void {
+            this.explorerItems.push(item)
+        },
+        reorderExplorerItems(fromIndex: number, toIndex: number): void {
+            if (fromIndex < 0 || toIndex < 0 || fromIndex >= this.explorerItems.length || toIndex >= this.explorerItems.length) return
+            const [moved] = this.explorerItems.splice(fromIndex, 1)
+            this.explorerItems.splice(toIndex, 0, moved)
+        },
+        moveExplorerItem(sourceIndex: number, targetFolder: ExplorerItem): void {
+            if (sourceIndex < 0 || sourceIndex >= this.explorerItems.length) return
+            const item = this.explorerItems[sourceIndex]
+            item.path = `${targetFolder.path.replace(/\/$/, '')}/${item.name}`
         },
         async saveAgentNode(request: SaveAgentNodeRequest): Promise<void> {
             if (request.node) {

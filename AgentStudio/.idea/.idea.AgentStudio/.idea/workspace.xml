@@ -9,96 +9,31 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7a132c9a-813c-4694-8489-24ad8305e937" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../.github/workflows/ci.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/Properties/launchSettings.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/appsettings.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/WorkflowE2E.spec.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/clients/grpc.spec.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/clients/grpc.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppNotificationSnackbar.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.spec.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/AgentNode.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/McpNode.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/ModelNode.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/PromptNode.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/notifications.spec.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/notifications.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Gateway/Properties/launchSettings.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.Development.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/AgentStudio.Service.Tests.csproj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/Infrastructure/AgentStudioTestFactory.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/Infrastructure/TestAuthHandler.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/Infrastructure/TestcontainersPostgreSqlFixture.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/IntegrationTests/AgentFlowGrpcApiTests.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/IntegrationTests/SignalREventsTests.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/UnitTests/AgentEngineUnitTests.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/AgentEngine.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/AgentFlowServiceImplementation.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/EventsHub.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/IAgentEngine.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/IMcpClientService.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/IUserContext.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/SaveAgentNodeRequestValidator.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/ValidationInterceptor.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Infrastructure/ApplicationDbContext.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Infrastructure/KeycloakUserIdProvider.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Infrastructure/McpClientService.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Infrastructure/UserContext.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Model/AgentNodeEntity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Model/WorkflowEdgeEntity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Model/WorkflowEntity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Model/WorkflowExecutionEntity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service/Properties/launchSettings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.github/workflows/dotnet-desktop.yml" beforeDir="false" />
+    <list default="true" id="7a132c9a-813c-4694-8489-24ad8305e937" name="Changes" comment="Poprawki">
+      <change afterPath="$PROJECT_DIR$/AgentStudio.sln.DotSettings.user" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/App.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/GlobalViewModel.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/GlobalViewModel.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.client.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.client.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/WorkflowE2E.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/WorkflowE2E.spec.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppBottomPanel.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppBottomPanel.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppHeader.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppHeader.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppLeftDrawer.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppLeftDrawer.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppSidebar.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppSidebar.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/locales/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/locales/en.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/locales/pl.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/locales/pl.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/main.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/router/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/router/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/AgentNode.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/AgentNode.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/McpNode.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/McpNode.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/ModelNode.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/ModelNode.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/PromptNode.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/PromptNode.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/store.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/vite.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Gateway/AgentStudio.Gateway.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Gateway/AgentStudio.Gateway.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Gateway/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Gateway/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Gateway/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Gateway/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Data/ApplicationDbContext.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Data/Entities/AgentNodeEntity.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Interceptors/ValidationInterceptor.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Security/IUserContext.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Security/UserContext.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Services/AgentFlowServiceImplementation.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Validators/SaveAgentNodeRequestValidator.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/appsettings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/hubs/EventsHub.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.sln" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.sln" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Protos/agent_node.proto" beforeDir="false" afterPath="$PROJECT_DIR$/Protos/agent_node.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ci.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/style.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DpaMonitoringSettings">
+    <option name="firstShow" value="false" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -118,6 +53,10 @@
   <component name="HighlightingSettingsPerFile">
     <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Gateway/Program.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
+  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
+  <component name="KubernetesApiProvider"><![CDATA[{
+  "isMigrated": true
+}]]></component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="false" />
   <component name="ProjectColorInfo"><![CDATA[{
   "associatedIndex": 2
@@ -129,6 +68,10 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    ".NET Launch Settings Profile.AgentStudio.Client: http.executor": "Run",
+    ".NET Launch Settings Profile.AgentStudio.Gateway: http.executor": "Run",
+    ".NET Launch Settings Profile.AgentStudio.Service: http.executor": "Run",
+    "Docker.compose.yaml.keycloak: Compose Deployment.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -141,7 +84,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Docker.AgentStudio.Client/Dockerfile">
+  <component name="RunManager" selected="Docker.compose.yaml.keycloak: Compose Deployment">
     <configuration name="AgentStudio.Client: http" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" />
       <option name="LAUNCH_PROFILE_TFM" value="net11.0" />
@@ -223,6 +166,10 @@
       <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
       <method v="2" />
     </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
+      <deployment type="docker-compose.yml" />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="docker-deploy" factoryName="dockerfile" temporary="true">
       <deployment type="dockerfile">
         <settings />
@@ -230,6 +177,25 @@
       <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
       <method v="2" />
     </configuration>
+    <configuration name="compose.yaml.keycloak: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="services">
+            <list>
+              <option value="keycloak" />
+            </list>
+          </option>
+          <option name="sourceFilePath" value="compose.yaml" />
+        </settings>
+      </deployment>
+      <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Docker.compose.yaml.keycloak: Compose Deployment" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -238,8 +204,17 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1792520074133</updated>
-      <workItem from="1792520076294" duration="6995000" />
+      <workItem from="1792520076294" duration="9132000" />
     </task>
+    <task id="LOCAL-00001" summary="Poprawki">
+      <option name="closed" value="true" />
+      <created>1792527572461</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1792527572461</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -247,4 +222,8 @@
   </component>
   <component name="UnityCheckinConfiguration" checkUnsavedScenes="false" />
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Poprawki" />
+    <option name="LAST_COMMIT_MESSAGE" value="Poprawki" />
+  </component>
 </project>

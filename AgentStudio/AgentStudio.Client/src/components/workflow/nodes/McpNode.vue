@@ -17,29 +17,27 @@ const emit = defineEmits<{
   <div class="custom-node mcp-node" :class="{ selected: props.selected }">
     <Handle type="target" :position="Position.Top" class="node-handle" />
 
-    <div class="node-header d-flex align-center justify-space-between px-3 py-2">
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-connection" size="small" class="mr-2" color="white" />
-        <span class="text-caption font-weight-bold text-white">{{ props.data.name || 'MCP Tools' }}</span>
+    <div class="node-header d-flex align-center justify-space-between px-2 py-1">
+      <div class="d-flex align-center overflow-hidden mr-1">
+        <v-icon icon="mdi-connection" size="14" class="mr-1.5 flex-shrink-0" color="white" />
+        <span class="node-title text-truncate">{{ props.data.name || 'MCP Tools' }}</span>
       </div>
-      <div class="d-flex align-center">
-        <v-btn icon="mdi-cog" size="x-small" variant="text" color="white" @click.stop="emit('configure', props.data)" />
-        <v-btn icon="mdi-delete" size="x-small" variant="text" color="white" @click.stop="emit('delete', props.id)" />
+      <div class="d-flex align-center flex-shrink-0">
+        <v-btn icon="mdi-cog" size="20" variant="text" color="white" class="node-action-btn" @click.stop="emit('configure', props.data)" />
+        <v-btn icon="mdi-delete" size="20" variant="text" color="white" class="node-action-btn" @click.stop="emit('delete', props.id)" />
       </div>
     </div>
 
-    <div class="node-body pa-3">
+    <div class="node-body px-2 py-1.5">
       <div class="d-flex align-center justify-space-between mb-1">
-        <span class="text-caption text-grey">Server:</span>
-        <span class="text-caption text-truncate font-monospace text-white" style="max-width: 130px;">
-          {{ props.data.mcpConfig?.serverUrl || 'Not configured' }}
+        <span class="label-text">Server</span>
+        <span class="value-text text-truncate" style="max-width: 90px;">
+          {{ props.data.mcpConfig?.serverUrl ? props.data.mcpConfig.serverUrl.replace(/^https?:\/\//, '') : 'None' }}
         </span>
       </div>
       <div class="d-flex align-center justify-space-between">
-        <span class="text-caption text-grey">Tools:</span>
-        <v-chip size="x-small" color="success" variant="flat">
-          {{ props.data.mcpConfig?.enabledTools?.length || 0 }} Active
-        </v-chip>
+        <span class="label-text">Tools</span>
+        <span class="badge-tag">{{ props.data.mcpConfig?.enabledTools?.length || 0 }} ACTIVE</span>
       </div>
     </div>
 
@@ -49,14 +47,14 @@ const emit = defineEmits<{
 
 <style scoped>
 .custom-node {
-  min-width: 220px;
-  max-width: 280px;
-  background-color: #1E293B;
-  border-radius: 8px;
-  border: 1px solid #334155;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  width: 165px;
+  background-color: #111827;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
   font-family: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
+  user-select: none;
 }
 
 .custom-node.selected {
@@ -66,14 +64,49 @@ const emit = defineEmits<{
 
 .mcp-node .node-header {
   background-color: #4CAF50;
-  border-top-left-radius: 7px;
-  border-top-right-radius: 7px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  height: 26px;
+}
+
+.node-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.label-text {
+  font-size: 10px;
+  color: #9CA3AF;
+}
+
+.value-text {
+  font-size: 10px;
+  font-weight: 500;
+  color: #F3F4F6;
+  font-family: monospace;
+}
+
+.badge-tag {
+  font-size: 9px;
+  font-weight: 700;
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.node-action-btn {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  padding: 0 !important;
 }
 
 .node-handle {
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
   background-color: #4CAF50;
-  border: 2px solid #FFFFFF;
+  border: 1.5px solid #FFFFFF;
 }
 </style>

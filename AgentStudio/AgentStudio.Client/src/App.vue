@@ -42,7 +42,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-app theme="agentStudioDarkTheme">
+  <v-app theme="agentStudioDarkTheme" class="agent-studio-app">
     <AppHeader />
 
     <AppSidebar
@@ -63,7 +63,7 @@ onMounted(() => {
         v-model:tab="activeBottomTab"
     />
 
-    <v-main class="d-flex flex-column">
+    <v-main class="d-flex flex-column main-wrapper">
       <div class="flex-grow-1 position-relative">
         <WorkflowCanvas />
       </div>
@@ -72,3 +72,14 @@ onMounted(() => {
     <AppNotificationSnackbar />
   </v-app>
 </template>
+
+<style scoped>
+.agent-studio-app {
+  background-color: #070D18 !important;
+  user-select: none;
+}
+.main-wrapper {
+  background-color: #070D18 !important;
+  overflow: hidden;
+}
+</style>

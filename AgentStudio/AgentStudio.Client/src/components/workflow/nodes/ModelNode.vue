@@ -17,34 +17,26 @@ const emit = defineEmits<{
   <div class="custom-node model-node" :class="{ selected: props.selected }">
     <Handle type="target" :position="Position.Top" class="node-handle" />
 
-    <div class="node-header d-flex align-center justify-space-between px-3 py-2">
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-brain" size="small" class="mr-2" color="white" />
-        <span class="text-caption font-weight-bold text-white">{{ props.data.name || 'Model Config' }}</span>
+    <div class="node-header d-flex align-center justify-space-between px-2 py-1">
+      <div class="d-flex align-center overflow-hidden mr-1">
+        <v-icon icon="mdi-brain" size="14" class="mr-1.5 flex-shrink-0" color="white" />
+        <span class="node-title text-truncate">{{ props.data.name || 'LLM Model' }}</span>
       </div>
-      <div class="d-flex align-center">
-        <v-btn icon="mdi-cog" size="x-small" variant="text" color="white" @click.stop="emit('configure', props.data)" />
-        <v-btn icon="mdi-delete" size="x-small" variant="text" color="white" @click.stop="emit('delete', props.id)" />
+      <div class="d-flex align-center flex-shrink-0">
+        <v-btn icon="mdi-cog" size="20" variant="text" color="white" class="node-action-btn" @click.stop="emit('configure', props.data)" />
+        <v-btn icon="mdi-delete" size="20" variant="text" color="white" class="node-action-btn" @click.stop="emit('delete', props.id)" />
       </div>
     </div>
 
-    <div class="node-body pa-3">
+    <div class="node-body px-2 py-1.5">
       <div class="d-flex align-center justify-space-between mb-1">
-        <span class="text-caption text-grey">Provider:</span>
-        <v-chip size="x-small" color="info" variant="flat">
-          {{ props.data.modelConfig?.provider || 'OpenAI' }}
-        </v-chip>
-      </div>
-      <div class="d-flex align-center justify-space-between mb-1">
-        <span class="text-caption text-grey">Model:</span>
-        <span class="text-caption font-weight-medium text-white">
-          {{ props.data.modelConfig?.modelName || 'gpt-4o' }}
-        </span>
+        <span class="label-text">Provider</span>
+        <span class="badge-tag">{{ props.data.modelConfig?.provider || 'OpenAI' }}</span>
       </div>
       <div class="d-flex align-center justify-space-between">
-        <span class="text-caption text-grey">Temp:</span>
-        <span class="text-caption text-white">
-          {{ props.data.modelConfig?.temperature ?? 0.7 }}
+        <span class="label-text">Model</span>
+        <span class="value-text text-truncate" style="max-width: 90px;">
+          {{ props.data.modelConfig?.modelName || 'gpt-4o' }}
         </span>
       </div>
     </div>
@@ -55,14 +47,14 @@ const emit = defineEmits<{
 
 <style scoped>
 .custom-node {
-  min-width: 200px;
-  max-width: 260px;
-  background-color: #1E293B;
-  border-radius: 8px;
-  border: 1px solid #334155;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  width: 165px;
+  background-color: #111827;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
   font-family: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
+  user-select: none;
 }
 
 .custom-node.selected {
@@ -72,14 +64,48 @@ const emit = defineEmits<{
 
 .model-node .node-header {
   background-color: #2196F3;
-  border-top-left-radius: 7px;
-  border-top-right-radius: 7px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  height: 26px;
+}
+
+.node-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.label-text {
+  font-size: 10px;
+  color: #9CA3AF;
+}
+
+.value-text {
+  font-size: 10px;
+  font-weight: 500;
+  color: #F3F4F6;
+}
+
+.badge-tag {
+  font-size: 9px;
+  font-weight: 700;
+  color: #60A5FA;
+  background: rgba(59, 130, 246, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.node-action-btn {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  padding: 0 !important;
 }
 
 .node-handle {
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
   background-color: #2196F3;
-  border: 2px solid #FFFFFF;
+  border: 1.5px solid #FFFFFF;
 }
 </style>
