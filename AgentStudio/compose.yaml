@@ -32,7 +32,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_HTTP_PORTS=8080
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=agents;Username=keycloak;Password=keycloak_password
-      - Keycloak__Authority=http://keycloak:8080/realms/agent-studio
+      - Keycloak__Authority=http://keycloak:8080/identity/realms/agent-studio
       - Keycloak__Audience=portal
     depends_on:
       - postgres
@@ -59,6 +59,9 @@ services:
       KC_DB_PASSWORD: keycloak_password
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_RELATIVE_PATH: /identity
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
     volumes:
       - ../Deploy/keycloak/agent-studio-realm.json:/opt/keycloak/data/import/agent-studio-realm.json:ro
     ports:

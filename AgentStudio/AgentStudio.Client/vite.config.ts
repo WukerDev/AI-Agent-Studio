@@ -10,6 +10,7 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'jsdom',
+        execArgv: ['--experimental-require-module'],
         server: {
             deps: {
                 inline: ['vuetify']

@@ -18,11 +18,7 @@ export const useConfig = createSharedComposable(() => {
         ? window.location.origin
         : (import.meta.env.VITE_GATEWAY_URL || 'http://localhost:5000');
 
-    const defaultAuthUrl = import.meta.env.VITE_AUTH_URL || (
-        isBrowser && !isDevVite
-            ? window.location.origin
-            : 'http://localhost:8080'
-    );
+    const defaultAuthUrl = import.meta.env.VITE_AUTH_URL || `${defaultGatewayUrl}/identity`;
 
     const state = reactive<AppConfig>({
         backendUrl: defaultGatewayUrl,

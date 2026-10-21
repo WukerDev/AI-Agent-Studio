@@ -8,24 +8,22 @@
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
+  <component name="CMakeProjectFlavorService">
+    <option name="flavorId" value="CMakePlainProjectFlavor" />
+  </component>
+  <component name="CMakeSettings">
+    <configurations />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="7a132c9a-813c-4694-8489-24ad8305e937" name="Changes" comment="Poprawki">
-      <change afterPath="$PROJECT_DIR$/AgentStudio.sln.DotSettings.user" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/App.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/GlobalViewModel.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/GlobalViewModel.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/WorkflowE2E.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/WorkflowE2E.spec.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppBottomPanel.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppBottomPanel.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppHeader.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppHeader.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppLeftDrawer.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppLeftDrawer.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppSidebar.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppSidebar.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/AgentNode.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/AgentNode.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/McpNode.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/McpNode.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/ModelNode.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/ModelNode.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/PromptNode.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/PromptNode.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/store.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/vite.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/appsettings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,58 +36,66 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "WukerDev"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;WukerDev&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/WukerDev/ProgramowanieZespo-owe.git",
-    "accountId": "0802da18-9278-4d76-a2d2-03de7b99dfdb"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/WukerDev/AI-Agent-Studio.git&quot;,
+    &quot;accountId&quot;: &quot;ce28e5f4-7ecd-495a-9100-eedbc537bf8e&quot;
   }
-}]]></component>
+}</component>
   <component name="HighlightingSettingsPerFile">
     <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Gateway/Program.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
-  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
-  <component name="KubernetesApiProvider"><![CDATA[{
-  "isMigrated": true
-}]]></component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="false" />
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 2
-}]]></component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
   <component name="ProjectId" id="3KyBkpkBwx60lFcG19n18tJo9vA" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    ".NET Launch Settings Profile.AgentStudio.Client: http.executor": "Run",
-    ".NET Launch Settings Profile.AgentStudio.Gateway: http.executor": "Run",
-    ".NET Launch Settings Profile.AgentStudio.Service: http.executor": "Run",
-    "Docker.compose.yaml.keycloak: Compose Deployment.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "ts.external.directory.path": "C:\\Users\\Wikto\\RiderProjects\\ProgramowanieZespo-owe\\AgentStudio\\AgentStudio.Client\\node_modules\\typescript\\lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;.NET Launch Settings Profile.AgentStudio.Client: http.executor&quot;: &quot;Run&quot;,
+    &quot;.NET Launch Settings Profile.AgentStudio.Gateway: http.executor&quot;: &quot;Run&quot;,
+    &quot;.NET Launch Settings Profile.AgentStudio.Service: http.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.compose.yaml.keycloak: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.compose.yaml.postgres: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Wikto\\RiderProjects\\ProgramowanieZespo-owe\\AgentStudio\\AgentStudio.Client\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
-  <component name="RunManager" selected="Docker.compose.yaml.keycloak: Compose Deployment">
+}</component>
+  <component name="RunManager" selected=".NET Launch Settings Profile.AgentStudio.Service: http">
     <configuration name="AgentStudio.Client: http" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" />
       <option name="LAUNCH_PROFILE_TFM" value="net11.0" />
       <option name="LAUNCH_PROFILE_NAME" value="http" />
-      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
       <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
@@ -97,6 +103,7 @@
       <option name="SEND_DEBUG_REQUEST" value="1" />
       <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
+      <option name="MIXED_MODE_DEBUG" value="0" />
       <method v="2">
         <option name="Build" />
       </method>
@@ -105,7 +112,6 @@
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AgentStudio.Gateway/AgentStudio.Gateway.csproj" />
       <option name="LAUNCH_PROFILE_TFM" value="net11.0" />
       <option name="LAUNCH_PROFILE_NAME" value="http" />
-      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
       <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
@@ -113,6 +119,7 @@
       <option name="SEND_DEBUG_REQUEST" value="1" />
       <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
+      <option name="MIXED_MODE_DEBUG" value="0" />
       <method v="2">
         <option name="Build" />
       </method>
@@ -121,7 +128,6 @@
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" />
       <option name="LAUNCH_PROFILE_TFM" value="net11.0" />
       <option name="LAUNCH_PROFILE_NAME" value="http" />
-      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
       <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
@@ -129,6 +135,7 @@
       <option name="SEND_DEBUG_REQUEST" value="1" />
       <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
+      <option name="MIXED_MODE_DEBUG" value="0" />
       <method v="2">
         <option name="Build" />
       </method>
@@ -167,7 +174,10 @@
       <method v="2" />
     </configuration>
     <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
-      <deployment type="docker-compose.yml" />
+      <deployment type="docker-compose.yml">
+        <settings />
+      </deployment>
+      <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
       <method v="2" />
     </configuration>
     <configuration default="true" type="docker-deploy" factoryName="dockerfile" temporary="true">
@@ -191,12 +201,28 @@
       <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
       <method v="2" />
     </configuration>
+    <configuration name="compose.yaml.postgres: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="services">
+            <list>
+              <option value="postgres" />
+            </list>
+          </option>
+          <option name="sourceFilePath" value="compose.yaml" />
+        </settings>
+      </deployment>
+      <EXTENSION ID="com.jetbrains.rider.docker.debug" isFastModeEnabled="true" isSslEnabled="false" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Docker.compose.yaml.keycloak: Compose Deployment" />
+        <item itemvalue="Docker.compose.yaml.postgres: Compose Deployment" />
       </list>
     </recent_temporary>
   </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="7a132c9a-813c-4694-8489-24ad8305e937" name="Changes" comment="" />
@@ -205,6 +231,7 @@
       <option name="presentableId" value="Default" />
       <updated>1792520074133</updated>
       <workItem from="1792520076294" duration="9132000" />
+      <workItem from="1792559565020" duration="134000" />
     </task>
     <task id="LOCAL-00001" summary="Poprawki">
       <option name="closed" value="true" />
@@ -223,7 +250,26 @@
   <component name="UnityCheckinConfiguration" checkUnsavedScenes="false" />
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="VcsManagerConfiguration">
+    <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="Poprawki" />
     <option name="LAST_COMMIT_MESSAGE" value="Poprawki" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.OperationCanceledException" breakIfHandledByOtherCode="false" displayValue="System.OperationCanceledException" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.Tasks.TaskCanceledException" breakIfHandledByOtherCode="false" displayValue="System.Threading.Tasks.TaskCanceledException" />
+          <option name="timeStamp" value="2" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.ThreadAbortException" breakIfHandledByOtherCode="false" displayValue="System.Threading.ThreadAbortException" />
+          <option name="timeStamp" value="3" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
