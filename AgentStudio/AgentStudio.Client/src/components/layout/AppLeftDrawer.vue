@@ -29,19 +29,41 @@ const isCreateItemDialogOpen = ref(false)
 const newItemName = ref('')
 const newItemType = ref<ItemType>(ItemType.FILE)
 
-const draggedItemIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
-
 watch([isOpen, () => props.tab], ([newIsOpen, newTab]) => {
   if (newIsOpen && newTab === 'files') {
     globalViewModel.loadExplorer(globalViewModel.currentExplorerPath || '/')
   }
 }, { immediate: true })
 
-function handleItemClick(item: any) {
-  if (item.type === ItemType.FOLDER) {
-    globalViewModel.loadExplorer(item.path)
+function getFlowIdFromItem(item: any): string {
+  if (!item) return 'default-flow'
+  let id = item.path || ''
+  if (id.startsWith('/')) {
+    id = id.substring(1)
   }
+  const lastSegment = id.split('/').pop() || id
+  return lastSegment.replace(/\.agentflow$/, '') || id || 'default-flow'
+}
+
+function isItemActive(item: any): boolean {
+  if (item.type === ItemType.FOLDER) return false
+  const flowId = getFlowIdFromItem(item)
+  return globalViewModel.currentFlowId === flowId || globalViewModel.currentFlowId === item.path.replace(/^\//, '')
+}
+
+async function handleItemClick(item: any) {
+  if (item.type === ItemType.FOLDER) {
+    await globalViewModel.loadExplorer(item.path)
+    return
+  }
+
+  const flowId = getFlowIdFromItem(item)
+  if (globalViewModel.currentFlowId === flowId) {
+    return
+  }
+
+  await globalViewModel.switchWorkflow(flowId)
+  notifStore.info(`Switched active workflow to: ${item.name || flowId}`)
 }
 
 function handleNavigateUp() {
@@ -77,53 +99,29 @@ function openCreateDialog(type: ItemType) {
   isCreateItemDialogOpen.value = true
 }
 
-function confirmCreateItem() {
-  const name = newItemName.value.trim()
+async function confirmCreateItem() {
+  let name = newItemName.value.trim()
   if (!name) return
 
-  globalViewModel.createExplorerItem(name, newItemType.value, globalViewModel.currentExplorerPath || '/')
-  notifStore.success(`Created ${newItemType.value === ItemType.FOLDER ? 'folder' : 'file'} "${name}"`)
+  if (newItemType.value === ItemType.FILE) {
+    if (!name.endsWith('.agentflow')) {
+      name = `${name}.agentflow`
+    }
+    const cleanParent = (globalViewModel.currentExplorerPath || '/').replace(/\/$/, '')
+    const path = cleanParent === '' ? `/${name}` : `${cleanParent}/${name}`
+
+    globalViewModel.createExplorerItem(name, ItemType.FILE, globalViewModel.currentExplorerPath || '/')
+    const flowId = getFlowIdFromItem({ name, path })
+    await globalViewModel.switchWorkflow(flowId)
+    await globalViewModel.saveEdges([], flowId)
+    notifStore.success(`Created & opened workflow "${name}"`)
+  } else {
+    globalViewModel.createExplorerItem(name, ItemType.FOLDER, globalViewModel.currentExplorerPath || '/')
+    notifStore.success(`Created folder "${name}"`)
+  }
+
   isCreateItemDialogOpen.value = false
   newItemName.value = ''
-}
-
-function handleExplorerDragStart(event: DragEvent, item: any, index: number) {
-  draggedItemIndex.value = index
-  if (event.dataTransfer) {
-    event.dataTransfer.setData('application/json', JSON.stringify({ itemType: item.type === ItemType.FOLDER ? 'folder' : 'file', item }))
-    event.dataTransfer.effectAllowed = 'move'
-  }
-}
-
-function handleExplorerDragOver(event: DragEvent, index: number) {
-  event.preventDefault()
-  if (draggedItemIndex.value === null || draggedItemIndex.value === index) return
-  dragOverIndex.value = index
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = 'move'
-  }
-}
-
-function handleExplorerDragLeave() {
-  dragOverIndex.value = null
-}
-
-function handleExplorerDrop(event: DragEvent, targetIndex: number) {
-  event.preventDefault()
-  const fromIndex = draggedItemIndex.value
-  dragOverIndex.value = null
-  draggedItemIndex.value = null
-
-  if (fromIndex === null || fromIndex === targetIndex) return
-
-  const targetItem = globalViewModel.explorerItems[targetIndex]
-  if (targetItem && targetItem.type === ItemType.FOLDER) {
-    globalViewModel.moveExplorerItem(fromIndex, targetItem)
-    notifStore.info(`Moved into folder "${targetItem.name}"`)
-  } else {
-    globalViewModel.reorderExplorerItems(fromIndex, targetIndex)
-    notifStore.info('Reordered item position')
-  }
 }
 
 const paletteNodes = [
@@ -292,34 +290,58 @@ const paletteArguments = [
       <div class="flex-grow-1 overflow-y-auto">
         <v-list v-if="globalViewModel.explorerItems.length > 0" density="compact" nav class="pa-2">
           <v-list-item
-            v-for="(item, index) in globalViewModel.explorerItems"
+            v-for="item in globalViewModel.explorerItems"
             :key="item.path"
             :value="item.path"
-            draggable="true"
+            :active="isItemActive(item)"
+            active-color="primary"
             class="explorer-list-item mb-1 rounded"
-            :class="{
-              'drag-over-folder': dragOverIndex === index && item.type === ItemType.FOLDER,
-              'drag-over-item': dragOverIndex === index && item.type !== ItemType.FOLDER,
-              'is-dragging': draggedItemIndex === index
-            }"
-            @dragstart="handleExplorerDragStart($event, item, index)"
-            @dragover.prevent="handleExplorerDragOver($event, index)"
-            @dragleave="handleExplorerDragLeave"
-            @drop="handleExplorerDrop($event, index)"
+            :class="{ 'active-flow-item': isItemActive(item) }"
             @click="handleItemClick(item)"
           >
             <template v-slot:prepend>
-              <v-icon icon="mdi-drag-vertical" size="14" class="drag-handle-icon mr-1 text-grey" />
-              <v-icon :color="globalViewModel.getExplorerItemColor(item.type)" class="mr-1">
-                {{ globalViewModel.getExplorerItemIcon(item.type) }}
+              <v-icon
+                :color="isItemActive(item) ? 'primary' : globalViewModel.getExplorerItemColor(item.type)"
+                class="mr-2"
+                size="18"
+              >
+                {{ isItemActive(item) ? 'mdi-sitemap' : globalViewModel.getExplorerItemIcon(item.type) }}
               </v-icon>
             </template>
-            <v-list-item-title class="text-caption font-weight-medium">
+            <v-list-item-title
+              class="text-caption"
+              :class="{ 'font-weight-bold text-primary': isItemActive(item), 'font-weight-medium': !isItemActive(item) }"
+            >
               {{ item.name }}
             </v-list-item-title>
             <template v-slot:append>
-              <v-chip size="x-small" variant="tonal" :color="item.type === ItemType.FOLDER ? 'warning' : 'info'" class="text-caption">
-                {{ item.type === ItemType.FOLDER ? 'DIR' : 'FILE' }}
+              <v-chip
+                v-if="item.type === ItemType.FOLDER"
+                size="x-small"
+                variant="tonal"
+                color="warning"
+                class="text-caption font-weight-bold"
+              >
+                DIR
+              </v-chip>
+              <v-chip
+                v-else-if="isItemActive(item)"
+                size="x-small"
+                variant="flat"
+                color="primary"
+                class="text-caption font-weight-bold px-1.5"
+              >
+                <v-icon icon="mdi-check" start size="10" />
+                ACTIVE
+              </v-chip>
+              <v-chip
+                v-else
+                size="x-small"
+                variant="tonal"
+                color="grey"
+                class="text-caption"
+              >
+                FLOW
               </v-chip>
             </template>
           </v-list-item>
@@ -518,20 +540,17 @@ const paletteArguments = [
   opacity: 1;
 }
 .explorer-list-item {
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: all 0.15s ease;
   border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
 }
 .explorer-list-item:hover {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
 }
-.drag-over-folder {
-  background-color: rgba(251, 140, 0, 0.15) !important;
-  border-color: #FB8C00 !important;
-}
-.drag-over-item {
-  border-top: 2px solid #2196F3 !important;
-}
-.is-dragging {
-  opacity: 0.4;
+.active-flow-item {
+  background-color: rgba(230, 57, 70, 0.15) !important;
+  border-color: rgba(230, 57, 70, 0.45) !important;
 }
 </style>

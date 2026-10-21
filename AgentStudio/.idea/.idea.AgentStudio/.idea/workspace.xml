@@ -17,21 +17,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7a132c9a-813c-4694-8489-24ad8305e937" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/LabelNode.vue" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/NoteNode.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/App.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/GlobalViewModel.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/GlobalViewModel.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/WorkflowE2E.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/WorkflowE2E.spec.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.spec.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/store.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.Development.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.Development.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Protos/agent_node.proto" beforeDir="false" afterPath="$PROJECT_DIR$/Protos/agent_node.proto" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +85,7 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected=".NET Launch Settings Profile.AgentStudio.Service: http">
+  <component name="RunManager" selected=".NET Launch Settings Profile.AgentStudio.Gateway: http">
     <configuration name="AgentStudio.Client: http" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" />
       <option name="LAUNCH_PROFILE_TFM" value="net11.0" />
@@ -276,7 +262,8 @@
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="Poprawki" />
-    <option name="LAST_COMMIT_MESSAGE" value="Poprawki" />
+    <MESSAGE value="poprawki" />
+    <option name="LAST_COMMIT_MESSAGE" value="poprawki" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

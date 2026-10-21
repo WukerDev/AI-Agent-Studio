@@ -90,6 +90,12 @@ watch(() => globalViewModel.edges, (newEdges) => {
   }))
 }, { immediate: true, deep: true })
 
+watch(() => globalViewModel.currentFlowId, () => {
+  setTimeout(() => {
+    fitView({ padding: 0.2 })
+  }, 100)
+})
+
 onNodeClick((event) => {
   if (event.node?.id) {
     globalViewModel.openInspector(event.node.id)

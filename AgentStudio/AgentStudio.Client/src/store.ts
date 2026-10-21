@@ -150,6 +150,9 @@ export const useGlobalStore = defineStore('global', {
             })
         },
         async getAgentNodes(request: GetAgentNodesRequest): Promise<void> {
+            if (request.flowId) {
+                this.currentFlowId = request.flowId
+            }
             await this.runGrpcCommand(async (client, options) => {
                 const call = await client.getAgentNodes(request, options)
                 if (call.response.success && call.response.nodes) {
@@ -173,6 +176,9 @@ export const useGlobalStore = defineStore('global', {
             })
         },
         async getWorkflowEdges(request: GetWorkflowEdgesRequest): Promise<void> {
+            if (request.flowId) {
+                this.currentFlowId = request.flowId
+            }
             await this.runGrpcCommand(async (client, options) => {
                 const call = await client.getWorkflowEdges(request, options)
                 if (call.response.success && call.response.edges) {
@@ -181,6 +187,18 @@ export const useGlobalStore = defineStore('global', {
                     this.errorKey = 'error.grpc.get_edges_failed'
                 }
             })
+        },
+        setCurrentFlowId(flowId: string): void {
+            this.currentFlowId = flowId
+        },
+        async switchFlow(flowId: string): Promise<void> {
+            this.currentFlowId = flowId
+            this.selectedNodeId = null
+            this.isInspectorOpen = false
+            this.nodes = []
+            this.edges = []
+            await this.getAgentNodes({ flowId })
+            await this.getWorkflowEdges({ flowId })
         },
         setupGrpcClient(): void {
             getGrpcClient()

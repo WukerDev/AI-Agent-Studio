@@ -340,4 +340,31 @@ describe('End-to-End Frontend Workflow & Canvas State', () => {
         expect(vm.isInspectorOpen).toBe(false)
         expect(vm.selectedNodeId).toBeNull()
     })
+
+    it('E2E Flow 12: Should switch active workflow and clear canvas state when switching flow', async () => {
+        expect(vm.currentFlowId).toBe('default-flow')
+
+        // Open inspector on an existing node
+        await vm.addNode(NodeType.AGENT, { x: 50, y: 50 }, 'Flow 1 Agent')
+        const node = vm.nodes[0]
+        vm.openInspector(node.id)
+        expect(vm.isInspectorOpen).toBe(true)
+
+        // Switch to a new workflow
+        await vm.switchWorkflow('secondary-flow')
+        expect(vm.currentFlowId).toBe('secondary-flow')
+        expect(vm.isInspectorOpen).toBe(false)
+        expect(vm.selectedNodeId).toBeNull()
+        expect(vm.canUndo).toBe(false)
+        expect(vm.canRedo).toBe(false)
+
+        // Adding node in new workflow assigns correct flowId
+        await vm.addNode(NodeType.MODEL, { x: 120, y: 120 }, 'Secondary Model')
+        expect(vm.nodes).toHaveLength(1)
+        expect(vm.nodes[0].flowId).toBe('secondary-flow')
+
+        // Switch back to original workflow
+        await vm.switchWorkflow('default-flow')
+        expect(vm.currentFlowId).toBe('default-flow')
+    })
 })

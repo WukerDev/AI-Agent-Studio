@@ -140,6 +140,21 @@ export class GlobalViewModel {
         })
     }
 
+    public setCurrentFlowId(flowId: string): void {
+        this.globalStore.setCurrentFlowId(flowId)
+    }
+
+    public async switchWorkflow(flowId: string): Promise<void> {
+        this.clearHistory()
+        this.clipboard = null
+        await this.globalStore.switchFlow(flowId)
+    }
+
+    public clearHistory(): void {
+        this.undoStack = []
+        this.redoStack = []
+    }
+
     public async loadNodes(flowId: string): Promise<void> {
         await this.globalStore.getAgentNodes({ flowId })
     }
