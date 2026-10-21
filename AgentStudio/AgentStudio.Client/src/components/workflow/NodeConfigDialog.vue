@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { NodeType } from '../../clients/generated/agent_node'
 
 const props = defineProps<{
@@ -17,6 +17,57 @@ const enabledToolsInput = ref('')
 
 const providers = ['OpenAI', 'Ollama', 'Custom']
 
+const noteColorOptions = [
+  { title: 'Amber (Default)', value: '#F59E0B' },
+  { title: 'Sky Blue', value: '#0EA5E9' },
+  { title: 'Emerald Green', value: '#10B981' },
+  { title: 'Purple', value: '#8B5CF6' },
+  { title: 'Rose Pink', value: '#F43F5E' },
+  { title: 'Slate Dark', value: '#475569' }
+]
+
+const labelSizeOptions = [
+  { title: 'Small (14px)', value: 'small' },
+  { title: 'Medium (18px)', value: 'medium' },
+  { title: 'Large (24px)', value: 'large' },
+  { title: 'Huge (32px)', value: 'huge' }
+]
+
+const labelColorOptions = [
+  { title: 'Purple (Default)', value: '#8B5CF6' },
+  { title: 'Blue', value: '#3B82F6' },
+  { title: 'Green', value: '#10B981' },
+  { title: 'Orange', value: '#F97316' },
+  { title: 'Pink', value: '#EC4899' },
+  { title: 'Slate', value: '#64748B' }
+]
+
+const dialogTitle = computed(() => {
+  if (!localNode.value) return 'Configure Node'
+  switch (localNode.value.type) {
+    case NodeType.NOTE:
+      return 'Configure Sticky Note'
+    case NodeType.LABEL:
+      return 'Configure Canvas Label'
+    case NodeType.AGENT:
+      return 'Configure AI Agent'
+    case NodeType.MODEL:
+      return 'Configure LLM Model'
+    case NodeType.PROMPT:
+      return 'Configure System Prompt'
+    case NodeType.MCP_CONNECTOR:
+      return 'Configure MCP Connector'
+    default:
+      return 'Configure Node'
+  }
+})
+
+const nameLabel = computed(() => {
+  if (localNode.value?.type === NodeType.LABEL) return 'Label Text'
+  if (localNode.value?.type === NodeType.NOTE) return 'Note Title'
+  return 'Node Name'
+})
+
 watch(() => props.nodeData, (val) => {
   if (val) {
     localNode.value = JSON.parse(JSON.stringify(val))
@@ -25,6 +76,15 @@ watch(() => props.nodeData, (val) => {
     }
     if (!localNode.value.mcpConfig) {
       localNode.value.mcpConfig = { serverUrl: 'http://localhost:8000/mcp', authToken: '', enabledTools: [] }
+    }
+    if (localNode.value.type === NodeType.NOTE && !localNode.value.endpoint) {
+      localNode.value.endpoint = '#F59E0B'
+    }
+    if (localNode.value.type === NodeType.LABEL) {
+      if (!localNode.value.endpoint) localNode.value.endpoint = 'medium'
+      if (!localNode.value.modelConfig?.provider) {
+        localNode.value.modelConfig.provider = '#8B5CF6'
+      }
     }
     enabledToolsInput.value = (localNode.value.mcpConfig?.enabledTools || []).join(', ')
   }
@@ -51,7 +111,7 @@ function handleSave() {
   >
     <v-card v-if="localNode">
       <v-card-title class="d-flex align-center justify-space-between bg-surface pa-4">
-        <span class="text-h6 font-weight-bold">Configure Node</span>
+        <span class="text-h6 font-weight-bold">{{ dialogTitle }}</span>
         <v-btn icon="mdi-close" variant="text" size="small" @click="emit('update:modelValue', false)" />
       </v-card-title>
 
@@ -60,12 +120,76 @@ function handleSave() {
       <v-card-text class="pa-4">
         <v-text-field
           v-model="localNode.name"
-          label="Node Name"
+          :label="nameLabel"
           variant="outlined"
           density="compact"
           class="mb-3"
         />
 
+        <!-- Note Node Inspector -->
+        <template v-if="localNode.type === NodeType.NOTE">
+          <v-textarea
+            v-model="localNode.systemPrompt"
+            label="Note Content"
+            placeholder="Write workflow notes, architecture thoughts, or markdown comments..."
+            variant="outlined"
+            density="compact"
+            rows="5"
+            hint="Supports multiline text and documentation."
+            persistent-hint
+            class="mb-3"
+          />
+
+          <v-select
+            v-model="localNode.endpoint"
+            :items="noteColorOptions"
+            item-title="title"
+            item-value="value"
+            label="Sticky Note Color"
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          />
+        </template>
+
+        <!-- Label Node Inspector -->
+        <template v-if="localNode.type === NodeType.LABEL">
+          <v-text-field
+            v-model="localNode.systemPrompt"
+            label="Subtitle / Description (Optional)"
+            placeholder="e.g. Primary processing workflow"
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          />
+
+          <v-row density="compact">
+            <v-col cols="6">
+              <v-select
+                v-model="localNode.endpoint"
+                :items="labelSizeOptions"
+                item-title="title"
+                item-value="value"
+                label="Font Size"
+                variant="outlined"
+                density="compact"
+              />
+            </v-col>
+            <v-col cols="6">
+              <v-select
+                v-model="localNode.modelConfig.provider"
+                :items="labelColorOptions"
+                item-title="title"
+                item-value="value"
+                label="Accent Color"
+                variant="outlined"
+                density="compact"
+              />
+            </v-col>
+          </v-row>
+        </template>
+
+        <!-- Prompt or Agent Node Inspector -->
         <template v-if="localNode.type === NodeType.PROMPT || localNode.type === NodeType.AGENT">
           <v-textarea
             v-model="localNode.systemPrompt"
@@ -79,6 +203,7 @@ function handleSave() {
           />
         </template>
 
+        <!-- Model or Agent Node Inspector -->
         <template v-if="localNode.type === NodeType.MODEL || localNode.type === NodeType.AGENT">
           <v-select
             v-model="localNode.modelConfig.provider"
@@ -123,6 +248,7 @@ function handleSave() {
           </div>
         </template>
 
+        <!-- MCP Connector or Agent Node Inspector -->
         <template v-if="localNode.type === NodeType.MCP_CONNECTOR || localNode.type === NodeType.AGENT">
           <v-text-field
             v-model="localNode.mcpConfig.serverUrl"

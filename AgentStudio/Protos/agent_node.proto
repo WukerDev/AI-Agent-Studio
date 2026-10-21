@@ -84,6 +84,8 @@ enum NodeType {
   NODE_TYPE_MODEL = 2;
   NODE_TYPE_PROMPT = 3;
   NODE_TYPE_MCP_CONNECTOR = 4;
+  NODE_TYPE_NOTE = 5;
+  NODE_TYPE_LABEL = 6;
 }
 
 message Position {

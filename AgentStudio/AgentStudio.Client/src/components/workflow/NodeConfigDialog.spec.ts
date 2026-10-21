@@ -109,4 +109,73 @@ describe('NodeConfigDialog Component (Agent & Model Configuration)', () => {
         expect(savedPayload.mcpConfig.serverUrl).toBe('http://localhost:8000/mcp')
         expect(savedPayload.mcpConfig.enabledTools).toEqual(['search_web', 'fetch_page'])
     })
+    it('should configure sticky note content and color', async () => {
+        const noteNode = {
+            id: 'node_note_1',
+            name: 'Architecture Notes',
+            type: NodeType.NOTE,
+            systemPrompt: 'Keep all agents asynchronous',
+            endpoint: '#F59E0B'
+        }
+
+        const wrapper = mount(NodeConfigDialog, {
+            props: {
+                modelValue: true,
+                nodeData: noteNode
+            },
+            global: {
+                plugins: [vuetify]
+            }
+        })
+
+        const buttons = wrapper.findAllComponents(components.VBtn)
+        const saveButton = buttons.find(b => b.text().includes('Save Changes'))
+        await saveButton!.trigger('click')
+
+        const emittedSave = wrapper.emitted('save')
+        expect(emittedSave).toBeTruthy()
+        const saved = emittedSave![0][0] as any
+        expect(saved.id).toBe('node_note_1')
+        expect(saved.type).toBe(NodeType.NOTE)
+        expect(saved.name).toBe('Architecture Notes')
+        expect(saved.systemPrompt).toBe('Keep all agents asynchronous')
+        expect(saved.endpoint).toBe('#F59E0B')
+    })
+
+    it('should configure canvas label text, subtitle and size', async () => {
+        const labelNode = {
+            id: 'node_label_1',
+            name: 'Data Pipeline',
+            type: NodeType.LABEL,
+            systemPrompt: 'Stage 1 processing',
+            endpoint: 'large',
+            modelConfig: {
+                provider: '#8B5CF6'
+            }
+        }
+
+        const wrapper = mount(NodeConfigDialog, {
+            props: {
+                modelValue: true,
+                nodeData: labelNode
+            },
+            global: {
+                plugins: [vuetify]
+            }
+        })
+
+        const buttons = wrapper.findAllComponents(components.VBtn)
+        const saveButton = buttons.find(b => b.text().includes('Save Changes'))
+        await saveButton!.trigger('click')
+
+        const emittedSave = wrapper.emitted('save')
+        expect(emittedSave).toBeTruthy()
+        const saved = emittedSave![0][0] as any
+        expect(saved.id).toBe('node_label_1')
+        expect(saved.type).toBe(NodeType.LABEL)
+        expect(saved.name).toBe('Data Pipeline')
+        expect(saved.systemPrompt).toBe('Stage 1 processing')
+        expect(saved.endpoint).toBe('large')
+        expect(saved.modelConfig.provider).toBe('#8B5CF6')
+    })
 })

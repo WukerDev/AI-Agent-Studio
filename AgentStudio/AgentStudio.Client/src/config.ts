@@ -12,9 +12,9 @@ export interface AppConfig {
 
 export const useConfig = createSharedComposable(() => {
     const isBrowser = typeof window !== 'undefined';
-    const isDevVite = isBrowser && (window.location.port === '5173' || window.location.port === '4173');
+    const isDevClientPort = isBrowser && (window.location.port === '5002' || window.location.port === '5173' || window.location.port === '4173');
     
-    const defaultGatewayUrl = isBrowser && !isDevVite
+    const defaultGatewayUrl = isBrowser && !isDevClientPort
         ? window.location.origin
         : (import.meta.env.VITE_GATEWAY_URL || 'https://localhost');
 

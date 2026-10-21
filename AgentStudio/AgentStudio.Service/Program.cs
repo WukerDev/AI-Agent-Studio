@@ -134,6 +134,22 @@ try
         try
         {
             db.Database.EnsureCreated();
+            if (db.Database.IsRelational())
+            {
+                var creator = Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator>(db.Database);
+                try
+                {
+                    creator.CreateTables();
+                }
+                catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07")
+                {
+                    // Tables already exist
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "CreateTables check: {Message}", ex.Message);
+                }
+            }
         }
         catch (Exception ex)
         {

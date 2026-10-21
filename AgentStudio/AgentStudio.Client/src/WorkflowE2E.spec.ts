@@ -218,4 +218,126 @@ describe('End-to-End Frontend Workflow & Canvas State', () => {
         expect(promptNode).toBeDefined()
         expect(promptNode?.systemPrompt).toBe('Argument query: {{input}}')
     })
+
+    it('E2E Flow 8: Should add Note and Label nodes with proper default properties, colors, and icons', async () => {
+        await vm.addNode(NodeType.NOTE, { x: 150, y: 150 }, 'Release Checklist', { systemPrompt: 'Verify prod keys' })
+        await vm.addNode(NodeType.LABEL, { x: 350, y: 150 }, 'Agent Operations Section', { endpoint: 'large' })
+
+        expect(vm.nodes).toHaveLength(2)
+        const note = vm.nodes[0]
+        const label = vm.nodes[1]
+
+        expect(note.type).toBe(NodeType.NOTE)
+        expect(note.name).toBe('Release Checklist')
+        expect(note.systemPrompt).toBe('Verify prod keys')
+        expect(vm.getNodeIcon(NodeType.NOTE)).toBe('mdi-note-text-outline')
+        expect(vm.getNodeColor(NodeType.NOTE)).toBe('#F59E0B')
+
+        expect(label.type).toBe(NodeType.LABEL)
+        expect(label.name).toBe('Agent Operations Section')
+        expect(label.endpoint).toBe('large')
+        expect(vm.getNodeIcon(NodeType.LABEL)).toBe('mdi-format-title')
+        expect(vm.getNodeColor(NodeType.LABEL)).toBe('#8B5CF6')
+    })
+
+    it('E2E Flow 9: Should handle Undo and Redo operations across node additions and removals', async () => {
+        expect(vm.canUndo).toBe(false)
+        expect(vm.canRedo).toBe(false)
+
+        await vm.addNode(NodeType.AGENT, { x: 100, y: 100 }, 'Agent Alpha')
+        expect(vm.nodes).toHaveLength(1)
+        expect(vm.canUndo).toBe(true)
+        expect(vm.canRedo).toBe(false)
+
+        await vm.addNode(NodeType.NOTE, { x: 200, y: 100 }, 'Note Beta')
+        expect(vm.nodes).toHaveLength(2)
+
+        // Undo adding Note Beta
+        await vm.undo()
+        expect(vm.nodes).toHaveLength(1)
+        expect(vm.nodes[0].name).toBe('Agent Alpha')
+        expect(vm.canRedo).toBe(true)
+
+        // Redo adding Note Beta
+        await vm.redo()
+        expect(vm.nodes).toHaveLength(2)
+        expect(vm.nodes[1].name).toBe('Note Beta')
+
+        // Undo Alpha and Beta
+        await vm.undo()
+        await vm.undo()
+        expect(vm.nodes).toHaveLength(0)
+    })
+
+    it('E2E Flow 10: Should support Copy, Cut, Paste, Delete, and Arrow Key movement for selected nodes', async () => {
+        await vm.addNode(NodeType.AGENT, { x: 100, y: 100 }, 'Worker 1')
+        await vm.addNode(NodeType.MODEL, { x: 250, y: 100 }, 'Worker 2')
+
+        const node1 = vm.nodes[0]
+        const node2 = vm.nodes[1]
+
+        // Move with Arrow Keys (+10px X, -10px Y)
+        await vm.moveSelected([node1.id, node2.id], 10, -10)
+        expect(vm.nodes[0].position?.x).toBe(110)
+        expect(vm.nodes[0].position?.y).toBe(90)
+        expect(vm.nodes[1].position?.x).toBe(260)
+        expect(vm.nodes[1].position?.y).toBe(90)
+
+        // Copy selected nodes
+        const copiedCount = vm.copySelected([node1.id, node2.id])
+        expect(copiedCount).toBe(2)
+
+        // Paste copies with offset (+30px)
+        const pasted = await vm.paste({ x: 30, y: 30 })
+        expect(pasted).toHaveLength(2)
+        expect(vm.nodes).toHaveLength(4)
+        expect(pasted[0].position?.x).toBe(140)
+        expect(pasted[0].name).toContain('(Copy)')
+
+        // Cut first 2 nodes
+        const cutCount = await vm.cutSelected([node1.id, node2.id])
+        expect(cutCount).toBe(2)
+        expect(vm.nodes).toHaveLength(2)
+
+        // Delete remaining nodes
+        const remainingIds = vm.nodes.map(n => n.id)
+        const deletedCount = await vm.deleteSelected(remainingIds)
+        expect(deletedCount).toBe(2)
+        expect(vm.nodes).toHaveLength(0)
+    })
+
+    it('E2E Flow 11: Should manage Inspector state in shell when clicking, selecting and removing nodes', async () => {
+        expect(vm.isInspectorOpen).toBe(false)
+        expect(vm.selectedNodeId).toBeNull()
+        expect(vm.selectedNode).toBeNull()
+
+        await vm.addNode(NodeType.AGENT, { x: 100, y: 100 }, 'Agent Delta')
+        const agentNode = vm.nodes[0]
+
+        // Open inspector for Agent Delta
+        vm.openInspector(agentNode.id)
+        expect(vm.isInspectorOpen).toBe(true)
+        expect(vm.selectedNodeId).toBe(agentNode.id)
+        expect(vm.selectedNode?.name).toBe('Agent Delta')
+
+        // Switch to newly created note
+        await vm.addNode(NodeType.NOTE, { x: 300, y: 100 }, 'Note Delta')
+        const noteNode = vm.nodes[1]
+        vm.openInspector(noteNode.id)
+        expect(vm.isInspectorOpen).toBe(true)
+        expect(vm.selectedNodeId).toBe(noteNode.id)
+        expect(vm.selectedNode?.name).toBe('Note Delta')
+
+        // Removing active node automatically closes inspector
+        await vm.removeNode(noteNode.id)
+        expect(vm.isInspectorOpen).toBe(false)
+        expect(vm.selectedNodeId).toBeNull()
+
+        // Re-open and close explicitly
+        vm.openInspector(agentNode.id)
+        expect(vm.isInspectorOpen).toBe(true)
+        vm.closeInspector()
+        expect(vm.isInspectorOpen).toBe(false)
+        expect(vm.selectedNodeId).toBeNull()
+    })
 })

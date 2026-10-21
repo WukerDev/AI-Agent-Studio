@@ -43,6 +43,8 @@ export interface GlobalStoreState {
     executionLogs: ExecutionLog[]
     executionStatus: string
     executionOutput: string
+    selectedNodeId: string | null
+    isInspectorOpen: boolean
 }
 
 export const useGlobalStore = defineStore('global', {
@@ -60,9 +62,25 @@ export const useGlobalStore = defineStore('global', {
         lastSyncMillis: 0,
         executionLogs: [],
         executionStatus: 'Idle',
-        executionOutput: ''
+        executionOutput: '',
+        selectedNodeId: null,
+        isInspectorOpen: false
     }),
     actions: {
+        openInspector(nodeId: string): void {
+            this.selectedNodeId = nodeId
+            this.isInspectorOpen = true
+        },
+        closeInspector(): void {
+            this.isInspectorOpen = false
+            this.selectedNodeId = null
+        },
+        setInspectorOpen(isOpen: boolean): void {
+            this.isInspectorOpen = isOpen
+            if (!isOpen) {
+                this.selectedNodeId = null
+            }
+        },
         async initializeRealtimeAndGrpc(): Promise<void> {
             this.setupGrpcClient()
             await this.connectSignalR()

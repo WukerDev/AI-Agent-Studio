@@ -4,6 +4,7 @@ import AppHeader from './components/layout/AppHeader.vue'
 import AppSidebar from './components/layout/AppSidebar.vue'
 import AppLeftDrawer from './components/layout/AppLeftDrawer.vue'
 import AppBottomPanel from './components/layout/AppBottomPanel.vue'
+import AppInspectorDrawer from './components/layout/AppInspectorDrawer.vue'
 import AppNotificationSnackbar from './components/layout/AppNotificationSnackbar.vue'
 import WorkflowCanvas from './components/workflow/WorkflowCanvas.vue'
 import { GlobalViewModel } from './GlobalViewModel'
@@ -62,6 +63,9 @@ onMounted(() => {
         v-model="isBottomPanelOpen"
         v-model:tab="activeBottomTab"
     />
+
+    <!-- Shell Right Inspector Drawer -->
+    <AppInspectorDrawer />
 
     <v-main class="d-flex flex-column main-wrapper">
       <div class="flex-grow-1 position-relative">

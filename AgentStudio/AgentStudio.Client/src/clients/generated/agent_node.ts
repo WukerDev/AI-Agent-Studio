@@ -337,7 +337,15 @@ export enum NodeType {
     /**
      * @generated from protobuf enum value: NODE_TYPE_MCP_CONNECTOR = 4;
      */
-    MCP_CONNECTOR = 4
+    MCP_CONNECTOR = 4,
+    /**
+     * @generated from protobuf enum value: NODE_TYPE_NOTE = 5;
+     */
+    NOTE = 5,
+    /**
+     * @generated from protobuf enum value: NODE_TYPE_LABEL = 6;
+     */
+    LABEL = 6
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class ExecuteWorkflowRequest$Type extends MessageType<ExecuteWorkflowRequest> {
