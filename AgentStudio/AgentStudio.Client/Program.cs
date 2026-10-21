@@ -28,13 +28,31 @@ var staticFileOptions = new StaticFileOptions
     RequestPath = string.Empty
 };
 
+var portalStaticFileOptions = new StaticFileOptions
+{
+    FileProvider = fileProviderOptions,
+    RequestPath = "/portal"
+};
+
+var portalDefaultFilesOptions = new DefaultFilesOptions
+{
+    FileProvider = fileProviderOptions,
+    RequestPath = "/portal"
+};
+
 app.UseDefaultFiles(defaultFilesOptions);
+app.UseDefaultFiles(portalDefaultFilesOptions);
+
 app.UseStaticFiles(staticFileOptions);
+app.UseStaticFiles(portalStaticFileOptions);
 
 app.UseRouting();
 
 app.MapControllers();
 
+app.MapGet("/", () => Results.Redirect("/portal/"));
+
 app.MapFallbackToFile("index.html", staticFileOptions);
+app.MapFallbackToFile("/portal/{**slug}", "index.html", staticFileOptions);
 
 app.Run();

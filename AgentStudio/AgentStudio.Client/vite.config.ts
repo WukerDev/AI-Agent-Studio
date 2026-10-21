@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 
 export default defineConfig({
+    base: '/portal/',
     plugins: [
         vue(),
         vuetify({ autoImport: true, styles: process.env.NODE_ENV === 'test' ? 'none' : true })

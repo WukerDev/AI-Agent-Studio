@@ -5,10 +5,12 @@ services:
       context: .
       dockerfile: AgentStudio.Gateway/Dockerfile
     ports:
+      - "443:443"
+      - "80:80"
       - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_HTTP_PORTS=5000
+      - ASPNETCORE_HTTP_PORTS=80;5000
     depends_on:
       - agentstudio.service
       - agentstudio.client
