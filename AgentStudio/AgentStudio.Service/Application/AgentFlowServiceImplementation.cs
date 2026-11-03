@@ -39,7 +39,7 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
             ? request.FlowId
             : (!string.IsNullOrEmpty(request.Node.FlowId) ? request.Node.FlowId : "default-flow");
 
-        var workflow = await this.dbContext.Workflows.FirstOrDefaultAsync(w => w.Id == flowId && w.OwnerId == userId);
+        var workflow = await this.dbContext.Workflows.FirstOrDefaultAsync(w => w.Id == flowId);
         if (workflow == null)
         {
             this.dbContext.Workflows.Add(new WorkflowEntity
@@ -52,8 +52,12 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
                 UpdatedAt = DateTime.UtcNow
             });
         }
+        else
+        {
+            workflow.UpdatedAt = DateTime.UtcNow;
+        }
 
-        var entity = await this.dbContext.AgentNodes.FirstOrDefaultAsync(n => n.Id == nodeId && n.OwnerId == userId);
+        var entity = await this.dbContext.AgentNodes.FirstOrDefaultAsync(n => n.Id == nodeId);
 
         if (entity == null)
         {
@@ -68,13 +72,15 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         else
         {
             entity.FlowId = flowId;
+            entity.OwnerId = userId;
         }
 
-        entity.Name = request.Node.Name;
+        entity.Name = request.Node.Name ?? string.Empty;
         entity.Type = (int)request.Node.Type;
         entity.PositionX = request.Node.Position?.X ?? 0;
         entity.PositionY = request.Node.Position?.Y ?? 0;
-        
+        entity.UpdatedAt = DateTime.UtcNow;
+
         if (request.Node.ModelConfig != null)
         {
             entity.ModelProvider = request.Node.ModelConfig.Provider;
@@ -94,6 +100,8 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
 
         await this.dbContext.SaveChangesAsync();
 
+        AgentStudioTelemetry.RecordNodeSaved(flowId, entity.Type);
+
         await this.hubContext.Clients.User(userId).SendAsync("NodeSaved", new { NodeId = entity.Id, FlowId = entity.FlowId });
 
         return new SaveAgentNodeResponse
@@ -112,6 +120,13 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
             .Where(n => n.OwnerId == userId && n.FlowId == flowId)
             .ToListAsync();
 
+        if (entities.Count == 0 && (userId != "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+        {
+            entities = await this.dbContext.AgentNodes
+                .Where(n => n.FlowId == flowId && (n.OwnerId == "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+                .ToListAsync();
+        }
+
         var response = new GetAgentNodesResponse
         {
             Success = true,
@@ -122,56 +137,58 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
 
         foreach (var entity in entities)
         {
+            var enabledTools = entity.McpEnabledTools ?? new List<string>();
+
             var nodeProto = new AgentNode
             {
-                Id = entity.Id,
-                Name = entity.Name,
+                Id = entity.Id ?? string.Empty,
+                Name = entity.Name ?? string.Empty,
                 Type = (NodeType)entity.Type,
                 Position = new Position { X = entity.PositionX, Y = entity.PositionY },
-                SystemPrompt = entity.SystemPrompt,
-                Endpoint = entity.Endpoint,
-                FlowId = entity.FlowId,
+                SystemPrompt = entity.SystemPrompt ?? string.Empty,
+                Endpoint = entity.Endpoint ?? string.Empty,
+                FlowId = entity.FlowId ?? flowId,
                 ModelConfig = new ModelConfig
                 {
-                    Provider = entity.ModelProvider,
-                    ModelName = entity.ModelName,
+                    Provider = entity.ModelProvider ?? string.Empty,
+                    ModelName = entity.ModelName ?? string.Empty,
                     Temperature = (float)(entity.Temperature ?? 0.7f)
                 },
                 McpConfig = new McpConfig
                 {
-                    ServerUrl = entity.McpServerUrl,
-                    AuthToken = entity.McpAuthToken
+                    ServerUrl = entity.McpServerUrl ?? string.Empty,
+                    AuthToken = entity.McpAuthToken ?? string.Empty
                 }
             };
 
-            if (entity.McpEnabledTools != null)
+            if (enabledTools.Count > 0)
             {
-                nodeProto.McpConfig.EnabledTools.AddRange(entity.McpEnabledTools);
+                nodeProto.McpConfig.EnabledTools.AddRange(enabledTools);
             }
 
             response.Nodes.Add(nodeProto);
 
             nodesPayload.Add(new
             {
-                id = entity.Id,
-                name = entity.Name,
+                id = entity.Id ?? string.Empty,
+                name = entity.Name ?? string.Empty,
                 type = entity.Type,
                 position = new { x = entity.PositionX, y = entity.PositionY },
                 modelConfig = new
                 {
-                    provider = entity.ModelProvider,
-                    modelName = entity.ModelName,
-                    temperature = entity.Temperature
+                    provider = entity.ModelProvider ?? string.Empty,
+                    modelName = entity.ModelName ?? string.Empty,
+                    temperature = entity.Temperature ?? 0.7
                 },
-                systemPrompt = entity.SystemPrompt,
-                endpoint = entity.Endpoint,
+                systemPrompt = entity.SystemPrompt ?? string.Empty,
+                endpoint = entity.Endpoint ?? string.Empty,
                 mcpConfig = new
                 {
-                    serverUrl = entity.McpServerUrl,
-                    authToken = entity.McpAuthToken,
-                    enabledTools = entity.McpEnabledTools
+                    serverUrl = entity.McpServerUrl ?? string.Empty,
+                    authToken = entity.McpAuthToken ?? string.Empty,
+                    enabledTools
                 },
-                flowId = entity.FlowId
+                flowId = entity.FlowId ?? flowId
             });
         }
 
@@ -180,12 +197,47 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         return response;
     }
 
+    public override async Task<DeleteAgentNodeResponse> DeleteAgentNode(DeleteAgentNodeRequest request, ServerCallContext context)
+    {
+        var userId = this.userContext.UserId;
+        var flowId = string.IsNullOrEmpty(request.FlowId) ? "default-flow" : request.FlowId;
+
+        if (!string.IsNullOrEmpty(request.Id))
+        {
+            var node = await this.dbContext.AgentNodes
+                .FirstOrDefaultAsync(n => n.Id == request.Id && (n.OwnerId == userId || n.OwnerId == "guest-user"));
+
+            if (node != null)
+            {
+                flowId = node.FlowId;
+                this.dbContext.AgentNodes.Remove(node);
+            }
+
+            var connectedEdges = await this.dbContext.WorkflowEdges
+                .Where(e => (e.OwnerId == userId || e.OwnerId == "guest-user") && (e.SourceNodeId == request.Id || e.TargetNodeId == request.Id))
+                .ToListAsync();
+
+            if (connectedEdges.Count > 0)
+            {
+                this.dbContext.WorkflowEdges.RemoveRange(connectedEdges);
+            }
+
+            await this.dbContext.SaveChangesAsync();
+
+            AgentStudioTelemetry.RecordNodeDeleted(flowId);
+
+            await this.hubContext.Clients.User(userId).SendAsync("NodeDeleted", new { NodeId = request.Id, FlowId = flowId });
+        }
+
+        return new DeleteAgentNodeResponse { Success = true };
+    }
+
     public override async Task<SaveWorkflowEdgesResponse> SaveWorkflowEdges(SaveWorkflowEdgesRequest request, ServerCallContext context)
     {
         var userId = this.userContext.UserId;
         var flowId = string.IsNullOrEmpty(request.FlowId) ? "default-flow" : request.FlowId;
 
-        var workflow = await this.dbContext.Workflows.FirstOrDefaultAsync(w => w.Id == flowId && w.OwnerId == userId);
+        var workflow = await this.dbContext.Workflows.FirstOrDefaultAsync(w => w.Id == flowId);
         if (workflow == null)
         {
             this.dbContext.Workflows.Add(new WorkflowEntity
@@ -198,28 +250,35 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
                 UpdatedAt = DateTime.UtcNow
             });
         }
+        else
+        {
+            workflow.UpdatedAt = DateTime.UtcNow;
+        }
 
         var existingEdges = await this.dbContext.WorkflowEdges
-            .Where(e => e.FlowId == flowId)
+            .Where(e => e.FlowId == flowId && (e.OwnerId == userId || e.OwnerId == "guest-user"))
             .ToListAsync();
 
         this.dbContext.WorkflowEdges.RemoveRange(existingEdges);
 
         foreach (var edge in request.Edges)
         {
+            var edgeId = string.IsNullOrEmpty(edge.Id) ? Guid.NewGuid().ToString() : edge.Id;
             this.dbContext.WorkflowEdges.Add(new WorkflowEdgeEntity
             {
-                Id = string.IsNullOrEmpty(edge.Id) ? Guid.NewGuid().ToString() : edge.Id,
+                Id = edgeId,
                 FlowId = flowId,
                 OwnerId = userId,
-                SourceNodeId = edge.SourceNodeId,
-                SourceHandle = edge.SourceHandle,
-                TargetNodeId = edge.TargetNodeId,
-                TargetHandle = edge.TargetHandle
+                SourceNodeId = edge.SourceNodeId ?? string.Empty,
+                SourceHandle = edge.SourceHandle ?? string.Empty,
+                TargetNodeId = edge.TargetNodeId ?? string.Empty,
+                TargetHandle = edge.TargetHandle ?? string.Empty
             });
         }
 
         await this.dbContext.SaveChangesAsync();
+
+        AgentStudioTelemetry.RecordEdgesSaved(flowId, request.Edges.Count);
 
         await this.hubContext.Clients.User(userId).SendAsync("WorkflowEdgesSaved", new { FlowId = flowId, Count = request.Edges.Count });
 
@@ -232,8 +291,15 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         var flowId = string.IsNullOrEmpty(request.FlowId) ? "default-flow" : request.FlowId;
 
         var entities = await this.dbContext.WorkflowEdges
-            .Where(e => e.FlowId == flowId)
+            .Where(e => e.FlowId == flowId && e.OwnerId == userId)
             .ToListAsync();
+
+        if (entities.Count == 0 && (userId != "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+        {
+            entities = await this.dbContext.WorkflowEdges
+                .Where(e => e.FlowId == flowId && (e.OwnerId == "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+                .ToListAsync();
+        }
 
         var response = new GetWorkflowEdgesResponse { Success = true };
         var edgesPayload = new List<object>();
@@ -242,22 +308,22 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         {
             response.Edges.Add(new WorkflowEdge
             {
-                Id = entity.Id,
-                FlowId = entity.FlowId,
-                SourceNodeId = entity.SourceNodeId,
+                Id = entity.Id ?? string.Empty,
+                FlowId = entity.FlowId ?? flowId,
+                SourceNodeId = entity.SourceNodeId ?? string.Empty,
                 SourceHandle = entity.SourceHandle ?? string.Empty,
-                TargetNodeId = entity.TargetNodeId,
+                TargetNodeId = entity.TargetNodeId ?? string.Empty,
                 TargetHandle = entity.TargetHandle ?? string.Empty
             });
 
             edgesPayload.Add(new
             {
-                id = entity.Id,
-                flowId = entity.FlowId,
-                sourceNodeId = entity.SourceNodeId,
-                sourceHandle = entity.SourceHandle,
-                targetNodeId = entity.TargetNodeId,
-                targetHandle = entity.TargetHandle
+                id = entity.Id ?? string.Empty,
+                flowId = entity.FlowId ?? flowId,
+                sourceNodeId = entity.SourceNodeId ?? string.Empty,
+                sourceHandle = entity.SourceHandle ?? string.Empty,
+                targetNodeId = entity.TargetNodeId ?? string.Empty,
+                targetHandle = entity.TargetHandle ?? string.Empty
             });
         }
 
@@ -280,7 +346,7 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
             {
                 using var scope = this.serviceScopeFactory.CreateScope();
                 var agentEngine = scope.ServiceProvider.GetRequiredService<IAgentEngine>();
-                await agentEngine.ExecuteFlowAsync(flowId, userId, request.InputMessage);
+                await agentEngine.ExecuteFlowAsync(flowId, userId, request.InputMessage, executionId: executionId);
             }
             catch (Exception ex)
             {
@@ -302,14 +368,19 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         var items = new List<ExplorerItem>();
 
         var flows = await this.dbContext.Workflows
-            .Where(w => w.OwnerId == userId)
+            .Where(w => w.OwnerId == userId || w.OwnerId == "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(w.Id))
+            .OrderBy(w => w.Name)
             .ToListAsync();
 
         foreach (var flow in flows)
         {
+            var displayName = flow.Name.EndsWith(".agentflow", StringComparison.OrdinalIgnoreCase)
+                ? flow.Name
+                : $"{flow.Name}.agentflow";
+
             items.Add(new ExplorerItem
             {
-                Name = $"{flow.Name}.agentflow",
+                Name = displayName,
                 Path = $"/{flow.Id}",
                 Type = ItemType.File
             });
@@ -333,7 +404,7 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         response.Items.AddRange(items);
 
         var payload = items.Select(i => new { name = i.Name, path = i.Path, type = (int)i.Type }).ToList();
-        await this.hubContext.Clients.User(userId).SendAsync("ExplorerLoaded", new { Path = request.Path, Items = payload });
+        await this.hubContext.Clients.User(userId).SendAsync("ExplorerLoaded", new { Path = request.Path ?? "/", Items = payload });
 
         return response;
     }

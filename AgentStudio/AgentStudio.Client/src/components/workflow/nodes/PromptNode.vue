@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="custom-node prompt-node" :class="{ selected: props.selected }">
-    <Handle type="target" :position="Position.Top" class="node-handle" />
+    <Handle id="prompt-out" type="source" :position="Position.Top" class="node-handle" title="Podłącz do portu 'Prompt' w węźle AI Agent" />
 
     <div class="node-header d-flex align-center justify-space-between px-2 py-1">
       <div class="d-flex align-center overflow-hidden mr-1">
@@ -33,12 +33,12 @@ const emit = defineEmits<{
         {{ props.data.systemPrompt || 'System instructions template' }}
       </div>
       <div class="d-flex align-center justify-space-between mt-1">
-        <span class="badge-tag">INSTRUCTIONS</span>
+        <span class="badge-tag">PROMPT PORT</span>
         <v-icon icon="mdi-code-tags" size="10" color="grey" />
       </div>
     </div>
 
-    <Handle type="source" :position="Position.Bottom" class="node-handle" />
+    <Handle id="prompt-bottom" type="source" :position="Position.Bottom" class="node-handle" />
   </div>
 </template>
 
@@ -99,8 +99,8 @@ const emit = defineEmits<{
 }
 
 .node-handle {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   background-color: #FB8C00;
   border: 1.5px solid #FFFFFF;
 }

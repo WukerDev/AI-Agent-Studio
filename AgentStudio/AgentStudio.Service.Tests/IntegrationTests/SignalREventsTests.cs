@@ -61,37 +61,127 @@ public class SignalREventsTests : IClassFixture<AgentStudioTestFactory>
     }
 
     [Fact]
-    public async Task When_ExecuteWorkflow_Called_SignalR_Bus_Should_Receive_WorkflowStarted_Event()
+    public async Task When_DeleteAgentNode_Called_SignalR_Bus_Should_Receive_NodeDeleted_Event()
     {
         // Arrange
         await using var hubConnection = this.factory.CreateSignalRConnection();
         var tcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        hubConnection.On<JsonElement>("WorkflowStarted", payload =>
+        hubConnection.On<JsonElement>("NodeDeleted", payload =>
         {
             tcs.TrySetResult(payload);
+        });
+
+        await hubConnection.StartAsync();
+
+        var flowId = "flow-signalr-del-" + Guid.NewGuid();
+        var nodeId = "node-del-" + Guid.NewGuid();
+
+        await this.grpcClient.SaveAgentNodeAsync(new SaveAgentNodeRequest
+        {
+            FlowId = flowId,
+            Node = new AgentNode
+            {
+                Id = nodeId,
+                Name = "Node To Delete",
+                Type = NodeType.Agent,
+                Position = new Position { X = 25, Y = 25 }
+            }
+        });
+
+        // Act
+        var deleteResponse = await this.grpcClient.DeleteAgentNodeAsync(new DeleteAgentNodeRequest
+        {
+            FlowId = flowId,
+            Id = nodeId
+        });
+        deleteResponse.Success.Should().BeTrue();
+
+        // Assert
+        var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+        completedTask.Should().Be(tcs.Task, "SignalR client should receive 'NodeDeleted' event within timeout");
+
+        var eventPayload = await tcs.Task;
+        eventPayload.GetProperty("nodeId").GetString().Should().Be(nodeId);
+        eventPayload.GetProperty("flowId").GetString().Should().Be(flowId);
+
+        await hubConnection.StopAsync();
+    }
+
+    [Fact]
+    public async Task When_ExecuteWorkflow_Called_SignalR_Bus_Should_Receive_WorkflowStarted_And_Finished_With_Gemma3_12b()
+    {
+        // Arrange
+        await using var hubConnection = this.factory.CreateSignalRConnection();
+        var startedTcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var finishedTcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        string? expectedExecutionId = null;
+
+        hubConnection.On<JsonElement>("WorkflowStarted", payload =>
+        {
+            startedTcs.TrySetResult(payload);
+        });
+
+        hubConnection.On<JsonElement>("WorkflowExecutionFinished", payload =>
+        {
+            if (expectedExecutionId == null || payload.GetProperty("executionId").GetString() == expectedExecutionId)
+            {
+                finishedTcs.TrySetResult(payload);
+            }
         });
 
         await hubConnection.StartAsync();
         hubConnection.State.Should().Be(HubConnectionState.Connected);
 
         var flowId = "flow-signalr-exec-" + Guid.NewGuid();
+
+        await this.grpcClient.SaveAgentNodeAsync(new SaveAgentNodeRequest
+        {
+            FlowId = flowId,
+            Node = new AgentNode
+            {
+                Id = "agent-" + Guid.NewGuid(),
+                Name = "Gemma3 Realtime Agent",
+                Type = NodeType.Agent,
+                Position = new Position { X = 100, Y = 100 },
+                SystemPrompt = "You are a helpful assistant. Reply with the single word: OK.",
+                Endpoint = "http://localhost:11434",
+                ModelConfig = new ModelConfig
+                {
+                    Provider = "Ollama",
+                    ModelName = "gemma3:12b",
+                    Temperature = 0.1f
+                }
+            }
+        });
+
         var request = new ExecuteWorkflowRequest
         {
             FlowId = flowId,
-            InputMessage = "Test workflow execution"
+            InputMessage = "Reply with OK."
         };
 
         // Act
         var grpcResponse = await this.grpcClient.ExecuteWorkflowAsync(request);
         grpcResponse.Success.Should().BeTrue();
+        expectedExecutionId = grpcResponse.ExecutionId;
 
-        // Assert
-        var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-        completedTask.Should().Be(tcs.Task, "SignalR client should receive 'WorkflowStarted' event within timeout");
+        // Assert WorkflowStarted
+        var completedStart = await Task.WhenAny(startedTcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+        completedStart.Should().Be(startedTcs.Task, "SignalR client should receive 'WorkflowStarted' event within timeout");
 
-        var eventPayload = await tcs.Task;
-        eventPayload.GetProperty("executionId").GetString().Should().Be(grpcResponse.ExecutionId);
+        var startPayload = await startedTcs.Task;
+        startPayload.GetProperty("executionId").GetString().Should().Be(grpcResponse.ExecutionId);
+
+        // Assert WorkflowExecutionFinished (from live Ollama gemma3:12b)
+        var completedFinish = await Task.WhenAny(finishedTcs.Task, Task.Delay(TimeSpan.FromSeconds(45)));
+        completedFinish.Should().Be(finishedTcs.Task, "SignalR client should receive 'WorkflowExecutionFinished' event from gemma3:12b");
+
+        var finishPayload = await finishedTcs.Task;
+        finishPayload.GetProperty("executionId").GetString().Should().Be(grpcResponse.ExecutionId);
+        finishPayload.GetProperty("success").GetBoolean().Should().BeTrue();
+        finishPayload.GetProperty("output").GetString().Should().NotBeNullOrWhiteSpace();
 
         await hubConnection.StopAsync();
     }

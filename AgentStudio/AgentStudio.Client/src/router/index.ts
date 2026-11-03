@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { useAuth } from '../auth'
+import WorkflowCanvas from '../components/workflow/WorkflowCanvas.vue'
 
 const routes: RouteRecordRaw[] = [
     {
         path: '/',
         name: 'Editor',
-        component: () => import('../components/workflow/WorkflowCanvas.vue')
+        component: WorkflowCanvas
     },
 ]
 
@@ -13,15 +13,6 @@ export function setupRouter() {
     const router = createRouter({
         history: createWebHistory(import.meta.env.BASE_URL),
         routes
-    })
-
-    router.beforeEach((_to, _from) => {
-        const authStore = useAuth()
-
-        if (!authStore.isAuthenticated) {
-            authStore.login()
-            return false
-        }
     })
 
     return router

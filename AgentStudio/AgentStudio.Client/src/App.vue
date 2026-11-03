@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppSidebar from './components/layout/AppSidebar.vue'
 import AppLeftDrawer from './components/layout/AppLeftDrawer.vue'
@@ -16,6 +16,15 @@ const activeBottomTab = ref<string | null>(null)
 
 const isLeftPanelOpen = ref(false)
 const activeLeftTab = ref<string | null>(null)
+
+watch(() => globalViewModel.executionStatus, (status) => {
+  if (status === 'Starting' || status === 'Running') {
+    isBottomPanelOpen.value = true
+    if (!activeBottomTab.value) {
+      activeBottomTab.value = 'console'
+    }
+  }
+})
 
 const toggleBottomPanel = (tab: string): void => {
   if (isBottomPanelOpen.value && activeBottomTab.value === tab) {

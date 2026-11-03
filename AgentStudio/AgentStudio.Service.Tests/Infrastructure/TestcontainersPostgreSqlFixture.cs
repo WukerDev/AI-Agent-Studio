@@ -15,13 +15,13 @@ public class TestcontainersPostgreSqlFixture : IAsyncLifetime
         try
         {
             this.container = new PostgreSqlBuilder()
-                .WithImage("postgres:15-alpine")
+                .WithImage("postgres:15")
                 .WithDatabase("agentstudio_tests")
                 .WithUsername("postgres")
                 .WithPassword("postgres")
                 .Build();
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
             await this.container.StartAsync(cts.Token);
             this.ConnectionString = this.container.GetConnectionString();
             this.IsDockerAvailable = true;

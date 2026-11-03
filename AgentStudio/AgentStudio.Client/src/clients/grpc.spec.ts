@@ -18,6 +18,7 @@ describe('Central gRPC Client (src/clients/grpc.ts)', () => {
         const client = getGrpcClient()
         expect(client).toBeDefined()
         expect(typeof client.saveAgentNode).toBe('function')
+        expect(typeof client.deleteAgentNode).toBe('function')
         expect(typeof client.getAgentNodes).toBe('function')
         expect(typeof client.saveWorkflowEdges).toBe('function')
         expect(typeof client.getWorkflowEdges).toBe('function')

@@ -4,7 +4,7 @@ defineOptions({
 })
 
 import { shallowRef, watch, computed, onMounted, onUnmounted, ref } from 'vue'
-import { VueFlow, useVueFlow, type Node, type Edge, type Connection } from '@vue-flow/core'
+import { VueFlow, useVueFlow, ConnectionMode, type Node, type Edge, type Connection } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { MiniMap } from '@vue-flow/minimap'
@@ -47,6 +47,134 @@ const isRunDialogOpen = ref(false)
 const isShortcutsHelpOpen = ref(false)
 const workflowInputPrompt = ref('')
 
+const flowSamplePrompts: Record<string, { label: string; prompt: string }[]> = {
+  'default-flow': [
+    {
+      label: 'Obliczenia matematyczne (MCP Calculator)',
+      prompt: 'Użyj narzędzia calculate_expression aby obliczyć: (145 * 28) + 350 i przedstaw wynik po polsku.'
+    },
+    {
+      label: 'Diagnostyka systemu (MCP System Info)',
+      prompt: 'Uruchom narzędzie get_system_info i podaj system operacyjny, wersję .NET oraz liczbę rdzeni procesora.'
+    },
+    {
+      label: 'Aktualny czas UTC (MCP Time)',
+      prompt: 'Sprawdź aktualny czas UTC oraz dzień tygodnia za pomocą narzędzia get_current_time.'
+    }
+  ],
+  'multi-agent-research': [
+    {
+      label: 'gRPC vs REST API (Badacz -> Redaktor)',
+      prompt: 'Zbadaj kluczowe różnice między komunikacją gRPC a REST API w mikroserwisach wysokiej wydajności.'
+    },
+    {
+      label: 'Indeksy PostgreSQL (Badacz -> Redaktor)',
+      prompt: 'Przeanalizuj zastosowania indeksów B-Tree oraz JSONB GIN w bazie PostgreSQL dla systemów AI.'
+    },
+    {
+      label: 'Architektura ReAct i MCP',
+      prompt: 'Opisz wzorzec orkiestracji wieloagentowej ReAct oraz rolę protokołu Model Context Protocol.'
+    }
+  ],
+  'gemini-assistant-flow': [
+    {
+      label: 'Obliczenia + Czas (Gemini 3.5 Flash-Lite + MCP)',
+      prompt: 'Oblicz za pomocą calculate_expression wyrażenie (512 * 32) + 1024 oraz podaj zwięzłe podsumowanie.'
+    },
+    {
+      label: 'Projekt bazy danych dla Agentów AI',
+      prompt: 'Zaprojektuj zwięzły schemat tabel PostgreSQL dla historii wykonań agentów AI z kolumną JSONB.'
+    },
+    {
+      label: 'Diagnostyka środowiska uruchomieniowego',
+      prompt: 'Pobierz informacje o systemie przez get_system_info i podsumuj parametry maszyny.'
+    }
+  ],
+  'code-review-flow': [
+    {
+      label: 'Lista plików projektu (MCP list_dir)',
+      prompt: 'Wypisz zawartość bieżącego katalogu roboczego za pomocą narzędzia list_dir i opisz strukturę projektu.'
+    },
+    {
+      label: 'Diagnostyka hosta .NET (MCP get_system_info)',
+      prompt: 'Wywołaj narzędzie get_system_info i podaj wersję środowiska .NET, architekturę OS oraz liczbę rdzeni CPU.'
+    },
+    {
+      label: 'Audyt bezpieczeństwa gRPC-Web i SignalR',
+      prompt: 'Jako Senior Architect wymień 3 najważniejsze zasady zabezpieczania usług gRPC-Web oraz hubów SignalR.'
+    }
+  ],
+  'mcp-calculator-time-flow': [
+    {
+      label: 'Test get_system_info (Diagnostyka OS / CPU / .NET)',
+      prompt: 'Wywołaj narzędzie get_system_info i podaj nazwę systemu operacyjnego, wersję .NET oraz liczbę rdzeni CPU.'
+    },
+    {
+      label: 'Test calculate_expression (Kalkulator MCP)',
+      prompt: 'Użyj narzędzia calculate_expression aby policzyć (256 * 64) + 1024 i podaj dokładny wynik.'
+    },
+    {
+      label: 'Test get_current_time (Aktualna data i czas UTC)',
+      prompt: 'Wywołaj narzędzie get_current_time i podaj dokładną datę oraz godzinę UTC.'
+    }
+  ]
+}
+
+const currentFlowSamples = computed(() => {
+  const flowId = globalViewModel.currentFlowId || 'default-flow'
+  return flowSamplePrompts[flowId] ?? flowSamplePrompts['default-flow'] ?? []
+})
+
+function resolveEdgeHandlesAndColor(edge: {
+  sourceNodeId: string
+  sourceHandle?: string
+  targetNodeId: string
+  targetHandle?: string
+}) {
+  const allNodes = globalViewModel.nodes || []
+  const sourceNode = allNodes.find(n => n.id === edge.sourceNodeId)
+  const targetNode = allNodes.find(n => n.id === edge.targetNodeId)
+
+  let sourceId = edge.sourceNodeId
+  let targetId = edge.targetNodeId
+  let sourceHandle = edge.sourceHandle || undefined
+  let targetHandle = edge.targetHandle || undefined
+  let strokeColor = '#E63946'
+
+  // If an Agent is connected to a sub-node (Model, Prompt, MCP), normalize direction: Sub-Node -> Agent port
+  if (sourceNode?.type === NodeType.AGENT && targetNode && targetNode.type !== NodeType.AGENT) {
+    sourceId = targetNode.id
+    targetId = sourceNode.id
+    sourceHandle = undefined
+    targetHandle = undefined
+  }
+
+  const normalizedSource = allNodes.find(n => n.id === sourceId)
+  const normalizedTarget = allNodes.find(n => n.id === targetId)
+
+  if (normalizedTarget?.type === NodeType.AGENT) {
+    if (normalizedSource?.type === NodeType.MODEL) {
+      sourceHandle = 'model-out'
+      targetHandle = 'model'
+      strokeColor = '#2196F3'
+    } else if (normalizedSource?.type === NodeType.PROMPT) {
+      sourceHandle = 'prompt-out'
+      targetHandle = 'prompt'
+      strokeColor = '#FB8C00'
+    } else if (normalizedSource?.type === NodeType.MCP_CONNECTOR) {
+      sourceHandle = 'tool-out'
+      targetHandle = 'tool'
+      strokeColor = '#4CAF50'
+    } else if (normalizedSource?.type === NodeType.AGENT) {
+      sourceHandle = 'agent-out'
+      targetHandle = 'agent-in'
+      strokeColor = '#E63946'
+    }
+  }
+
+  return { sourceId, targetId, sourceHandle, targetHandle, strokeColor }
+}
+
 function getNodeTypeName(type: NodeType): string {
   switch (type) {
     case NodeType.AGENT:
@@ -78,23 +206,30 @@ watch(() => globalViewModel.nodes, (newNodes) => {
   }))
 }, { immediate: true, deep: true })
 
-watch(() => globalViewModel.edges, (newEdges) => {
-  edges.value = newEdges.map(edge => ({
-    id: edge.id || `e_${edge.sourceNodeId}_${edge.targetNodeId}`,
-    source: edge.sourceNodeId,
-    target: edge.targetNodeId,
-    sourceHandle: edge.sourceHandle || undefined,
-    targetHandle: edge.targetHandle || undefined,
-    animated: true,
-    style: { stroke: '#E63946', strokeWidth: 2 }
-  }))
+watch([() => globalViewModel.edges, () => globalViewModel.nodes], ([newEdges]) => {
+  edges.value = newEdges.map(edge => {
+    const resolved = resolveEdgeHandlesAndColor(edge)
+    return {
+      id: edge.id || `e_${resolved.sourceId}_${resolved.targetId}`,
+      source: resolved.sourceId,
+      target: resolved.targetId,
+      sourceHandle: resolved.sourceHandle,
+      targetHandle: resolved.targetHandle,
+      animated: true,
+      style: { stroke: resolved.strokeColor, strokeWidth: 2 }
+    }
+  })
 }, { immediate: true, deep: true })
 
-watch(() => globalViewModel.currentFlowId, () => {
+watch(() => globalViewModel.currentFlowId, (newFlowId) => {
+  const samples = flowSamplePrompts[newFlowId || 'default-flow'] || flowSamplePrompts['default-flow']
+  if (samples && samples.length > 0) {
+    workflowInputPrompt.value = samples[0]!.prompt
+  }
   setTimeout(() => {
     fitView({ padding: 0.2 })
   }, 100)
-})
+}, { immediate: true })
 
 onNodeClick((event) => {
   if (event.node?.id) {
@@ -127,16 +262,30 @@ onConnect((params: Connection) => {
   if (!params.source || !params.target) return
   globalViewModel.pushHistorySnapshot()
 
-  const newEdge = {
-    id: `e_${params.source}_${params.target}`,
-    flowId: globalViewModel.currentFlowId || 'default-flow',
+  const resolved = resolveEdgeHandlesAndColor({
     sourceNodeId: params.source,
     sourceHandle: params.sourceHandle || '',
     targetNodeId: params.target,
     targetHandle: params.targetHandle || ''
+  })
+
+  const newEdge = {
+    id: `e_${resolved.sourceId}_${resolved.targetId}`,
+    flowId: globalViewModel.currentFlowId || 'default-flow',
+    sourceNodeId: resolved.sourceId,
+    sourceHandle: resolved.sourceHandle || '',
+    targetNodeId: resolved.targetId,
+    targetHandle: resolved.targetHandle || ''
   }
 
-  const updatedEdges = [...globalViewModel.edges.filter(e => e.id !== newEdge.id), newEdge]
+  let filteredEdges = globalViewModel.edges.filter(e => e.id !== newEdge.id)
+  if (resolved.targetHandle === 'model') {
+    filteredEdges = filteredEdges.filter(
+      e => !(e.targetNodeId === resolved.targetId && e.targetHandle === 'model')
+    )
+  }
+
+  const updatedEdges = [...filteredEdges, newEdge]
   globalViewModel.saveEdges(updatedEdges)
 })
 
@@ -315,42 +464,36 @@ function handleKeyDown(event: KeyboardEvent) {
 
   const isCtrlOrMeta = event.ctrlKey || event.metaKey
 
-  // Select all: Ctrl+A
   if (isCtrlOrMeta && event.key.toLowerCase() === 'a') {
     event.preventDefault()
     selectAllNodes()
     return
   }
 
-  // Copy: Ctrl+C
   if (isCtrlOrMeta && event.key.toLowerCase() === 'c') {
     event.preventDefault()
     handleCopy()
     return
   }
 
-  // Cut: Ctrl+X
   if (isCtrlOrMeta && event.key.toLowerCase() === 'x') {
     event.preventDefault()
     handleCut()
     return
   }
 
-  // Paste: Ctrl+V
   if (isCtrlOrMeta && event.key.toLowerCase() === 'v') {
     event.preventDefault()
     handlePaste()
     return
   }
 
-  // Undo: Ctrl+Z (without shift)
   if (isCtrlOrMeta && event.key.toLowerCase() === 'z' && !event.shiftKey) {
     event.preventDefault()
     handleUndo()
     return
   }
 
-  // Redo: Ctrl+Y or Ctrl+Shift+Z
   if (
     (isCtrlOrMeta && event.key.toLowerCase() === 'y') ||
     (isCtrlOrMeta && event.key.toLowerCase() === 'z' && event.shiftKey)
@@ -360,7 +503,6 @@ function handleKeyDown(event: KeyboardEvent) {
     return
   }
 
-  // Delete / Backspace
   if (event.key === 'Delete' || event.key === 'Backspace') {
     const selectedIds = getCurrentlySelectedNodeIds()
     if (selectedIds.length > 0) {
@@ -370,7 +512,6 @@ function handleKeyDown(event: KeyboardEvent) {
     }
   }
 
-  // Arrow keys: ArrowUp, ArrowDown, ArrowLeft, ArrowRight
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
     const selectedIds = getCurrentlySelectedNodeIds()
     if (selectedIds.length > 0) {
@@ -618,6 +759,7 @@ const executionStatusColor = computed(() => {
     <VueFlow
       :nodes="nodes"
       :edges="edges"
+      :connection-mode="ConnectionMode.Loose"
       :default-viewport="{ zoom: 1 }"
       :min-zoom="0.2"
       :max-zoom="4"
@@ -735,7 +877,7 @@ const executionStatusColor = computed(() => {
     </v-dialog>
 
     <!-- Run Workflow Dialog -->
-    <v-dialog v-model="isRunDialogOpen" max-width="500">
+    <v-dialog v-model="isRunDialogOpen" max-width="580">
       <v-card color="surface" rounded="lg">
         <v-card-title class="d-flex align-center">
           <v-icon icon="mdi-play-circle" color="success" class="mr-2" />
@@ -743,12 +885,34 @@ const executionStatusColor = computed(() => {
         </v-card-title>
 
         <v-card-text>
-          <p class="text-caption text-grey mb-3">
-            Provide an initial query or message for the autonomous agents to execute, or run with base instructions:
+          <p class="text-caption text-grey mb-2">
+            Wpisz własne polecenie lub kliknij jeden z gotowych, przykładowych promptów dla aktualnego przepływu (<strong>{{ globalViewModel.currentFlowId }}</strong>):
           </p>
+
+          <div class="mb-3">
+            <div class="text-caption font-weight-bold text-grey-lighten-1 mb-1">
+              Przykładowe prompty dla tego scenariusza (kliknij, aby wstawić):
+            </div>
+            <div class="d-flex flex-column gap-1">
+              <v-card
+                v-for="(sample, idx) in currentFlowSamples"
+                :key="idx"
+                variant="tonal"
+                color="primary"
+                class="pa-2 mb-1.5 cursor-pointer sample-prompt-card"
+                @click="workflowInputPrompt = sample.prompt"
+              >
+                <div class="text-caption font-weight-bold text-primary">{{ sample.label }}</div>
+                <div class="text-caption text-grey-lighten-2 font-monospace" style="font-size: 11px;">
+                  {{ sample.prompt }}
+                </div>
+              </v-card>
+            </div>
+          </div>
 
           <v-textarea
             v-model="workflowInputPrompt"
+            label="Prompt wejściowy ({{input}})"
             placeholder="e.g. Plan a microservice architecture and list required tools via MCP..."
             rows="3"
             variant="outlined"
@@ -798,6 +962,20 @@ const executionStatusColor = computed(() => {
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.sample-prompt-card {
+  transition: transform 0.12s ease, border-color 0.12s ease;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.sample-prompt-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(59, 130, 246, 0.7);
 }
 
 :deep(.vue-flow__controls) {

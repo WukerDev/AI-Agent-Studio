@@ -2,7 +2,12 @@ namespace AgentStudio.Service.Application;
 
 public interface IAgentEngine
 {
-    Task<WorkflowExecutionResult> ExecuteFlowAsync(string flowId, string userId, string? inputMessage = null, CancellationToken cancellationToken = default);
+    Task<WorkflowExecutionResult> ExecuteFlowAsync(
+        string flowId,
+        string userId,
+        string? inputMessage = null,
+        CancellationToken cancellationToken = default,
+        string? executionId = null);
 }
 
 public class WorkflowExecutionResult

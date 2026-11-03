@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="custom-node mcp-node" :class="{ selected: props.selected }">
-    <Handle type="target" :position="Position.Top" class="node-handle" />
+    <Handle id="tool-out" type="source" :position="Position.Top" class="node-handle" title="Podłącz do portu 'Tool' w węźle AI Agent" />
 
     <div class="node-header d-flex align-center justify-space-between px-2 py-1">
       <div class="d-flex align-center overflow-hidden mr-1">
@@ -31,17 +31,25 @@ const emit = defineEmits<{
     <div class="node-body px-2 py-1.5">
       <div class="d-flex align-center justify-space-between mb-1">
         <span class="label-text">Server</span>
-        <span class="value-text text-truncate" style="max-width: 90px;">
-          {{ props.data.mcpConfig?.serverUrl ? props.data.mcpConfig.serverUrl.replace(/^https?:\/\//, '') : 'None' }}
+        <span class="value-text text-truncate" style="max-width: 95px;">
+          {{
+            !props.data.mcpConfig?.serverUrl
+              ? 'Built-in MCP'
+              : props.data.mcpConfig.serverUrl.startsWith('builtin://')
+                ? 'Built-in Tools'
+                : props.data.mcpConfig.serverUrl.replace(/^https?:\/\//, '')
+          }}
         </span>
       </div>
       <div class="d-flex align-center justify-space-between">
         <span class="label-text">Tools</span>
-        <span class="badge-tag">{{ props.data.mcpConfig?.enabledTools?.length || 0 }} ACTIVE</span>
+        <span class="badge-tag">
+          {{ props.data.mcpConfig?.enabledTools?.length ? `${props.data.mcpConfig.enabledTools.length} ACTIVE` : 'ALL ACTIVE' }}
+        </span>
       </div>
     </div>
 
-    <Handle type="source" :position="Position.Bottom" class="node-handle" />
+    <Handle id="tool-bottom" type="source" :position="Position.Bottom" class="node-handle" />
   </div>
 </template>
 
@@ -104,8 +112,8 @@ const emit = defineEmits<{
 }
 
 .node-handle {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   background-color: #4CAF50;
   border: 1.5px solid #FFFFFF;
 }

@@ -135,7 +135,7 @@ const paletteNodes = [
   {
     type: NodeType.MODEL,
     name: 'LLM Model',
-    description: 'OpenAI, Ollama & custom endpoint',
+    description: 'Ollama, Gemini, OpenAI & custom',
     icon: 'mdi-brain',
     color: 'info'
   },
@@ -179,12 +179,33 @@ const paletteArguments = [
   {
     type: NodeType.MODEL,
     name: 'Ollama Local Preset',
-    description: 'llama3.2 @ localhost:11434',
+    description: 'gemma3:12b @ localhost:11434',
     icon: 'mdi-laptop',
     color: 'purple-darken-1',
     customConfig: {
-      modelConfig: { provider: 'Ollama', modelName: 'llama3.2', temperature: 0.5 },
+      modelConfig: { provider: 'Ollama', modelName: 'gemma3:12b', temperature: 0.5 },
       endpoint: 'http://localhost:11434'
+    }
+  },
+  {
+    type: NodeType.MODEL,
+    name: 'Google Gemini 2.5 Flash-Lite',
+    description: 'gemini-2.5-flash-lite (Cheapest $0.10/1M)',
+    icon: 'mdi-google',
+    color: 'cyan-darken-1',
+    customConfig: {
+      modelConfig: { provider: 'Gemini', modelName: 'gemini-2.5-flash-lite', temperature: 0.6 },
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/'
+    }
+  },
+  {
+    type: NodeType.MCP_CONNECTOR,
+    name: 'Math & System MCP',
+    description: 'calculate_expression, get_current_time',
+    icon: 'mdi-calculator-variant',
+    color: 'green-darken-1',
+    customConfig: {
+      mcpConfig: { serverUrl: 'builtin://tools', authToken: '', enabledTools: ['calculate_expression', 'get_current_time', 'get_system_info'] }
     }
   },
   {
@@ -194,17 +215,17 @@ const paletteArguments = [
     icon: 'mdi-web',
     color: 'teal-darken-1',
     customConfig: {
-      mcpConfig: { serverUrl: 'http://localhost:8000/mcp', authToken: '', enabledTools: ['search_web', 'fetch_page'] }
+      mcpConfig: { serverUrl: 'builtin://tools', authToken: '', enabledTools: ['search_web', 'fetch_page'] }
     }
   },
   {
     type: NodeType.MCP_CONNECTOR,
     name: 'File System MCP',
-    description: 'read_file, write_file',
+    description: 'read_file, write_file, list_dir',
     icon: 'mdi-folder-cog',
     color: 'light-green-darken-2',
     customConfig: {
-      mcpConfig: { serverUrl: 'http://localhost:8000/mcp', authToken: '', enabledTools: ['read_file', 'write_file', 'list_dir'] }
+      mcpConfig: { serverUrl: 'builtin://tools', authToken: '', enabledTools: ['read_file', 'write_file', 'list_dir'] }
     }
   }
 ]
