@@ -254,17 +254,11 @@ public class AgentEngine : IAgentEngine
                 string responseText;
                 if (tools.Count > 0)
                 {
-                    try
-                    {
-                        var agentWithTools = chatClient.AsAIAgent(instructions: systemPrompt, tools: tools, name: agentName);
-                        var response = await agentWithTools.RunAsync(currentInput, cancellationToken: cancellationToken);
-                        responseText = response.Text ?? string.Empty;
-                    }
-                    catch (Exception toolEx) when (toolEx.Message.Contains("does not support tools", StringComparison.OrdinalIgnoreCase))
+                    if (provider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
                     {
                         await LogEvent(
                             "info",
-                            $"Model '{modelName}' does not support native OpenAI tool definitions; activating ReAct MCP tool execution loop ({tools.Count} tools).");
+                            $"Activating ReAct MCP tool execution loop for Gemini model '{modelName}' ({tools.Count} tools).");
 
                         responseText = await ExecuteReActToolLoopAsync(
                             chatClient,
@@ -274,6 +268,34 @@ public class AgentEngine : IAgentEngine
                             tools,
                             LogEvent,
                             cancellationToken);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var agentWithTools = chatClient.AsAIAgent(instructions: systemPrompt, tools: tools, name: agentName);
+                            var response = await agentWithTools.RunAsync(currentInput, cancellationToken: cancellationToken);
+                            responseText = response.Text ?? string.Empty;
+                        }
+                        catch (Exception toolEx) when (
+                            toolEx.Message.Contains("does not support tools", StringComparison.OrdinalIgnoreCase) ||
+                            toolEx.Message.Contains("400", StringComparison.OrdinalIgnoreCase) ||
+                            toolEx.Message.Contains("Bad Request", StringComparison.OrdinalIgnoreCase) ||
+                            toolEx.Message.Contains("Invalid JSON payload", StringComparison.OrdinalIgnoreCase))
+                        {
+                            await LogEvent(
+                                "info",
+                                $"Model '{modelName}' rejected native OpenAI tool definitions ({toolEx.Message}); activating ReAct MCP tool execution loop ({tools.Count} tools).");
+
+                            responseText = await ExecuteReActToolLoopAsync(
+                                chatClient,
+                                agentName,
+                                systemPrompt,
+                                currentInput,
+                                tools,
+                                LogEvent,
+                                cancellationToken);
+                        }
                     }
                 }
                 else

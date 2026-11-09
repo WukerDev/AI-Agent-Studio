@@ -131,12 +131,12 @@ public class McpClientService : IMcpClientService
                 "Evaluates a mathematical expression (e.g. '(145 * 28) + 350') and returns the exact numeric result."),
 
             ["get_current_time"] = AIFunctionFactory.Create(
-                (string? timezone) => GetCurrentTimeInfo(timezone),
+                (string timezone) => GetCurrentTimeInfo(timezone),
                 "get_current_time",
                 "Returns the current UTC and local date, time, and day of the week."),
 
             ["get_system_info"] = AIFunctionFactory.Create(
-                (string? category) => GetSystemInfoSummary(category),
+                (string category) => GetSystemInfoSummary(category),
                 "get_system_info",
                 "Returns system environment diagnostics: OS version, .NET runtime, CPU cores, machine name, working directory, and AI Agent Studio telemetry."),
 
@@ -151,7 +151,7 @@ public class McpClientService : IMcpClientService
                 "Fetches content or metadata from a specified URL."),
 
             ["list_dir"] = AIFunctionFactory.Create(
-                (string? path) => ListWorkspaceDirectory(path),
+                (string path) => ListWorkspaceDirectory(path),
                 "list_dir",
                 "Lists files and directories in the workspace directory."),
 
