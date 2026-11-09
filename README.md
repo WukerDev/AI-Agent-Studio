@@ -42,23 +42,24 @@ flowchart TD
 
 1. **Wizualny Kreator Przepływów (VueFlow):**
    * Projektowanie architektury agentów oraz ich wzajemnych relacji metodą drag-and-drop.
-   * Obsługa 4 dedykowanych węzłów: **Węzeł Agenta**, **Węzeł Modelu LLM**, **Węzeł Promptu Systemowego** oraz **Węzeł Konektora MCP**.
+   * Obsługa 4 dedykowanych węzłów wykonawczych (**Węzeł Agenta**, **Węzeł Modelu LLM**, **Węzeł Promptu Systemowego**, **Węzeł Konektora MCP**) oraz węzłów pomocniczych (**Notatka / Sticky Note**, **Etykieta / Label**).
 2. **Elastyczne Podłączanie Modeli AI:**
    * Wsparcie dla chmurowych dostawców (**OpenAI**: `gpt-4o`, `gpt-4o-mini`, itp.).
-   * Pełne wsparcie dla modeli lokalnych (**Ollama**: `llama3.2`, `mistral`, itp.) bez konieczności płacenia za API.
+   * Pełne wsparcie dla modeli lokalnych (**Ollama**: `gemma3:12b`, `llama3.2`, `mistral`, itp.) bez konieczności płacenia za API.
    * Wsparcie dla niestandardowych endpointów zgodnych z OpenAI API (vLLM, LM Studio, Azure OpenAI).
 3. **Integracja z MCP (Model Context Protocol):**
    * Dynamiczne podłączanie serwerów narzędziowych MCP (HTTP / SSE / SSE Transport).
-   * Automatyczna dyskryminacja narzędzi, mapowanie ich na `AITool` w Microsoft Agents AI i udostępnianie agentom w pętli myślenia.
+   * Automatyczna dyskryminacja narzędzi, mapowanie ich na `AITool` w Microsoft Agents AI i udostępnianie agentom w pętli myślenia (z automatycznym fallbackiem kontekstowym dla modeli nieobsługujących natywnego function-calling, np. `gemma3:12b`).
 4. **Wysokowydajny gRPC-Web & Real-Time SignalR:**
    * Silnie typowane kontrakty Protocol Buffers (`agent_node.proto`).
-   * Zapis i odczyt konfiguracji grafu przez gRPC-Web.
+   * Zapis, odczyt i usuwanie konfiguracji węzłów oraz krawędzi grafu przez gRPC-Web.
    * Asynchroniczne strumieniowanie logów egzekucji agenta krok po kroku oraz odpowiedzi AI na żywo do panelu konsoli frontendu.
 5. **Centralna Bramka YARP (Frontend Gateway):**
-   * Jeden port wejściowy `:5000` obsługujący gRPC-Web, SignalR (WebSockets), Keycloak i pliki SPA.
+   * Jeden port wejściowy `:5000` obsługujący gRPC-Web, SignalR (WebSockets), Keycloak, metryki OpenTelemetry (`/metrics`, `/api/telemetry`) i pliki SPA.
    * Całkowita eliminacja problemów z CORS i zróżnicowanymi portami.
-6. **Pełne Bezpieczeństwo i Tożsamość (IAM):**
+6. **Pełne Bezpieczeństwo, Tożsamość (IAM) i Telemetria:**
    * Centralne zarządzanie tożsamością z użyciem Keycloak (realm `agent-studio`, klient OIDC `portal`).
+   * Wbudowana telemetria OpenTelemetry (`AgentStudioTelemetry`) eksportująca metryki w formacie Prometheus (`/metrics`) i JSON (`/api/telemetry`) wraz z automatycznie prowizjonowanym dashboardem w Grafanie (`Deploy/grafana/dashboards/agent-studio-telemetry.json`).
 
 ---
 
@@ -87,7 +88,7 @@ flowchart TD
 ### Infrastruktura & CI/CD
 * **Konteneryzacja:** Docker & Docker Compose (`compose.yaml`)
 * **Tożsamość i Dostęp (IAM):** Keycloak 26+ (automatyczny import realmu `Deploy/keycloak/agent-studio-realm.json`)
-* **Monitoring:** Grafana
+* **Monitoring:** Grafana + OpenTelemetry (`/metrics`, `/api/telemetry`)
 * **CI/CD:** GitHub Actions (`.github/workflows/ci.yml`) z kompilacją Release, testami integracyjnymi .NET i testami TypeScript
 
 ---
@@ -98,7 +99,7 @@ flowchart TD
 Kanwa kreatora pozwala łączyć 4 rodzaje węzłów:
 * 🤖 **AI Agent (Czerwony):** Główny węzeł decyzyjny reprezentujący autonomicznego agenta `ChatClientAgent`.
 * 🧠 **LLM Model (Niebieski):** Węzeł definiujący model językowy (OpenAI, Ollama, Custom API), temperaturę oraz adres API.
-* 📝 **System Prompt (Pomarańczowy):** Węzeł wstrzykujący instrukcje bazowe, rolę i zasady postępowania agenta.
+* 📝 **System Prompt (Pomarańczowy):** Węzeł wstrzykujący instrukcje bazowe, rolę i zasady postępowania agenta (obsługuje również zmienne szablonowe `{{input}}` i `{{query}}`).
 * 🔌 **MCP Connector (Zielony):** Węzeł łączący agenta z zewnętrznym serwerem narzędziowym Model Context Protocol (np. wyszukiwarka internetowa, baza danych, system plików).
 
 ---
@@ -106,10 +107,10 @@ Kanwa kreatora pozwala łączyć 4 rodzaje węzłów:
 ### 2. Sposób 1: Wizualne Podłączenie na Kanwie (Rekomendowane)
 1. Kliknij **Add Node -> LLM Model** na pasku narzędzi lub wybierz kartę *LLM Model* z lewego panelu.
 2. Kliknij **Add Node -> AI Agent** i umieść go obok modelu.
-3. Przeciągnij krawędź z prawego punktu węzła **LLM Model** (uchwyt wyjściowy) do lewego punktu węzła **AI Agent** (uchwyt wejściowy).
-4. Kliknij ikonę zębatki ⚙️ na węźle modelu, aby otworzyć okno konfiguracji:
+3. Przeciągnij krawędź z prawego punktu węzła **LLM Model** (uchwyt wyjściowy) do lewego punktu węzła **AI Agent** (uchwyt wejściowy). Możesz też łączyć wielu agentów szeregowo (`Agent 1 -> Agent 2`) w celu przekazywania wyników między agentami.
+4. Kliknij węzeł modelu (lub ikonę zębatki ⚙️), aby otworzyć panel inspektora konfiguracji:
    * Wybierz **Provider**: `OpenAI`, `Ollama` lub `Custom`.
-   * Wpisz **Model Name**: np. `gpt-4o` lub `llama3.2`.
+   * Wpisz **Model Name**: np. `gemma3:12b`, `gpt-4o` lub `llama3.2`.
    * Ustaw **Temperature**: np. `0.7`.
 5. Kliknij **Save Changes**. Konfiguracja zostanie natychmiast utrwalona w bazie danych przez gRPC.
 
@@ -117,9 +118,9 @@ Kanwa kreatora pozwala łączyć 4 rodzaje węzłów:
 
 ### 3. Sposób 2: Bezpośrednia Konfiguracja w Węźle Agenta
 Każdy węzeł **AI Agent** posiada wbudowaną konfigurację awaryjną:
-1. Kliknij ikonę zębatki ⚙️ bezpośrednio na węźle Agenta.
-2. W oknie konfiguracji możesz od razu wybrać dostawcę modelu, wpisać prompt systemowy oraz podać URL serwera MCP.
-3. Jeśli węzeł Agenta nie ma podłączonego osobnego węzła modelu, silnik automatycznie skorzysta z konfiguracji bezpośredniej lub domyślnej z pliku konfiguracyjnego `appsettings.json`.
+1. Kliknij bezpośrednio na węzeł Agenta.
+2. W panelu inspektora możesz od razu wybrać dostawcę modelu, wpisać prompt systemowy oraz podać URL serwera MCP.
+3. Jeśli węzeł Agenta nie ma podłączonego osobnego węzła modelu, silnik automatycznie skorzysta z konfiguracji bezpośredniej lub domyślnej z pliku konfiguracyjnego `appsettings.json` (`Ollama` / `gemma3:12b`).
 
 ---
 
@@ -132,9 +133,9 @@ Każdy węzeł **AI Agent** posiada wbudowaną konfigurację awaryjną:
 * **Endpoint:** (Domyślnie `https://api.openai.com/v1`)
 
 #### B. Ollama (Lokalnie na Twoim komputerze)
-* Uruchom Ollama na komputerze (`ollama run llama3.2`).
+* Uruchom Ollama na komputerze (`ollama run gemma3:12b` lub `ollama run llama3.2`).
 * **Provider:** `Ollama`
-* **Model Name:** `llama3.2`, `mistral`, `deepseek-r1`
+* **Model Name:** `gemma3:12b`, `llama3.2`, `mistral`, `deepseek-r1`
 * **Custom API Endpoint:** `http://localhost:11434` (lub `http://host.docker.internal:11434` w kontenerze).
 
 #### C. Custom API / vLLM / LM Studio / Azure OpenAI
@@ -149,7 +150,7 @@ Każdy węzeł **AI Agent** posiada wbudowaną konfigurację awaryjną:
 2. W oknie dialogowym wpisz opcjonalne zadanie lub zapytanie wejściowe (np. *„Wyszukaj najnowsze artykuły o AI i przygotuj podsumowanie”*).
 3. Kliknij **Execute**.
 4. W dolnym panelu konsoli (**Console**) zobaczysz strumieniowane na żywo logi z silnika:
-   * Rozpoznanie konfiguracji modelu i promptu,
+   * Rozpoznanie konfiguracji modelu, krawędzi grafu i promptu,
    * Nawiązanie połączenia z serwerami MCP i podpięcie narzędzi,
    * Wykonanie pętli myślenia agenta w Microsoft Agents AI.
 5. W zakładce **Output** pojawi się ostateczna odpowiedź wygenerowana przez Agenta.
@@ -199,7 +200,7 @@ Każdy węzeł **AI Agent** posiada wbudowaną konfigurację awaryjną:
 - [x] Utworzenie testów jednostkowych silnika agentów `AgentEngineUnitTests`.
 - [x] Wdrożenie testów frontendowych **Vitest + JSDOM** (`WorkflowE2E.spec.ts`, `NodeConfigDialog.spec.ts`, `grpc.spec.ts`, `notifications.spec.ts`).
 - [x] Zintegrowanie automatycznych testów w GitHub Actions workflow.
-- [ ] Dalsza rozbudowa dashboardów diagnostycznych w **Grafanie** w oparciu o metryki OpenTelemetry.
+- [x] Dalsza rozbudowa dashboardów diagnostycznych w **Grafanie** w oparciu o metryki OpenTelemetry.
 
 ---
 
@@ -261,15 +262,15 @@ Po uruchomieniu aplikacja dostępna jest pod adresami:
 
 ### Uruchamianie Testów
 
-* **Testy integracyjne i jednostkowe backendu (.NET 11 + Testcontainers):**
+* **Testy integracyjne i jednostkowe backendu (.NET 11 + Testcontainers + Ollama `gemma3:12b`):**
   ```bash
   dotnet test AgentStudio/AgentStudio.Service.Tests/AgentStudio.Service.Tests.csproj
   ```
-  *(Automatycznie uruchamia 8 testów pokrywających API gRPC, subskrypcje zdarzeń SignalR oraz orkiestrację silnika AgentEngine)*
+  *(Automatycznie uruchamia 15 testów pokrywających API gRPC, walidację FluentValidation, subskrypcje zdarzeń SignalR, telemetrię OpenTelemetry oraz wieloagentową orkiestrację silnika AgentEngine z modelem Ollama `gemma3:12b`)*
 
 * **Testy komponentów i E2E frontendu (Vitest + JSDOM):**
   ```bash
   cd AgentStudio/AgentStudio.Client
   npm test
   ```
-  *(Automatycznie uruchamia 15 testów weryfikujących tworzenie węzłów, usuwanie powiązań, formularze konfiguracji modeli AI i powiadomienia)*
+  *(Automatycznie uruchamia 25 testów weryfikujących tworzenie węzłów, usuwanie powiązań, formularze konfiguracji modeli AI i powiadomienia)*

@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="custom-node model-node" :class="{ selected: props.selected }">
-    <Handle type="target" :position="Position.Top" class="node-handle" />
+    <Handle id="model-out" type="source" :position="Position.Top" class="node-handle" title="Podłącz do portu 'Model' w węźle AI Agent" />
 
     <div class="node-header d-flex align-center justify-space-between px-2 py-1">
       <div class="d-flex align-center overflow-hidden mr-1">
@@ -31,17 +31,17 @@ const emit = defineEmits<{
     <div class="node-body px-2 py-1.5">
       <div class="d-flex align-center justify-space-between mb-1">
         <span class="label-text">Provider</span>
-        <span class="badge-tag">{{ props.data.modelConfig?.provider || 'OpenAI' }}</span>
+        <span class="badge-tag">{{ props.data.modelConfig?.provider || 'Ollama' }}</span>
       </div>
       <div class="d-flex align-center justify-space-between">
         <span class="label-text">Model</span>
-        <span class="value-text text-truncate" style="max-width: 90px;">
-          {{ props.data.modelConfig?.modelName || 'gpt-4o' }}
+        <span class="value-text text-truncate" style="max-width: 95px;">
+          {{ props.data.modelConfig?.modelName || 'gemma3:12b' }}
         </span>
       </div>
     </div>
 
-    <Handle type="source" :position="Position.Bottom" class="node-handle" />
+    <Handle id="model-bottom" type="source" :position="Position.Bottom" class="node-handle" />
   </div>
 </template>
 
@@ -103,8 +103,8 @@ const emit = defineEmits<{
 }
 
 .node-handle {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   background-color: #2196F3;
   border: 1.5px solid #FFFFFF;
 }

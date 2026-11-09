@@ -8,7 +8,7 @@
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "protoc:agents": "node -e \"require('fs').mkdirSync('src/clients/generated', { recursive: true })\" && grpc_tools_node_protoc --ts_out=./src/clients/generated -I=../Protos agent_node.proto"
+    "protoc:agents": "node -e \"import('fs').then(fs => fs.mkdirSync('src/clients/generated', { recursive: true }))\" && protoc --ts_out=./src/clients/generated --proto_path=../Protos ../Protos/agent_node.proto"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",

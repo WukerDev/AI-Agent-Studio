@@ -16,7 +16,7 @@ export const useConfig = createSharedComposable(() => {
     
     const defaultGatewayUrl = isBrowser && !isDevClientPort
         ? window.location.origin
-        : (import.meta.env.VITE_GATEWAY_URL || 'https://localhost');
+        : (import.meta.env.VITE_GATEWAY_URL || 'http://localhost:5000');
 
     const defaultAuthUrl = import.meta.env.VITE_AUTH_URL || `${defaultGatewayUrl}/identity`;
 

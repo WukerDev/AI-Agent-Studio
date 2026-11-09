@@ -24,7 +24,7 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '11.0.x'
-        
+
     - name: Restore .NET dependencies
       run: dotnet restore AgentStudio/AgentStudio.sln
 
@@ -33,3 +33,15 @@ jobs:
 
     - name: Run Integration Tests (gRPC, SignalR, Testcontainers)
       run: dotnet test AgentStudio/AgentStudio.Service.Tests/AgentStudio.Service.Tests.csproj -c Release --no-build --verbosity normal
+
+    - name: Install Frontend Dependencies
+      working-directory: AgentStudio/AgentStudio.Client
+      run: npm ci
+
+    - name: Run Frontend Tests (Vitest + JSDOM)
+      working-directory: AgentStudio/AgentStudio.Client
+      run: npm test
+
+    - name: Build Frontend Production Bundle
+      working-directory: AgentStudio/AgentStudio.Client
+      run: npm run build

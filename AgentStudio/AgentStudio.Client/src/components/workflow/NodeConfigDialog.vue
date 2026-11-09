@@ -15,7 +15,20 @@ const emit = defineEmits<{
 const localNode = ref<any>({})
 const enabledToolsInput = ref('')
 
-const providers = ['OpenAI', 'Ollama', 'Custom']
+const providers = ['Ollama', 'Gemini', 'OpenAI', 'Custom']
+
+const geminiModels = [
+  { name: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite (Domyślny, najszybszy i najtańszy)' },
+  { name: 'gemini-flash-lite-latest', label: 'gemini-flash-lite-latest (Zawsze najnowszy Flash-Lite)' },
+  { name: 'gemini-3.1-flash-lite', label: 'gemini-3.1-flash-lite (Lekki i stabilny)' },
+  { name: 'gemini-3.8-flash', label: 'gemini-3.8-flash (Rekomendowany następca Flash)' },
+  { name: 'gemini-flash-latest', label: 'gemini-flash-latest (Najnowszy Flash)' },
+  { name: 'gemini-3.5-flash', label: 'gemini-3.5-flash (Flash 3.5)' },
+  { name: 'gemini-3.1-pro-preview', label: 'gemini-3.1-pro-preview (Rekomendowany następca Pro)' },
+  { name: 'gemini-pro-latest', label: 'gemini-pro-latest (Najnowszy Pro)' },
+  { name: 'gemini-4-argon', label: 'gemini-4-argon (Flagowy model Gemini 4)' },
+  { name: 'gemma-4-26b-a4b-it', label: 'gemma-4-26b-a4b-it (Otwarty model Gemma 4 w API)' }
+]
 
 const noteColorOptions = [
   { title: 'Amber (Default)', value: '#F59E0B' },
@@ -50,7 +63,7 @@ const dialogTitle = computed(() => {
     case NodeType.LABEL:
       return 'Configure Canvas Label'
     case NodeType.AGENT:
-      return 'Configure AI Agent'
+      return 'Configure AI Agent Hub'
     case NodeType.MODEL:
       return 'Configure LLM Model'
     case NodeType.PROMPT:
@@ -72,10 +85,28 @@ watch(() => props.nodeData, (val) => {
   if (val) {
     localNode.value = JSON.parse(JSON.stringify(val))
     if (!localNode.value.modelConfig) {
-      localNode.value.modelConfig = { provider: 'OpenAI', modelName: 'gpt-4o', temperature: 0.7 }
+      localNode.value.modelConfig = { provider: 'Ollama', modelName: 'gemma3:12b', temperature: 0.7 }
+    } else if (localNode.value.type === NodeType.MODEL) {
+      if (!localNode.value.modelConfig.provider) {
+        localNode.value.modelConfig.provider = 'Ollama'
+      }
+      if (!localNode.value.modelConfig.modelName) {
+        localNode.value.modelConfig.modelName =
+          localNode.value.modelConfig.provider === 'Ollama'
+            ? 'gemma3:12b'
+            : localNode.value.modelConfig.provider === 'Gemini'
+              ? 'gemini-3.5-flash-lite'
+              : 'gpt-4o'
+      }
     }
     if (!localNode.value.mcpConfig) {
-      localNode.value.mcpConfig = { serverUrl: 'http://localhost:8000/mcp', authToken: '', enabledTools: [] }
+      localNode.value.mcpConfig = {
+        serverUrl: localNode.value.type === NodeType.MCP_CONNECTOR ? 'builtin://tools' : '',
+        authToken: '',
+        enabledTools: []
+      }
+    } else if (localNode.value.type === NodeType.MCP_CONNECTOR && !localNode.value.mcpConfig.serverUrl) {
+      localNode.value.mcpConfig.serverUrl = 'builtin://tools'
     }
     if (localNode.value.type === NodeType.NOTE && !localNode.value.endpoint) {
       localNode.value.endpoint = '#F59E0B'
@@ -90,8 +121,34 @@ watch(() => props.nodeData, (val) => {
   }
 }, { immediate: true })
 
+function handleProviderChange(provider: string) {
+  if (!localNode.value?.modelConfig) return
+  if (provider === 'Ollama') {
+    if (!localNode.value.modelConfig.modelName || localNode.value.modelConfig.modelName === 'gpt-4o' || localNode.value.modelConfig.modelName.startsWith('gemini-')) {
+      localNode.value.modelConfig.modelName = 'gemma3:12b'
+    }
+    if (!localNode.value.endpoint || localNode.value.endpoint.includes('googleapis.com') || localNode.value.endpoint.includes('openai.com')) {
+      localNode.value.endpoint = 'http://localhost:11434'
+    }
+  } else if (provider === 'Gemini') {
+    if (!localNode.value.modelConfig.modelName || localNode.value.modelConfig.modelName === 'gemma3:12b' || localNode.value.modelConfig.modelName === 'gpt-4o') {
+      localNode.value.modelConfig.modelName = 'gemini-3.5-flash-lite'
+    }
+    if (!localNode.value.endpoint || localNode.value.endpoint.includes('localhost:11434') || localNode.value.endpoint.includes('openai.com')) {
+      localNode.value.endpoint = 'https://generativelanguage.googleapis.com/v1beta/openai/'
+    }
+  } else if (provider === 'OpenAI') {
+    if (!localNode.value.modelConfig.modelName || localNode.value.modelConfig.modelName === 'gemma3:12b' || localNode.value.modelConfig.modelName.startsWith('gemini-')) {
+      localNode.value.modelConfig.modelName = 'gpt-4o'
+    }
+    if (!localNode.value.endpoint || localNode.value.endpoint.includes('localhost:11434') || localNode.value.endpoint.includes('googleapis.com')) {
+      localNode.value.endpoint = 'https://api.openai.com/v1'
+    }
+  }
+}
+
 function handleSave() {
-  if (localNode.value.mcpConfig) {
+  if (localNode.value.type === NodeType.MCP_CONNECTOR && localNode.value.mcpConfig) {
     localNode.value.mcpConfig.enabledTools = enabledToolsInput.value
       .split(',')
       .map(s => s.trim())
@@ -125,6 +182,13 @@ function handleSave() {
           density="compact"
           class="mb-3"
         />
+
+        <!-- Agent Node Info (n8n-style ports) -->
+        <template v-if="localNode.type === NodeType.AGENT">
+          <v-alert type="info" variant="tonal" density="compact" class="text-caption mb-2">
+            Węzeł <strong>AI Agent</strong> posiada dedykowane porty na dole karty: <strong>Model</strong>, <strong>Prompt</strong> oraz <strong>Tool</strong>. Podłącz do nich odpowiednie węzły na płótnie.
+          </v-alert>
+        </template>
 
         <!-- Note Node Inspector -->
         <template v-if="localNode.type === NodeType.NOTE">
@@ -189,8 +253,8 @@ function handleSave() {
           </v-row>
         </template>
 
-        <!-- Prompt or Agent Node Inspector -->
-        <template v-if="localNode.type === NodeType.PROMPT || localNode.type === NodeType.AGENT">
+        <!-- Prompt Node Inspector ONLY -->
+        <template v-if="localNode.type === NodeType.PROMPT">
           <v-textarea
             v-model="localNode.systemPrompt"
             label="System Prompt / Instructions"
@@ -203,8 +267,8 @@ function handleSave() {
           />
         </template>
 
-        <!-- Model or Agent Node Inspector -->
-        <template v-if="localNode.type === NodeType.MODEL || localNode.type === NodeType.AGENT">
+        <!-- Model Node Inspector ONLY -->
+        <template v-if="localNode.type === NodeType.MODEL">
           <v-select
             v-model="localNode.modelConfig.provider"
             :items="providers"
@@ -212,12 +276,42 @@ function handleSave() {
             variant="outlined"
             density="compact"
             class="mb-3"
+            @update:model-value="handleProviderChange"
           />
 
           <v-text-field
             v-model="localNode.modelConfig.modelName"
             label="Model Name"
-            placeholder="e.g. gpt-4o, llama3.2, claude-3-5-sonnet"
+            placeholder="e.g. gemma3:12b, gemini-3.5-flash-lite, gpt-4o"
+            variant="outlined"
+            density="compact"
+            class="mb-2"
+          />
+
+          <!-- Quick Gemini Model Selector -->
+          <div v-if="localNode.modelConfig?.provider === 'Gemini'" class="mb-3">
+            <div class="text-caption text-grey mb-1">Dostępne modele Google Gemini API (kliknij, aby wybrać):</div>
+            <div class="d-flex flex-column gap-1">
+              <v-chip
+                v-for="gm in geminiModels"
+                :key="gm.name"
+                size="x-small"
+                variant="tonal"
+                :color="localNode.modelConfig.modelName === gm.name ? 'info' : 'grey'"
+                class="cursor-pointer justify-start"
+                @click="localNode.modelConfig.modelName = gm.name"
+              >
+                {{ gm.label }}
+              </v-chip>
+            </div>
+          </div>
+
+          <v-text-field
+            v-if="localNode.modelConfig?.provider !== 'Ollama'"
+            v-model="localNode.mcpConfig.authToken"
+            label="API Key (Gemini / OpenAI - Optional)"
+            placeholder="Paste Gemini or OpenAI API key"
+            type="password"
             variant="outlined"
             density="compact"
             class="mb-3"
@@ -226,7 +320,7 @@ function handleSave() {
           <v-text-field
             v-model="localNode.endpoint"
             label="Custom API Endpoint (Optional)"
-            placeholder="e.g. http://localhost:11434 or https://api.openai.com/v1"
+            placeholder="e.g. http://localhost:11434 or https://generativelanguage.googleapis.com/v1beta/openai/"
             variant="outlined"
             density="compact"
             class="mb-3"
@@ -248,12 +342,12 @@ function handleSave() {
           </div>
         </template>
 
-        <!-- MCP Connector or Agent Node Inspector -->
-        <template v-if="localNode.type === NodeType.MCP_CONNECTOR || localNode.type === NodeType.AGENT">
+        <!-- MCP Connector Node Inspector ONLY -->
+        <template v-if="localNode.type === NodeType.MCP_CONNECTOR">
           <v-text-field
             v-model="localNode.mcpConfig.serverUrl"
             label="MCP Server URL"
-            placeholder="e.g. http://localhost:8000/mcp or http://localhost:5000/sse"
+            placeholder="e.g. builtin://tools or http://localhost:8000/mcp"
             variant="outlined"
             density="compact"
             class="mb-3"
@@ -271,7 +365,7 @@ function handleSave() {
           <v-text-field
             v-model="enabledToolsInput"
             label="Enabled Tools (comma-separated, leave blank for all)"
-            placeholder="e.g. search_web, read_file, execute_query"
+            placeholder="e.g. calculate_expression, get_system_info, get_current_time"
             variant="outlined"
             density="compact"
             class="mb-3"

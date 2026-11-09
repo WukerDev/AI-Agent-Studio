@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using AgentStudio.Service.Model;
 using System.Text.Json;
 
@@ -19,6 +20,11 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        var stringListComparer = new ValueComparer<List<string>?>(
+            (c1, c2) => (c1 == null && c2 == null) || (c1 != null && c2 != null && c1.SequenceEqual(c2)),
+            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+            c => c == null ? null : c.ToList());
+
         modelBuilder.Entity<WorkflowEntity>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -32,17 +38,19 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.OwnerId).IsRequired();
             entity.Property(e => e.FlowId).IsRequired();
-            
+
+            var toolsProp = entity.Property(e => e.McpEnabledTools)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v ?? new List<string>(), (JsonSerializerOptions?)null),
+                    v => string.IsNullOrWhiteSpace(v)
+                        ? new List<string>()
+                        : (JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()));
+
+            toolsProp.Metadata.SetValueComparer(stringListComparer);
+
             if (Database.IsNpgsql())
             {
-                entity.Property(e => e.McpEnabledTools).HasColumnType("jsonb");
-            }
-            else
-            {
-                entity.Property(e => e.McpEnabledTools)
-                      .HasConversion(
-                          v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                          v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>());
+                toolsProp.HasColumnType("jsonb");
             }
 
             entity.HasIndex(e => new { e.FlowId, e.OwnerId });
@@ -54,7 +62,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.FlowId).IsRequired();
             entity.Property(e => e.SourceNodeId).IsRequired();
             entity.Property(e => e.TargetNodeId).IsRequired();
-            entity.HasIndex(e => e.FlowId);
+            entity.HasIndex(e => new { e.FlowId, e.OwnerId });
         });
 
         modelBuilder.Entity<WorkflowExecutionEntity>(entity =>
@@ -62,7 +70,7 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.FlowId).IsRequired();
             entity.Property(e => e.OwnerId).IsRequired();
-            
+
             if (Database.IsNpgsql())
             {
                 entity.Property(e => e.LogsJson).HasColumnType("jsonb");

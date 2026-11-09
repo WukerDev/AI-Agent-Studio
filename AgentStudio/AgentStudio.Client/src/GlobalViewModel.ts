@@ -53,7 +53,7 @@ export class GlobalViewModel {
         return this.globalStore.isSignalRConnected
     }
 
-    public get errorKey(): string {
+    public get errorKey(): boolean | string {
         return this.globalStore.errorKey
     }
 
@@ -100,6 +100,10 @@ export class GlobalViewModel {
 
     public closeInspector(): void {
         this.globalStore.closeInspector()
+    }
+
+    public clearExecutionLogs(): void {
+        this.globalStore.clearExecutionLogs()
     }
 
     public async initialize(): Promise<void> {
@@ -191,7 +195,7 @@ export class GlobalViewModel {
 
         this.globalStore.nodes = previous.nodes
         this.globalStore.edges = previous.edges
-        await this.syncCanvasToBackend()
+        await this.syncCanvasToBackend(current.nodes)
     }
 
     public async redo(): Promise<void> {
@@ -205,11 +209,19 @@ export class GlobalViewModel {
 
         this.globalStore.nodes = next.nodes
         this.globalStore.edges = next.edges
-        await this.syncCanvasToBackend()
+        await this.syncCanvasToBackend(current.nodes)
     }
 
-    private async syncCanvasToBackend(): Promise<void> {
+    private async syncCanvasToBackend(previousNodes: AgentNode[] = []): Promise<void> {
         const flowId = this.globalStore.currentFlowId || 'default-flow'
+        const currentIds = new Set(this.globalStore.nodes.map(n => n.id))
+
+        for (const oldNode of previousNodes) {
+            if (!currentIds.has(oldNode.id)) {
+                await this.globalStore.deleteAgentNode({ id: oldNode.id, flowId })
+            }
+        }
+
         for (const node of this.globalStore.nodes) {
             await this.saveNode(node)
         }
@@ -294,16 +306,21 @@ export class GlobalViewModel {
         if (!nodeIds || nodeIds.length === 0) return 0
         this.pushHistorySnapshot()
 
+        const flowId = this.globalStore.currentFlowId || 'default-flow'
         const idSet = new Set(nodeIds)
         if (this.globalStore.selectedNodeId && idSet.has(this.globalStore.selectedNodeId)) {
             this.closeInspector()
         }
-        const count = this.globalStore.nodes.filter(n => idSet.has(n.id)).length
+        const nodesToDelete = this.globalStore.nodes.filter(n => idSet.has(n.id))
+        const count = nodesToDelete.length
         this.globalStore.nodes = this.globalStore.nodes.filter(n => !idSet.has(n.id))
         this.globalStore.edges = this.globalStore.edges.filter(
             e => !idSet.has(e.sourceNodeId) && !idSet.has(e.targetNodeId)
         )
-        await this.saveEdges(this.globalStore.edges)
+        for (const node of nodesToDelete) {
+            await this.globalStore.deleteAgentNode({ id: node.id, flowId })
+        }
+        await this.saveEdges(this.globalStore.edges, flowId)
         return count
     }
 
@@ -387,6 +404,7 @@ export class GlobalViewModel {
 
     public async removeNode(nodeId: string): Promise<void> {
         this.pushHistorySnapshot()
+        const flowId = this.globalStore.currentFlowId || 'default-flow'
         if (this.globalStore.selectedNodeId === nodeId) {
             this.closeInspector()
         }
@@ -394,7 +412,8 @@ export class GlobalViewModel {
         this.globalStore.edges = this.globalStore.edges.filter(
             e => e.sourceNodeId !== nodeId && e.targetNodeId !== nodeId
         )
-        await this.saveEdges(this.globalStore.edges)
+        await this.globalStore.deleteAgentNode({ id: nodeId, flowId })
+        await this.saveEdges(this.globalStore.edges, flowId)
     }
 
     public getNodeColor(type: NodeType): string {

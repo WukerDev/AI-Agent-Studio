@@ -12,6 +12,7 @@ import type {
     GetExplorerRequest,
     SaveAgentNodeRequest,
     GetAgentNodesRequest,
+    DeleteAgentNodeRequest,
     SaveWorkflowEdgesRequest,
     GetWorkflowEdgesRequest
 } from './clients/generated/agent_node'
@@ -81,6 +82,13 @@ export const useGlobalStore = defineStore('global', {
                 this.selectedNodeId = null
             }
         },
+        clearExecutionLogs(): void {
+            this.executionLogs = []
+            this.executionOutput = ''
+            if (this.executionStatus !== 'Running' && this.executionStatus !== 'Starting') {
+                this.executionStatus = 'Idle'
+            }
+        },
         async initializeRealtimeAndGrpc(): Promise<void> {
             this.setupGrpcClient()
             await this.connectSignalR()
@@ -146,6 +154,22 @@ export const useGlobalStore = defineStore('global', {
                 } else {
                     this.errorKey = 'error.grpc.save_node_failed'
                     notif.error('Failed to save node')
+                }
+            })
+        },
+        async deleteAgentNode(request: DeleteAgentNodeRequest): Promise<void> {
+            if (request.id) {
+                this.nodes = this.nodes.filter(n => n.id !== request.id)
+                this.edges = this.edges.filter(
+                    e => e.sourceNodeId !== request.id && e.targetNodeId !== request.id
+                )
+            }
+            const notif = useNotificationStore()
+            await this.runGrpcCommand(async (client, options) => {
+                const call = await client.deleteAgentNode(request, options)
+                if (!call.response.success) {
+                    this.errorKey = 'error.grpc.delete_node_failed'
+                    notif.error('Failed to delete node')
                 }
             })
         },
@@ -233,6 +257,16 @@ export const useGlobalStore = defineStore('global', {
 
             hubConnection.on('NodeSaved', (payload: NodeSavedEventPayload) => {
                 this.lastSavedNodeId = payload.nodeId
+                this.updateSyncTimestamp()
+            })
+
+            hubConnection.on('NodeDeleted', (payload: NodeDeletedEventPayload) => {
+                if (payload.nodeId) {
+                    this.nodes = this.nodes.filter(n => n.id !== payload.nodeId)
+                    this.edges = this.edges.filter(
+                        e => e.sourceNodeId !== payload.nodeId && e.targetNodeId !== payload.nodeId
+                    )
+                }
                 this.updateSyncTimestamp()
             })
 
@@ -324,6 +358,11 @@ export const useGlobalStore = defineStore('global', {
 })
 
 interface NodeSavedEventPayload {
+    nodeId: string
+    flowId?: string
+}
+
+interface NodeDeletedEventPayload {
     nodeId: string
     flowId?: string
 }

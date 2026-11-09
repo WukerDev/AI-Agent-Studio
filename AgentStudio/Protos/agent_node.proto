@@ -9,6 +9,7 @@ service AgentFlowService {
   rpc GetExplorer (GetExplorerRequest) returns (GetExplorerResponse);
   rpc SaveAgentNode (SaveAgentNodeRequest) returns (SaveAgentNodeResponse);
   rpc GetAgentNodes (GetAgentNodesRequest) returns (GetAgentNodesResponse);
+  rpc DeleteAgentNode (DeleteAgentNodeRequest) returns (DeleteAgentNodeResponse);
   rpc SaveWorkflowEdges (SaveWorkflowEdgesRequest) returns (SaveWorkflowEdgesResponse);
   rpc GetWorkflowEdges (GetWorkflowEdgesRequest) returns (GetWorkflowEdgesResponse);
 }
@@ -58,6 +59,15 @@ message GetAgentNodesResponse {
   bool success = 1;
   string message = 2;
   repeated AgentNode nodes = 3;
+}
+
+message DeleteAgentNodeRequest {
+  string id = 1;
+  string flow_id = 2;
+}
+
+message DeleteAgentNodeResponse {
+  bool success = 1;
 }
 
 message GetExplorerResponse {

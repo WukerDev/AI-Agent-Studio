@@ -367,4 +367,71 @@ describe('End-to-End Frontend Workflow & Canvas State', () => {
         await vm.switchWorkflow('default-flow')
         expect(vm.currentFlowId).toBe('default-flow')
     })
+
+    it('E2E Flow 13: Should configure Ollama gemma3:12b preset and clear execution logs', async () => {
+        await vm.addNode(
+            NodeType.MODEL,
+            { x: 180, y: 180 },
+            'Ollama Local Preset',
+            {
+                modelConfig: { provider: 'Ollama', modelName: 'gemma3:12b', temperature: 0.5 },
+                endpoint: 'http://localhost:11434'
+            }
+        )
+
+        const ollamaNode = vm.nodes.find(n => n.name === 'Ollama Local Preset')
+        expect(ollamaNode).toBeDefined()
+        expect(ollamaNode?.modelConfig?.provider).toBe('Ollama')
+        expect(ollamaNode?.modelConfig?.modelName).toBe('gemma3:12b')
+        expect(ollamaNode?.endpoint).toBe('http://localhost:11434')
+
+        store.executionLogs.push({
+            timestamp: new Date().toISOString(),
+            level: 'INFO',
+            message: 'Test log entry'
+        })
+        store.executionOutput = 'Sample output'
+        expect(vm.executionLogs).toHaveLength(1)
+
+        vm.clearExecutionLogs()
+        expect(vm.executionLogs).toHaveLength(0)
+        expect(vm.executionOutput).toBe('')
+        expect(vm.executionStatus).toBe('Idle')
+    })
+
+    it('E2E Flow 14: Should configure Google Gemini 3.5 Flash-Lite preset and built-in MCP tools', async () => {
+        await vm.addNode(
+            NodeType.MODEL,
+            { x: 180, y: 180 },
+            'Google Gemini 3.5 Flash-Lite',
+            {
+                modelConfig: { provider: 'Gemini', modelName: 'gemini-3.5-flash-lite', temperature: 0.6 },
+                endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/'
+            }
+        )
+
+        await vm.addNode(
+            NodeType.MCP_CONNECTOR,
+            { x: 380, y: 180 },
+            'Math & System MCP',
+            {
+                mcpConfig: {
+                    serverUrl: 'builtin://tools',
+                    authToken: '',
+                    enabledTools: ['calculate_expression', 'get_current_time', 'get_system_info']
+                }
+            }
+        )
+
+        const geminiNode = vm.nodes.find(n => n.name === 'Google Gemini 3.5 Flash-Lite')
+        expect(geminiNode).toBeDefined()
+        expect(geminiNode?.modelConfig?.provider).toBe('Gemini')
+        expect(geminiNode?.modelConfig?.modelName).toBe('gemini-3.5-flash-lite')
+        expect(geminiNode?.endpoint).toContain('generativelanguage.googleapis.com')
+
+        const mcpNode = vm.nodes.find(n => n.name === 'Math & System MCP')
+        expect(mcpNode).toBeDefined()
+        expect(mcpNode?.mcpConfig?.serverUrl).toBe('builtin://tools')
+        expect(mcpNode?.mcpConfig?.enabledTools).toContain('calculate_expression')
+    })
 })

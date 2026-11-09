@@ -33,7 +33,7 @@ const closePanel = (): void => {
 }
 
 function clearLogs() {
-  globalViewModel.executionLogs.length = 0
+  globalViewModel.clearExecutionLogs()
   notifStore.info('Console logs cleared')
 }
 
@@ -118,13 +118,18 @@ function getLogLevelColor(level: string): string {
           <div
             v-for="(log, idx) in globalViewModel.executionLogs"
             :key="idx"
-            class="d-flex align-start py-1 terminal-line"
+            class="d-flex flex-column py-1 terminal-line"
           >
-            <span class="text-grey-darken-1 mr-2 select-none">[{{ globalViewModel.formatTimestamp(log.timestamp) }}]</span>
-            <v-chip size="x-small" :color="getLogLevelColor(log.level)" variant="flat" class="mr-2 text-uppercase font-weight-bold">
-              {{ log.level }}
-            </v-chip>
-            <span class="flex-grow-1 text-grey-lighten-2">{{ log.message }}</span>
+            <div class="d-flex align-start">
+              <span class="text-grey-darken-1 mr-2 select-none">[{{ globalViewModel.formatTimestamp(log.timestamp) }}]</span>
+              <v-chip size="x-small" :color="getLogLevelColor(log.level)" variant="flat" class="mr-2 text-uppercase font-weight-bold">
+                {{ log.level }}
+              </v-chip>
+              <span class="flex-grow-1 text-grey-lighten-2">{{ log.message }}</span>
+            </div>
+            <div v-if="log.data" class="text-grey-darken-1 pl-6 mt-1 whitespace-pre-wrap">
+              {{ typeof log.data === 'string' ? log.data : JSON.stringify(log.data) }}
+            </div>
           </div>
         </div>
       </v-window-item>
