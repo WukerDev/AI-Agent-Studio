@@ -308,18 +308,59 @@ public class SkillService : ISkillService
         var configured = configuration["Skills:Directory"] ?? configuration["Skills:RootPath"];
         if (!string.IsNullOrWhiteSpace(configured))
         {
-            return Path.GetFullPath(configured);
+            var fullConfigured = Path.GetFullPath(configured);
+            if (TryEnsureWritableDirectory(fullConfigured))
+            {
+                return fullConfigured;
+            }
         }
 
         var currentDir = Directory.GetCurrentDirectory();
         var parentSkills = Path.Combine(currentDir, "..", "skills");
         if (Directory.Exists(parentSkills))
         {
-            return Path.GetFullPath(parentSkills);
+            var fullParent = Path.GetFullPath(parentSkills);
+            if (TryEnsureWritableDirectory(fullParent))
+            {
+                return fullParent;
+            }
         }
 
-        var localSkills = Path.Combine(currentDir, "skills");
-        return Path.GetFullPath(localSkills);
+        var localSkills = Path.GetFullPath(Path.Combine(currentDir, "skills"));
+        if (TryEnsureWritableDirectory(localSkills))
+        {
+            return localSkills;
+        }
+
+        var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        if (!string.IsNullOrWhiteSpace(appDataDir))
+        {
+            var appDataSkills = Path.GetFullPath(Path.Combine(appDataDir, "AgentStudio", "skills"));
+            if (TryEnsureWritableDirectory(appDataSkills))
+            {
+                return appDataSkills;
+            }
+        }
+
+        var tempSkills = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "agentstudio-skills"));
+        Directory.CreateDirectory(tempSkills);
+        return tempSkills;
+    }
+
+    private static bool TryEnsureWritableDirectory(string path)
+    {
+        try
+        {
+            Directory.CreateDirectory(path);
+            var probeFile = Path.Combine(path, $".write_probe_{Guid.NewGuid():N}");
+            File.WriteAllText(probeFile, "ok");
+            File.Delete(probeFile);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private void EnsureDirectoryAndSeedDefaults()

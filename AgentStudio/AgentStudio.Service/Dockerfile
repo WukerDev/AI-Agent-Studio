@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS base
-USER $APP_UID
 WORKDIR /app
+RUN mkdir -p /app/skills && chown -R $APP_UID:$APP_UID /app
+USER $APP_UID
 
 FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -18,5 +19,5 @@ RUN dotnet publish "./AgentStudio.Service.csproj" -c $BUILD_CONFIGURATION -o /ap
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=publish --chown=$APP_UID:$APP_UID /app/publish .
 ENTRYPOINT ["dotnet", "AgentStudio.Service.dll"]

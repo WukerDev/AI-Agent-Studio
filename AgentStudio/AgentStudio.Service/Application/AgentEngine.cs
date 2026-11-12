@@ -205,11 +205,25 @@ public class AgentEngine : IAgentEngine
                     var skillItem = await this.skillService.GetSkillByNameAsync(normalizedSkillName, cancellationToken);
                     if (skillItem == null && !string.IsNullOrWhiteSpace(sNode.SystemPrompt))
                     {
-                        skillItem = await this.skillService.SaveSkillAsync(
-                            normalizedSkillName,
-                            FirstNonEmpty(sNode.Name, $"Skill {normalizedSkillName}"),
-                            sNode.SystemPrompt,
-                            cancellationToken);
+                        try
+                        {
+                            skillItem = await this.skillService.SaveSkillAsync(
+                                normalizedSkillName,
+                                FirstNonEmpty(sNode.Name, $"Skill {normalizedSkillName}"),
+                                sNode.SystemPrompt,
+                                cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.logger.LogWarning(ex, "Could not persist skill {SkillName} to disk; using in-memory skill definition.", normalizedSkillName);
+                            skillItem = new Protos.SkillItem
+                            {
+                                Name = normalizedSkillName,
+                                Description = FirstNonEmpty(sNode.Name, $"Skill {normalizedSkillName}"),
+                                Content = sNode.SystemPrompt,
+                                Path = $"skills/{normalizedSkillName}/SKILL.md"
+                            };
+                        }
                     }
 
                     if (skillItem != null && !attachedSkillItems.Any(s => s.Name.Equals(skillItem.Name, StringComparison.OrdinalIgnoreCase)))

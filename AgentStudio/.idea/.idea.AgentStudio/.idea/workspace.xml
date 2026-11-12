@@ -18,27 +18,9 @@
   <component name="ChangeListManager">
     <list default="true" id="7a132c9a-813c-4694-8489-24ad8305e937" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/GlobalViewModel.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/GlobalViewModel.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/WorkflowE2E.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/WorkflowE2E.spec.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.client.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.client.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/clients/generated/agent_node.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppInspectorDrawer.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppInspectorDrawer.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppLeftDrawer.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppLeftDrawer.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppSidebar.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/layout/AppSidebar.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.spec.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/NodeConfigDialog.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/WorkflowCanvas.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/AgentNode.vue" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/components/workflow/nodes/AgentNode.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/locales/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/locales/en.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/locales/pl.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/locales/pl.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/store.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service.Tests/IntegrationTests/AgentFlowGrpcApiTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/IntegrationTests/AgentFlowGrpcApiTests.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service.Tests/UnitTests/AgentEngineUnitTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/UnitTests/AgentEngineUnitTests.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Application/AgentEngine.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/AgentEngine.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Application/AgentFlowServiceImplementation.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/AgentFlowServiceImplementation.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Application/SaveAgentNodeRequestValidator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/SaveAgentNodeRequestValidator.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Protos/agent_node.proto" beforeDir="false" afterPath="$PROJECT_DIR$/Protos/agent_node.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Infrastructure/SkillService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Infrastructure/SkillService.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,61 +55,61 @@
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="false" />
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.00000000000149" />
-      <entry key="S2" value="1.0012182615301974" />
-      <entry key="S5" value="1.0920823571116411" />
-      <entry key="S10" value="1.4187895044673544" />
-      <entry key="S30" value="2.1809089488264006" />
-      <entry key="S60" value="2.5357173152293053" />
-      <entry key="M2" value="2.7522359240057575" />
-      <entry key="M5" value="2.9030749424500994" />
-      <entry key="M10" value="3.209108953719205" />
-      <entry key="M15" value="3.874155730705269" />
-      <entry key="M30" value="6.14480996058057" />
-      <entry key="H1" value="8.88917938791396" />
-      <entry key="H2" value="11.050270529065347" />
-      <entry key="H4" value="12.41062989195583" />
-      <entry key="D1" value="13.717637897027819" />
-      <entry key="W1" value="13.959212795407014" />
+      <entry key="MS100" value="1.0061574290975188" />
+      <entry key="MS500" value="1.549193721068934" />
+      <entry key="S2" value="3.4596878210633486" />
+      <entry key="S5" value="5.971270909714145" />
+      <entry key="S10" value="7.868581969020435" />
+      <entry key="S30" value="9.77111260320149" />
+      <entry key="S60" value="10.367175540198962" />
+      <entry key="M2" value="10.962128729139708" />
+      <entry key="M5" value="13.697837689796131" />
+      <entry key="M10" value="17.527109326465727" />
+      <entry key="M15" value="20.055513596377327" />
+      <entry key="M30" value="24.75657457037625" />
+      <entry key="H1" value="29.39517527011286" />
+      <entry key="H2" value="32.988288095304526" />
+      <entry key="H4" value="35.279334909679164" />
+      <entry key="D1" value="37.5128543897708" />
+      <entry key="W1" value="37.9295265815733" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0020220018043776893" />
-      <entry key="MS500" value="0.2891720459768849" />
-      <entry key="S2" value="0.734178688628109" />
-      <entry key="S5" value="0.9428879514319815" />
-      <entry key="S10" value="1.1839240223574257" />
-      <entry key="S30" value="1.6044779607746849" />
-      <entry key="S60" value="1.7802481419177056" />
-      <entry key="M2" value="1.8839635861657424" />
-      <entry key="M5" value="1.952012827680927" />
-      <entry key="M10" value="1.9757360509036084" />
-      <entry key="M15" value="1.9837633256184386" />
-      <entry key="M30" value="1.9918511501935483" />
-      <entry key="H1" value="1.995917917086462" />
-      <entry key="H2" value="1.9979570402957996" />
-      <entry key="H4" value="1.9989780401171324" />
-      <entry key="D1" value="1.9998296066420789" />
-      <entry key="W1" value="1.9999756564574724" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="1.9942304393883792E-179" />
+      <entry key="S5" value="3.5322343777398484E-72" />
+      <entry key="S10" value="2.2914930590091757E-36" />
+      <entry key="S30" value="1.9995487355436407E-12" />
+      <entry key="S60" value="1.987374257347011E-6" />
+      <entry key="M2" value="0.001990545292138195" />
+      <entry key="M5" value="0.12590485902730558" />
+      <entry key="M10" value="0.5017747882157657" />
+      <entry key="M15" value="0.7955664589573541" />
+      <entry key="M30" value="1.2613923265241505" />
+      <entry key="H1" value="1.5883248430462924" />
+      <entry key="H2" value="1.782315039882699" />
+      <entry key="H4" value="1.8880225895264067" />
+      <entry key="D1" value="1.980886174227856" />
+      <entry key="W1" value="1.9972582022695184" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.959264124449557" />
-      <entry key="MS500" value="1.0136916244884726" />
-      <entry key="S2" value="1.3846132814126837" />
-      <entry key="S5" value="1.8174985403971473" />
-      <entry key="S10" value="2.450094107124774" />
-      <entry key="S30" value="3.7066164645530133" />
-      <entry key="S60" value="4.270344480709392" />
-      <entry key="M2" value="4.611501691710696" />
-      <entry key="M5" value="4.844706086618678" />
-      <entry key="M10" value="5.179563874662429" />
-      <entry key="M15" value="5.854374857833347" />
-      <entry key="M30" value="8.134872873249325" />
-      <entry key="H1" value="10.8841969671309" />
-      <entry key="H2" value="13.047775312216464" />
-      <entry key="H4" value="14.409381186967968" />
-      <entry key="D1" value="15.717429617438228" />
-      <entry key="W1" value="15.959183037069113" />
+      <entry key="MS100" value="0.9786026325075204" />
+      <entry key="MS500" value="1.5399269341978594" />
+      <entry key="S2" value="3.4543923613521303" />
+      <entry key="S5" value="5.9676543273948655" />
+      <entry key="S10" value="7.86620383487169" />
+      <entry key="S30" value="9.770128078740402" />
+      <entry key="S60" value="10.366655012947778" />
+      <entry key="M2" value="10.963816574247543" />
+      <entry key="M5" value="13.822936279281619" />
+      <entry key="M10" value="18.02745877948238" />
+      <entry key="M15" value="20.84959685114513" />
+      <entry key="M30" value="26.01679974794163" />
+      <entry key="H1" value="30.982765130385058" />
+      <entry key="H2" value="34.7701901177278" />
+      <entry key="H4" value="37.16713846910082" />
+      <entry key="D1" value="39.493702212780974" />
+      <entry key="W1" value="39.926779258409134" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -160,7 +142,7 @@
     "cidr.known.project.marker": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "main",
-    "git.auto.fetch.suggestion.counter": "1",
+    "git.auto.fetch.suggestion.counter": "2",
     "ignore.virus.scanning.warn.message": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -422,7 +404,8 @@
     <MESSAGE value="Poprawki" />
     <MESSAGE value="poprawki" />
     <MESSAGE value="remove fake folder creation" />
-    <option name="LAST_COMMIT_MESSAGE" value="remove fake folder creation" />
+    <MESSAGE value="add skills usage" />
+    <option name="LAST_COMMIT_MESSAGE" value="add skills usage" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
