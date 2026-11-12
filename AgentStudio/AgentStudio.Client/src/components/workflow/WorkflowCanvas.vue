@@ -20,6 +20,7 @@ import PromptNode from './nodes/PromptNode.vue'
 import McpNode from './nodes/McpNode.vue'
 import NoteNode from './nodes/NoteNode.vue'
 import LabelNode from './nodes/LabelNode.vue'
+import SkillNode from './nodes/SkillNode.vue'
 import { useNotificationStore } from '../../notifications'
 
 const {
@@ -141,7 +142,7 @@ function resolveEdgeHandlesAndColor(edge: {
   let targetHandle = edge.targetHandle || undefined
   let strokeColor = '#E63946'
 
-  // If an Agent is connected to a sub-node (Model, Prompt, MCP), normalize direction: Sub-Node -> Agent port
+  // If an Agent is connected to a sub-node (Model, Prompt, MCP, Skill), normalize direction: Sub-Node -> Agent port
   if (sourceNode?.type === NodeType.AGENT && targetNode && targetNode.type !== NodeType.AGENT) {
     sourceId = targetNode.id
     targetId = sourceNode.id
@@ -165,6 +166,10 @@ function resolveEdgeHandlesAndColor(edge: {
       sourceHandle = 'tool-out'
       targetHandle = 'tool'
       strokeColor = '#4CAF50'
+    } else if (normalizedSource?.type === NodeType.SKILL) {
+      sourceHandle = 'skill-out'
+      targetHandle = 'skill'
+      strokeColor = '#06B6D4'
     } else if (normalizedSource?.type === NodeType.AGENT) {
       sourceHandle = 'agent-out'
       targetHandle = 'agent-in'
@@ -189,6 +194,8 @@ function getNodeTypeName(type: NodeType): string {
       return 'note'
     case NodeType.LABEL:
       return 'label'
+    case NodeType.SKILL:
+      return 'skill'
     default:
       return 'default'
   }
@@ -293,6 +300,7 @@ onPaneReady((vueFlowInstance) => {
   vueFlowInstance.fitView()
   globalViewModel.loadNodes(globalViewModel.currentFlowId || 'default-flow')
   globalViewModel.loadEdges(globalViewModel.currentFlowId || 'default-flow')
+  globalViewModel.loadSkills()
 })
 
 function openNodeConfig(nodeData: any) {
@@ -328,6 +336,8 @@ function getMiniMapNodeColor(node: any): string {
       return '#F59E0B'
     case 'label':
       return '#8B5CF6'
+    case 'skill':
+      return '#06B6D4'
     default:
       return '#64748B'
   }
@@ -635,6 +645,9 @@ const executionStatusColor = computed(() => {
           <v-list-item prepend-icon="mdi-connection" @click="handleAddNode(NodeType.MCP_CONNECTOR)">
             <v-list-item-title>MCP Tools Connector</v-list-item-title>
           </v-list-item>
+          <v-list-item prepend-icon="mdi-book-open-page-variant-outline" @click="handleAddNode(NodeType.SKILL)">
+            <v-list-item-title>Agent Skill (SKILL.md)</v-list-item-title>
+          </v-list-item>
           <v-divider class="my-1" />
           <v-list-item prepend-icon="mdi-note-text-outline" @click="handleAddNode(NodeType.NOTE)">
             <v-list-item-title>Sticky Note</v-list-item-title>
@@ -793,6 +806,10 @@ const executionStatusColor = computed(() => {
 
       <template #node-label="nodeProps">
         <LabelNode v-bind="nodeProps" @configure="openNodeConfig" @delete="handleNodeDelete" />
+      </template>
+
+      <template #node-skill="nodeProps">
+        <SkillNode v-bind="nodeProps" @configure="openNodeConfig" @delete="handleNodeDelete" />
       </template>
     </VueFlow>
 

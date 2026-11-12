@@ -132,6 +132,7 @@ try
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<IUserContext, UserContext>();
     builder.Services.AddScoped<IMcpClientService, McpClientService>();
+    builder.Services.AddScoped<ISkillService, SkillService>();
     builder.Services.AddScoped<IAgentEngine, AgentEngine>();
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>

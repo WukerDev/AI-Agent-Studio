@@ -7,9 +7,13 @@ import { AgentFlowServiceClient } from './clients/generated/agent_node.client'
 import type {
     AgentNode,
     ExplorerItem,
+    SkillItem,
     WorkflowEdge,
     ExecuteWorkflowRequest,
     GetExplorerRequest,
+    GetSkillsRequest,
+    SaveSkillRequest,
+    DeleteSkillRequest,
     SaveAgentNodeRequest,
     GetAgentNodesRequest,
     DeleteAgentNodeRequest,
@@ -33,6 +37,7 @@ export interface GlobalStoreState {
     nodes: AgentNode[]
     edges: WorkflowEdge[]
     explorerItems: ExplorerItem[]
+    skills: SkillItem[]
     currentFlowId: string
     currentExplorerPath: string
     activeExecutionId: string
@@ -53,6 +58,7 @@ export const useGlobalStore = defineStore('global', {
         nodes: [],
         edges: [],
         explorerItems: [],
+        skills: [],
         currentFlowId: 'default-flow',
         currentExplorerPath: '/',
         activeExecutionId: '',
@@ -135,6 +141,53 @@ export const useGlobalStore = defineStore('global', {
             if (sourceIndex < 0 || sourceIndex >= this.explorerItems.length) return
             const item = this.explorerItems[sourceIndex]
             item.path = `${targetFolder.path.replace(/\/$/, '')}/${item.name}`
+        },
+        async getSkills(request: GetSkillsRequest = {}): Promise<void> {
+            await this.runGrpcCommand(async (client, options) => {
+                const call = await client.getSkills(request, options)
+                if (call.response.success && call.response.skills) {
+                    this.skills = call.response.skills
+                } else if (!call.response.success) {
+                    this.errorKey = 'error.grpc.get_skills_failed'
+                }
+            })
+        },
+        async saveSkill(request: SaveSkillRequest): Promise<SkillItem | null> {
+            const notif = useNotificationStore()
+            let savedSkill: SkillItem | null = null
+            await this.runGrpcCommand(async (client, options) => {
+                const call = await client.saveSkill(request, options)
+                if (call.response.success && call.response.skill) {
+                    savedSkill = call.response.skill
+                    const idx = this.skills.findIndex(s => s.name === call.response.skill?.name)
+                    if (idx >= 0) {
+                        this.skills[idx] = call.response.skill
+                    } else {
+                        this.skills.push(call.response.skill)
+                    }
+                    notif.success(`Skill "${call.response.skill.name}/SKILL.md" saved`)
+                } else {
+                    this.errorKey = 'error.grpc.save_skill_failed'
+                    notif.error(call.response.message || 'Failed to save skill')
+                }
+            })
+            return savedSkill
+        },
+        async deleteSkill(request: DeleteSkillRequest): Promise<boolean> {
+            const notif = useNotificationStore()
+            let deleted = false
+            await this.runGrpcCommand(async (client, options) => {
+                const call = await client.deleteSkill(request, options)
+                if (call.response.success) {
+                    deleted = true
+                    this.skills = this.skills.filter(s => s.name !== request.name)
+                    notif.info(`Skill "${request.name}" deleted`)
+                } else {
+                    this.errorKey = 'error.grpc.delete_skill_failed'
+                    notif.error('Failed to delete skill')
+                }
+            })
+            return deleted
         },
         async saveAgentNode(request: SaveAgentNodeRequest): Promise<void> {
             if (request.node) {
@@ -319,6 +372,32 @@ export const useGlobalStore = defineStore('global', {
                 this.updateSyncTimestamp()
             })
 
+            hubConnection.on('SkillsLoaded', (payload: SkillsLoadedEventPayload) => {
+                if (payload.skills) {
+                    this.skills = payload.skills
+                }
+                this.updateSyncTimestamp()
+            })
+
+            hubConnection.on('SkillSaved', (payload: SkillSavedEventPayload) => {
+                if (payload.skill) {
+                    const idx = this.skills.findIndex(s => s.name === payload.skill.name)
+                    if (idx >= 0) {
+                        this.skills[idx] = payload.skill
+                    } else {
+                        this.skills.push(payload.skill)
+                    }
+                }
+                this.updateSyncTimestamp()
+            })
+
+            hubConnection.on('SkillDeleted', (payload: SkillDeletedEventPayload) => {
+                if (payload.name) {
+                    this.skills = this.skills.filter(s => s.name !== payload.name)
+                }
+                this.updateSyncTimestamp()
+            })
+
             hubConnection.onclose(() => {
                 this.isSignalRConnected = false
             })
@@ -398,4 +477,16 @@ interface WorkflowExecutionFinishedPayload {
 interface ExplorerLoadedEventPayload {
     path: string
     items: ExplorerItem[]
+}
+
+interface SkillsLoadedEventPayload {
+    skills: SkillItem[]
+}
+
+interface SkillSavedEventPayload {
+    skill: SkillItem
+}
+
+interface SkillDeletedEventPayload {
+    name: string
 }

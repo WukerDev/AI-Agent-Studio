@@ -23,19 +23,22 @@ public class AgentEngine : IAgentEngine
     private readonly IHubContext<EventsHub> hubContext;
     private readonly IConfiguration configuration;
     private readonly ILogger<AgentEngine> logger;
+    private readonly ISkillService skillService;
 
     public AgentEngine(
         ApplicationDbContext dbContext,
         IMcpClientService mcpClientService,
         IHubContext<EventsHub> hubContext,
         IConfiguration configuration,
-        ILogger<AgentEngine> logger)
+        ILogger<AgentEngine> logger,
+        ISkillService? skillService = null)
     {
         this.dbContext = dbContext;
         this.mcpClientService = mcpClientService;
         this.hubContext = hubContext;
         this.configuration = configuration;
         this.logger = logger;
+        this.skillService = skillService ?? new SkillService(configuration, Microsoft.Extensions.Logging.Abstractions.NullLogger<SkillService>.Instance);
     }
 
     public async Task<WorkflowExecutionResult> ExecuteFlowAsync(
@@ -121,6 +124,7 @@ public class AgentEngine : IAgentEngine
             var modelNodes = nodes.Where(n => n.Type == (int)Protos.NodeType.Model).ToList();
             var promptNodes = nodes.Where(n => n.Type == (int)Protos.NodeType.Prompt).ToList();
             var mcpNodes = nodes.Where(n => n.Type == (int)Protos.NodeType.McpConnector).ToList();
+            var skillNodes = nodes.Where(n => n.Type == (int)Protos.NodeType.Skill).ToList();
 
             var orderedAgents = OrderAgentsByEdges(agentNodes, edges);
             if (orderedAgents.Count == 0)
@@ -156,6 +160,12 @@ public class AgentEngine : IAgentEngine
                     connectedMcps = mcpNodes;
                 }
 
+                var connectedSkills = ResolveConnectedMany(currentAgentNode, skillNodes, nodes, edges);
+                if (connectedSkills.Count == 0 && skillNodes.Count > 0 && orderedAgents.Count <= 1)
+                {
+                    connectedSkills = skillNodes;
+                }
+
                 var promptParts = new List<string>();
                 foreach (var pNode in connectedPrompts)
                 {
@@ -178,6 +188,56 @@ public class AgentEngine : IAgentEngine
                     {
                         promptParts.Add(agentPrompt);
                     }
+                }
+
+                var attachedSkillItems = new List<Protos.SkillItem>();
+                var skillDirectoryPaths = new List<string>();
+
+                foreach (var sNode in connectedSkills)
+                {
+                    var rawSkillRef = FirstNonEmpty(sNode.Endpoint, sNode.Name);
+                    var normalizedSkillName = this.skillService.NormalizeSkillName(rawSkillRef);
+                    if (string.IsNullOrWhiteSpace(normalizedSkillName))
+                    {
+                        continue;
+                    }
+
+                    var skillItem = await this.skillService.GetSkillByNameAsync(normalizedSkillName, cancellationToken);
+                    if (skillItem == null && !string.IsNullOrWhiteSpace(sNode.SystemPrompt))
+                    {
+                        skillItem = await this.skillService.SaveSkillAsync(
+                            normalizedSkillName,
+                            FirstNonEmpty(sNode.Name, $"Skill {normalizedSkillName}"),
+                            sNode.SystemPrompt,
+                            cancellationToken);
+                    }
+
+                    if (skillItem != null && !attachedSkillItems.Any(s => s.Name.Equals(skillItem.Name, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        attachedSkillItems.Add(skillItem);
+                        var dirPath = this.skillService.GetSkillDirectoryPath(skillItem.Name);
+                        if (!string.IsNullOrWhiteSpace(dirPath) && Directory.Exists(dirPath))
+                        {
+                            skillDirectoryPaths.Add(dirPath);
+                        }
+                    }
+                }
+
+                if (attachedSkillItems.Count > 0)
+                {
+                    var skillNamesList = string.Join(", ", attachedSkillItems.Select(s => $"{s.Name} ({s.Path})"));
+                    await LogEvent("info", $"Attached Microsoft Agent Skill(s) via SKILL.md: [{skillNamesList}]");
+
+                    var skillsSb = new StringBuilder();
+                    skillsSb.AppendLine("### MICROSOFT AGENT SKILLS (SKILL.md)");
+                    foreach (var skill in attachedSkillItems)
+                    {
+                        skillsSb.AppendLine($"#### Skill: {skill.Name}");
+                        skillsSb.AppendLine($"Description: {skill.Description}");
+                        skillsSb.AppendLine(skill.Content);
+                        skillsSb.AppendLine();
+                    }
+                    promptParts.Add(skillsSb.ToString().Trim());
                 }
 
                 var systemPrompt = promptParts.Count > 0
@@ -247,6 +307,17 @@ public class AgentEngine : IAgentEngine
                         $"Attached {discoveredTools.Count} MCP tool(s): [{string.Join(", ", discoveredTools.Select(t => t.Name))}]");
                 }
 
+                using var skillsProvider = skillDirectoryPaths.Count > 0
+                    ? new AgentSkillsProvider(
+                        skillDirectoryPaths,
+                        options: new AgentSkillsProviderOptions
+                        {
+                            DisableLoadSkillApproval = true,
+                            DisableReadSkillResourceApproval = true,
+                            DisableRunSkillScriptApproval = true
+                        })
+                    : null;
+
                 IChatClient chatClient = CreateChatClient(provider, modelName, endpoint, temperature, apiKeyOverride);
 
                 await LogEvent("info", $"Executing agent reasoning loop ({agentName})...", new { Prompt = currentInput });
@@ -273,7 +344,17 @@ public class AgentEngine : IAgentEngine
                     {
                         try
                         {
-                            var agentWithTools = chatClient.AsAIAgent(instructions: systemPrompt, tools: tools, name: agentName);
+                            var agentOptions = new ChatClientAgentOptions
+                            {
+                                Name = agentName,
+                                ChatOptions = new ChatOptions
+                                {
+                                    Instructions = systemPrompt,
+                                    Tools = tools
+                                },
+                                AIContextProviders = skillsProvider != null ? [skillsProvider] : null
+                            };
+                            var agentWithTools = chatClient.AsAIAgent(agentOptions);
                             var response = await agentWithTools.RunAsync(currentInput, cancellationToken: cancellationToken);
                             responseText = response.Text ?? string.Empty;
                         }
@@ -300,9 +381,31 @@ public class AgentEngine : IAgentEngine
                 }
                 else
                 {
-                    var agent = chatClient.AsAIAgent(instructions: systemPrompt, name: agentName);
-                    var response = await agent.RunAsync(currentInput, cancellationToken: cancellationToken);
-                    responseText = response.Text ?? string.Empty;
+                    try
+                    {
+                        var agentOptions = new ChatClientAgentOptions
+                        {
+                            Name = agentName,
+                            ChatOptions = new ChatOptions
+                            {
+                                Instructions = systemPrompt
+                            },
+                            AIContextProviders = skillsProvider != null ? [skillsProvider] : null
+                        };
+                        var agent = chatClient.AsAIAgent(agentOptions);
+                        var response = await agent.RunAsync(currentInput, cancellationToken: cancellationToken);
+                        responseText = response.Text ?? string.Empty;
+                    }
+                    catch (Exception skillToolEx) when (
+                        skillsProvider != null &&
+                        (skillToolEx.Message.Contains("does not support tools", StringComparison.OrdinalIgnoreCase) ||
+                         skillToolEx.Message.Contains("400", StringComparison.OrdinalIgnoreCase) ||
+                         skillToolEx.Message.Contains("Bad Request", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        var agent = chatClient.AsAIAgent(instructions: systemPrompt, name: agentName);
+                        var response = await agent.RunAsync(currentInput, cancellationToken: cancellationToken);
+                        responseText = response.Text ?? string.Empty;
+                    }
                 }
 
                 stepOutputs.Add($"[{agentName}]\n{responseText}");

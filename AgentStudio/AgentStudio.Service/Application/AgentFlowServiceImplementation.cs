@@ -15,6 +15,7 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
     private readonly IUserContext userContext;
     private readonly IHubContext<EventsHub> hubContext;
     private readonly IServiceScopeFactory serviceScopeFactory;
+    private readonly ISkillService skillService;
     private readonly ILogger<AgentFlowServiceImplementation> logger;
 
     public AgentFlowServiceImplementation(
@@ -22,12 +23,14 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         IUserContext userContext,
         IHubContext<EventsHub> hubContext,
         IServiceScopeFactory serviceScopeFactory,
+        ISkillService skillService,
         ILogger<AgentFlowServiceImplementation> logger)
     {
         this.dbContext = dbContext;
         this.userContext = userContext;
         this.hubContext = hubContext;
         this.serviceScopeFactory = serviceScopeFactory;
+        this.skillService = skillService;
         this.logger = logger;
     }
 
@@ -408,4 +411,87 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
 
         return response;
     }
+
+    public override async Task<GetSkillsResponse> GetSkills(GetSkillsRequest request, ServerCallContext context)
+    {
+        var userId = this.userContext.UserId;
+        var skills = await this.skillService.GetSkillsAsync(context.CancellationToken);
+
+        var response = new GetSkillsResponse
+        {
+            Success = true,
+            Message = $"Loaded {skills.Count} skills"
+        };
+        response.Skills.AddRange(skills);
+
+        var payload = skills.Select(s => new
+        {
+            name = s.Name,
+            description = s.Description,
+            content = s.Content,
+            path = s.Path
+        }).ToList();
+
+        await this.hubContext.Clients.User(userId).SendAsync("SkillsLoaded", new { Skills = payload }, context.CancellationToken);
+
+        return response;
+    }
+
+    public override async Task<SaveSkillResponse> SaveSkill(SaveSkillRequest request, ServerCallContext context)
+    {
+        var userId = this.userContext.UserId;
+        try
+        {
+            var saved = await this.skillService.SaveSkillAsync(
+                request.Name,
+                request.Description,
+                request.Content,
+                context.CancellationToken);
+
+            await this.hubContext.Clients.User(userId).SendAsync("SkillSaved", new
+            {
+                Skill = new
+                {
+                    name = saved.Name,
+                    description = saved.Description,
+                    content = saved.Content,
+                    path = saved.Path
+                }
+            }, context.CancellationToken);
+
+            return new SaveSkillResponse
+            {
+                Success = true,
+                Message = $"Skill '{saved.Name}' saved to {saved.Path}",
+                Skill = saved
+            };
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogWarning(ex, "Failed to save skill '{SkillName}'", request.Name);
+            return new SaveSkillResponse
+            {
+                Success = false,
+                Message = ex.Message
+            };
+        }
+    }
+
+    public override async Task<DeleteSkillResponse> DeleteSkill(DeleteSkillRequest request, ServerCallContext context)
+    {
+        var userId = this.userContext.UserId;
+        var normalizedName = this.skillService.NormalizeSkillName(request.Name);
+        var deleted = await this.skillService.DeleteSkillAsync(request.Name, context.CancellationToken);
+
+        if (deleted)
+        {
+            await this.hubContext.Clients.User(userId).SendAsync("SkillDeleted", new { Name = normalizedName }, context.CancellationToken);
+        }
+
+        return new DeleteSkillResponse
+        {
+            Success = deleted
+        };
+    }
 }
+

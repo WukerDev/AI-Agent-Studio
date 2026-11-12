@@ -7,6 +7,7 @@
     "sidebar": {
       "files": "Pliki",
       "agents": "Węzły i Agenci",
+      "skills": "Eksplorator Skilli",
       "settings": "Ustawienia",
       "console": "Konsola",
       "output": "Wyjście"
@@ -14,6 +15,7 @@
     "leftDrawer": {
       "filesEmpty": "Brak plików w projekcie.",
       "agentsEmpty": "Kliknij lub przeciągnij węzły poniżej, aby dodać je do płótna.",
+      "skillsEmpty": "Brak zdefiniowanych skilli w projekcie.",
       "settingsEmpty": "Brak konfiguracji."
     },
     "bottomPanel": {
@@ -31,6 +33,7 @@
     "agent": "Węzeł Agenta",
     "model": "Węzeł Modelu",
     "prompt": "Węzeł Promptu",
-    "mcp": "Konektor MCP"
+    "mcp": "Konektor MCP",
+    "skill": "Węzeł Skilla"
   }
 }

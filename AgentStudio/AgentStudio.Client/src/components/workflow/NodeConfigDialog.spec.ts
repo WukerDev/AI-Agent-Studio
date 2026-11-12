@@ -178,4 +178,36 @@ describe('NodeConfigDialog Component (Agent & Model Configuration)', () => {
         expect(saved.endpoint).toBe('large')
         expect(saved.modelConfig.provider).toBe('#8B5CF6')
     })
+
+    it('should configure Agent Skill node folder name (SKILL.md) and description', async () => {
+        const skillNode = {
+            id: 'node_skill_1',
+            name: 'Skill: sql-architect',
+            type: NodeType.SKILL,
+            endpoint: 'sql-architect',
+            systemPrompt: 'PostgreSQL schema design and query optimization skill'
+        }
+
+        const wrapper = mount(NodeConfigDialog, {
+            props: {
+                modelValue: true,
+                nodeData: skillNode
+            },
+            global: {
+                plugins: [vuetify]
+            }
+        })
+
+        const buttons = wrapper.findAllComponents(components.VBtn)
+        const saveButton = buttons.find(b => b.text().includes('Save Changes'))
+        await saveButton!.trigger('click')
+
+        const emittedSave = wrapper.emitted('save')
+        expect(emittedSave).toBeTruthy()
+        const saved = emittedSave![0][0] as any
+        expect(saved.id).toBe('node_skill_1')
+        expect(saved.type).toBe(NodeType.SKILL)
+        expect(saved.endpoint).toBe('sql-architect')
+        expect(saved.systemPrompt).toBe('PostgreSQL schema design and query optimization skill')
+    })
 })

@@ -12,6 +12,9 @@ service AgentFlowService {
   rpc DeleteAgentNode (DeleteAgentNodeRequest) returns (DeleteAgentNodeResponse);
   rpc SaveWorkflowEdges (SaveWorkflowEdgesRequest) returns (SaveWorkflowEdgesResponse);
   rpc GetWorkflowEdges (GetWorkflowEdgesRequest) returns (GetWorkflowEdgesResponse);
+  rpc GetSkills (GetSkillsRequest) returns (GetSkillsResponse);
+  rpc SaveSkill (SaveSkillRequest) returns (SaveSkillResponse);
+  rpc DeleteSkill (DeleteSkillRequest) returns (DeleteSkillResponse);
 }
 
 message ExecuteWorkflowRequest {
@@ -96,6 +99,42 @@ enum NodeType {
   NODE_TYPE_MCP_CONNECTOR = 4;
   NODE_TYPE_NOTE = 5;
   NODE_TYPE_LABEL = 6;
+  NODE_TYPE_SKILL = 7;
+}
+
+message SkillItem {
+  string name = 1;
+  string description = 2;
+  string content = 3;
+  string path = 4;
+}
+
+message GetSkillsRequest {}
+
+message GetSkillsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated SkillItem skills = 3;
+}
+
+message SaveSkillRequest {
+  string name = 1;
+  string description = 2;
+  string content = 3;
+}
+
+message SaveSkillResponse {
+  bool success = 1;
+  string message = 2;
+  SkillItem skill = 3;
+}
+
+message DeleteSkillRequest {
+  string name = 1;
+}
+
+message DeleteSkillResponse {
+  bool success = 1;
 }
 
 message Position {

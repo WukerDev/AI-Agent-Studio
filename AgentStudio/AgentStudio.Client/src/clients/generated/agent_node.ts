@@ -200,6 +200,101 @@ export interface AgentNode {
     flowId: string;
 }
 /**
+ * @generated from protobuf message agentstudio.v1.SkillItem
+ */
+export interface SkillItem {
+    /**
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string description = 2
+     */
+    description: string;
+    /**
+     * @generated from protobuf field: string content = 3
+     */
+    content: string;
+    /**
+     * @generated from protobuf field: string path = 4
+     */
+    path: string;
+}
+/**
+ * @generated from protobuf message agentstudio.v1.GetSkillsRequest
+ */
+export interface GetSkillsRequest {
+}
+/**
+ * @generated from protobuf message agentstudio.v1.GetSkillsResponse
+ */
+export interface GetSkillsResponse {
+    /**
+     * @generated from protobuf field: bool success = 1
+     */
+    success: boolean;
+    /**
+     * @generated from protobuf field: string message = 2
+     */
+    message: string;
+    /**
+     * @generated from protobuf field: repeated agentstudio.v1.SkillItem skills = 3
+     */
+    skills: SkillItem[];
+}
+/**
+ * @generated from protobuf message agentstudio.v1.SaveSkillRequest
+ */
+export interface SaveSkillRequest {
+    /**
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string description = 2
+     */
+    description: string;
+    /**
+     * @generated from protobuf field: string content = 3
+     */
+    content: string;
+}
+/**
+ * @generated from protobuf message agentstudio.v1.SaveSkillResponse
+ */
+export interface SaveSkillResponse {
+    /**
+     * @generated from protobuf field: bool success = 1
+     */
+    success: boolean;
+    /**
+     * @generated from protobuf field: string message = 2
+     */
+    message: string;
+    /**
+     * @generated from protobuf field: agentstudio.v1.SkillItem skill = 3
+     */
+    skill?: SkillItem;
+}
+/**
+ * @generated from protobuf message agentstudio.v1.DeleteSkillRequest
+ */
+export interface DeleteSkillRequest {
+    /**
+     * @generated from protobuf field: string name = 1
+     */
+    name: string;
+}
+/**
+ * @generated from protobuf message agentstudio.v1.DeleteSkillResponse
+ */
+export interface DeleteSkillResponse {
+    /**
+     * @generated from protobuf field: bool success = 1
+     */
+    success: boolean;
+}
+/**
  * @generated from protobuf message agentstudio.v1.Position
  */
 export interface Position {
@@ -367,7 +462,11 @@ export enum NodeType {
     /**
      * @generated from protobuf enum value: NODE_TYPE_LABEL = 6;
      */
-    LABEL = 6
+    LABEL = 6,
+    /**
+     * @generated from protobuf enum value: NODE_TYPE_SKILL = 7;
+     */
+    SKILL = 7
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class ExecuteWorkflowRequest$Type extends MessageType<ExecuteWorkflowRequest> {
@@ -1090,6 +1189,397 @@ class AgentNode$Type extends MessageType<AgentNode> {
  */
 export const AgentNode = new AgentNode$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class SkillItem$Type extends MessageType<SkillItem> {
+    constructor() {
+        super("agentstudio.v1.SkillItem", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "content", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "path", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<SkillItem>): SkillItem {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.description = "";
+        message.content = "";
+        message.path = "";
+        if (value !== undefined)
+            reflectionMergePartial<SkillItem>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: SkillItem): SkillItem {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* string description */ 2:
+                    message.description = reader.string();
+                    break;
+                case /* string content */ 3:
+                    message.content = reader.string();
+                    break;
+                case /* string path */ 4:
+                    message.path = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: SkillItem, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* string description = 2; */
+        if (message.description !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.description);
+        /* string content = 3; */
+        if (message.content !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.content);
+        /* string path = 4; */
+        if (message.path !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.path);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.SkillItem
+ */
+export const SkillItem = new SkillItem$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetSkillsRequest$Type extends MessageType<GetSkillsRequest> {
+    constructor() {
+        super("agentstudio.v1.GetSkillsRequest", []);
+    }
+    create(value?: PartialMessage<GetSkillsRequest>): GetSkillsRequest {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        if (value !== undefined)
+            reflectionMergePartial<GetSkillsRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: GetSkillsRequest): GetSkillsRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: GetSkillsRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.GetSkillsRequest
+ */
+export const GetSkillsRequest = new GetSkillsRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetSkillsResponse$Type extends MessageType<GetSkillsResponse> {
+    constructor() {
+        super("agentstudio.v1.GetSkillsResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "skills", kind: "message", repeat: 2 /*RepeatType.UNPACKED*/, T: () => SkillItem }
+        ]);
+    }
+    create(value?: PartialMessage<GetSkillsResponse>): GetSkillsResponse {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.success = false;
+        message.message = "";
+        message.skills = [];
+        if (value !== undefined)
+            reflectionMergePartial<GetSkillsResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: GetSkillsResponse): GetSkillsResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                case /* repeated agentstudio.v1.SkillItem skills */ 3:
+                    message.skills.push(SkillItem.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: GetSkillsResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        /* repeated agentstudio.v1.SkillItem skills = 3; */
+        for (let i = 0; i < message.skills.length; i++)
+            SkillItem.internalBinaryWrite(message.skills[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.GetSkillsResponse
+ */
+export const GetSkillsResponse = new GetSkillsResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SaveSkillRequest$Type extends MessageType<SaveSkillRequest> {
+    constructor() {
+        super("agentstudio.v1.SaveSkillRequest", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "content", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<SaveSkillRequest>): SaveSkillRequest {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.description = "";
+        message.content = "";
+        if (value !== undefined)
+            reflectionMergePartial<SaveSkillRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: SaveSkillRequest): SaveSkillRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* string description */ 2:
+                    message.description = reader.string();
+                    break;
+                case /* string content */ 3:
+                    message.content = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: SaveSkillRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* string description = 2; */
+        if (message.description !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.description);
+        /* string content = 3; */
+        if (message.content !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.content);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.SaveSkillRequest
+ */
+export const SaveSkillRequest = new SaveSkillRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SaveSkillResponse$Type extends MessageType<SaveSkillResponse> {
+    constructor() {
+        super("agentstudio.v1.SaveSkillResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "skill", kind: "message", T: () => SkillItem }
+        ]);
+    }
+    create(value?: PartialMessage<SaveSkillResponse>): SaveSkillResponse {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.success = false;
+        message.message = "";
+        if (value !== undefined)
+            reflectionMergePartial<SaveSkillResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: SaveSkillResponse): SaveSkillResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                case /* string message */ 2:
+                    message.message = reader.string();
+                    break;
+                case /* agentstudio.v1.SkillItem skill */ 3:
+                    message.skill = SkillItem.internalBinaryRead(reader, reader.uint32(), options, message.skill);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: SaveSkillResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        /* string message = 2; */
+        if (message.message !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.message);
+        /* agentstudio.v1.SkillItem skill = 3; */
+        if (message.skill)
+            SkillItem.internalBinaryWrite(message.skill, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.SaveSkillResponse
+ */
+export const SaveSkillResponse = new SaveSkillResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DeleteSkillRequest$Type extends MessageType<DeleteSkillRequest> {
+    constructor() {
+        super("agentstudio.v1.DeleteSkillRequest", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<DeleteSkillRequest>): DeleteSkillRequest {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        if (value !== undefined)
+            reflectionMergePartial<DeleteSkillRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: DeleteSkillRequest): DeleteSkillRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: DeleteSkillRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.DeleteSkillRequest
+ */
+export const DeleteSkillRequest = new DeleteSkillRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DeleteSkillResponse$Type extends MessageType<DeleteSkillResponse> {
+    constructor() {
+        super("agentstudio.v1.DeleteSkillResponse", [
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<DeleteSkillResponse>): DeleteSkillResponse {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.success = false;
+        if (value !== undefined)
+            reflectionMergePartial<DeleteSkillResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: DeleteSkillResponse): DeleteSkillResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* bool success */ 1:
+                    message.success = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: DeleteSkillResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* bool success = 1; */
+        if (message.success !== false)
+            writer.tag(1, WireType.Varint).bool(message.success);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message agentstudio.v1.DeleteSkillResponse
+ */
+export const DeleteSkillResponse = new DeleteSkillResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class Position$Type extends MessageType<Position> {
     constructor() {
         super("agentstudio.v1.Position", [
@@ -1571,5 +2061,8 @@ export const AgentFlowService = new ServiceType("agentstudio.v1.AgentFlowService
     { name: "GetAgentNodes", options: {}, I: GetAgentNodesRequest, O: GetAgentNodesResponse },
     { name: "DeleteAgentNode", options: {}, I: DeleteAgentNodeRequest, O: DeleteAgentNodeResponse },
     { name: "SaveWorkflowEdges", options: {}, I: SaveWorkflowEdgesRequest, O: SaveWorkflowEdgesResponse },
-    { name: "GetWorkflowEdges", options: {}, I: GetWorkflowEdgesRequest, O: GetWorkflowEdgesResponse }
+    { name: "GetWorkflowEdges", options: {}, I: GetWorkflowEdgesRequest, O: GetWorkflowEdgesResponse },
+    { name: "GetSkills", options: {}, I: GetSkillsRequest, O: GetSkillsResponse },
+    { name: "SaveSkill", options: {}, I: SaveSkillRequest, O: SaveSkillResponse },
+    { name: "DeleteSkill", options: {}, I: DeleteSkillRequest, O: DeleteSkillResponse }
 ]);

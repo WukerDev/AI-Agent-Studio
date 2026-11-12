@@ -434,4 +434,47 @@ describe('End-to-End Frontend Workflow & Canvas State', () => {
         expect(mcpNode?.mcpConfig?.serverUrl).toBe('builtin://tools')
         expect(mcpNode?.mcpConfig?.enabledTools).toContain('calculate_expression')
     })
+
+    it('E2E Flow 15: Should manage Microsoft Agent Skills (SKILL.md) and attach a single SkillNode to an Agent', async () => {
+        store.skills = [
+            {
+                name: 'code-review',
+                description: 'Review code for security and clean architecture.',
+                content: '# Code Review Skill\n1. Check SOLID.',
+                path: 'skills/code-review/SKILL.md'
+            }
+        ]
+
+        expect(vm.skills).toHaveLength(1)
+        expect(vm.getNodeColor(NodeType.SKILL)).toBe('#06B6D4')
+        expect(vm.getNodeIcon(NodeType.SKILL)).toBe('mdi-book-open-page-variant-outline')
+
+        await vm.addNode(NodeType.AGENT, { x: 250, y: 100 }, 'Reviewer Agent')
+        await vm.addNode(NodeType.SKILL, { x: 350, y: 280 }, 'Skill: code-review', {
+            endpoint: 'code-review',
+            systemPrompt: vm.skills[0].description
+        })
+
+        const agent = vm.nodes.find(n => n.type === NodeType.AGENT)!
+        const skillNode = vm.nodes.find(n => n.type === NodeType.SKILL)!
+
+        expect(skillNode).toBeDefined()
+        expect(skillNode.endpoint).toBe('code-review')
+        expect(skillNode.systemPrompt).toContain('Review code')
+
+        await vm.saveEdges([
+            {
+                id: `e_${skillNode.id}_${agent.id}`,
+                flowId: 'default-flow',
+                sourceNodeId: skillNode.id,
+                sourceHandle: 'skill-out',
+                targetNodeId: agent.id,
+                targetHandle: 'skill'
+            }
+        ])
+
+        expect(vm.edges).toHaveLength(1)
+        expect(vm.edges[0].targetHandle).toBe('skill')
+        expect(vm.edges[0].sourceHandle).toBe('skill-out')
+    })
 })

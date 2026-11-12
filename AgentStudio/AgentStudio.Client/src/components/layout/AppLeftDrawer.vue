@@ -28,11 +28,81 @@ const isOpen = computed({
 const isCreateItemDialogOpen = ref(false)
 const newItemName = ref('')
 
+const isSkillDialogOpen = ref(false)
+const isEditingSkill = ref(false)
+const skillFormName = ref('')
+const skillFormDescription = ref('')
+const skillFormContent = ref('')
+
 watch([isOpen, () => props.tab], ([newIsOpen, newTab]) => {
   if (newIsOpen && newTab === 'files') {
     globalViewModel.loadExplorer(globalViewModel.currentExplorerPath || '/')
+  } else if (newIsOpen && (newTab === 'skills' || newTab === 'agents')) {
+    globalViewModel.loadSkills()
   }
 }, { immediate: true })
+
+function openCreateSkillDialog() {
+  isEditingSkill.value = false
+  skillFormName.value = 'my-domain-skill'
+  skillFormDescription.value = 'Użyj tego skilla, gdy agent potrzebuje specjalistycznej wiedzy domenowej.'
+  skillFormContent.value = '# My Domain Skill\n\n1. Analizuj wymagania krok po kroku.\n2. Zastosuj najlepsze praktyki Microsoft Agent Skills.'
+  isSkillDialogOpen.value = true
+}
+
+function openEditSkillDialog(skill: any) {
+  isEditingSkill.value = true
+  skillFormName.value = skill.name || ''
+  skillFormDescription.value = skill.description || ''
+  skillFormContent.value = skill.content || ''
+  isSkillDialogOpen.value = true
+}
+
+const skillMdPreview = computed(() => {
+  const safeName = (skillFormName.value || 'skill-name')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-|-$/g, '') || 'skill-name'
+  const safeDesc = (skillFormDescription.value || 'Skill description').replace(/\r?\n/g, ' ').trim()
+  return `---\nname: ${safeName}\ndescription: ${safeDesc}\n---\n\n${skillFormContent.value || ''}`
+})
+
+async function confirmSaveSkill() {
+  const name = skillFormName.value.trim()
+  if (!name) return
+  const saved = await globalViewModel.saveSkill(
+    name,
+    skillFormDescription.value.trim(),
+    skillFormContent.value
+  )
+  if (saved) {
+    isSkillDialogOpen.value = false
+  }
+}
+
+async function handleDeleteSkill(skillName: string) {
+  await globalViewModel.deleteSkill(skillName)
+}
+
+function handleAddSkillNodeToCanvas(skill: any) {
+  handleAddNode(NodeType.SKILL, `Skill: ${skill.name}`, {
+    endpoint: skill.name,
+    systemPrompt: skill.description || ''
+  })
+}
+
+function onSkillDragStart(event: DragEvent, skill: any) {
+  onPaletteDragStart(event, {
+    type: NodeType.SKILL,
+    name: `Skill: ${skill.name}`,
+    customConfig: {
+      endpoint: skill.name,
+      systemPrompt: skill.description || ''
+    }
+  })
+}
 
 function getFlowIdFromItem(item: any): string {
   if (!item) return 'default-flow'
@@ -145,6 +215,13 @@ const paletteNodes = [
     description: 'External tools & context protocol',
     icon: 'mdi-connection',
     color: 'success'
+  },
+  {
+    type: NodeType.SKILL,
+    name: 'Agent Skill',
+    description: 'Microsoft SKILL.md domain capability',
+    icon: 'mdi-book-open-page-variant-outline',
+    color: 'cyan'
   }
 ]
 
@@ -248,6 +325,17 @@ const paletteArguments = [
           title="Utwórz nowy plik"
           class="mr-1"
           @click="openCreateDialog"
+      />
+
+      <v-btn
+          v-if="props.tab === 'skills'"
+          icon="mdi-plus"
+          variant="tonal"
+          size="x-small"
+          color="cyan"
+          title="Dodaj nowy skill (<skill-name>/SKILL.md)"
+          class="mr-1"
+          @click="openCreateSkillDialog"
       />
 
       <v-btn icon="mdi-close" variant="text" size="small" @click="isOpen = false"></v-btn>
@@ -355,6 +443,120 @@ const paletteArguments = [
               @click="openCreateDialog"
           >
             Utwórz plik
+          </v-btn>
+        </v-container>
+      </div>
+    </div>
+
+    <div v-else-if="props.tab === 'skills'" class="fill-height d-flex flex-column">
+      <div class="px-3 py-2 bg-grey-darken-4 d-flex align-center justify-space-between border-b">
+        <div class="d-flex align-center overflow-hidden">
+          <v-icon icon="mdi-folder-key-outline" size="14" class="mr-1.5 text-cyan-lighten-2" />
+          <span class="text-caption font-monospace text-truncate text-grey-lighten-1">
+            skills/&lt;skill-name&gt;/SKILL.md
+          </span>
+        </div>
+        <div class="d-flex align-center ga-1">
+          <v-btn
+              variant="text"
+              size="x-small"
+              icon="mdi-refresh"
+              title="Odśwież skille"
+              @click="globalViewModel.loadSkills()"
+          />
+          <v-btn
+              variant="tonal"
+              color="cyan"
+              size="x-small"
+              prepend-icon="mdi-folder-plus-outline"
+              @click="openCreateSkillDialog"
+          >
+            Nowy Skill
+          </v-btn>
+        </div>
+      </div>
+
+      <div class="pa-3 flex-grow-1 overflow-y-auto">
+        <v-alert
+            type="info"
+            variant="tonal"
+            density="compact"
+            color="cyan"
+            class="text-caption mb-3"
+        >
+          Konwencja <strong>Microsoft Agent Skills</strong>: każdy skill posiada osobny folder z plikiem <code>SKILL.md</code> (YAML frontmatter <code>name</code>, <code>description</code> + instrukcje Markdown). Kliknij <strong>+ Węzeł</strong> lub przeciągnij skill na płótno.
+        </v-alert>
+
+        <div v-if="globalViewModel.skills.length > 0" class="palette-container ga-2">
+          <v-card
+              v-for="skill in globalViewModel.skills"
+              :key="skill.name"
+              variant="outlined"
+              color="cyan"
+              draggable="true"
+              class="pa-2.5 cursor-grab hover-card bg-surface-variant-subtle"
+              @dragstart="onSkillDragStart($event, skill)"
+          >
+            <div class="d-flex align-center justify-space-between mb-1">
+              <div class="d-flex align-center overflow-hidden">
+                <v-icon icon="mdi-folder" size="16" color="cyan" class="mr-1.5 flex-shrink-0" />
+                <span class="text-caption font-weight-bold text-white font-monospace text-truncate">
+                  {{ skill.name }}/SKILL.md
+                </span>
+              </div>
+              <v-chip size="x-small" color="cyan" variant="tonal" class="font-monospace">
+                SKILL.md
+              </v-chip>
+            </div>
+
+            <div class="text-caption text-grey-lighten-1 mb-2" style="font-size: 11px; line-height: 1.35;">
+              {{ skill.description }}
+            </div>
+
+            <div class="d-flex align-center justify-space-between pt-1 border-t">
+              <v-btn
+                  size="x-small"
+                  variant="tonal"
+                  color="cyan"
+                  prepend-icon="mdi-plus-box-outline"
+                  @click.stop="handleAddSkillNodeToCanvas(skill)"
+              >
+                Dodaj Węzeł
+              </v-btn>
+              <div class="d-flex align-center ga-1">
+                <v-btn
+                    icon="mdi-pencil-outline"
+                    size="x-small"
+                    variant="text"
+                    color="grey-lighten-1"
+                    title="Edytuj SKILL.md"
+                    @click.stop="openEditSkillDialog(skill)"
+                />
+                <v-btn
+                    icon="mdi-delete-outline"
+                    size="x-small"
+                    variant="text"
+                    color="error"
+                    title="Usuń folder skilla"
+                    @click.stop="handleDeleteSkill(skill.name)"
+                />
+              </div>
+            </div>
+          </v-card>
+        </div>
+
+        <v-container v-else class="pa-4 text-center">
+          <v-icon icon="mdi-book-open-page-variant-outline" size="36" color="cyan" class="mb-2" />
+          <p class="text-body-2 text-medium-emphasis">{{ t('layout.leftDrawer.skillsEmpty') }}</p>
+          <v-btn
+              prepend-icon="mdi-folder-plus-outline"
+              variant="tonal"
+              size="small"
+              color="cyan"
+              class="mt-2"
+              @click="openCreateSkillDialog"
+          >
+            Dodaj pierwszy Skill
           </v-btn>
         </v-container>
       </div>
@@ -497,6 +699,74 @@ const paletteArguments = [
         <v-spacer />
         <v-btn variant="text" size="small" @click="isCreateItemDialogOpen = false">Anuluj</v-btn>
         <v-btn color="primary" variant="flat" size="small" @click="confirmCreateItem">Utwórz</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="isSkillDialogOpen" max-width="640">
+    <v-card color="surface" rounded="lg">
+      <v-card-title class="d-flex align-center justify-space-between bg-grey-darken-4 py-3 px-4">
+        <div class="d-flex align-center">
+          <v-icon icon="mdi-book-open-page-variant-outline" color="cyan" class="mr-2" />
+          <span class="text-subtitle-1 font-weight-bold">
+            {{ isEditingSkill ? `Edytuj Skill: ${skillFormName}/SKILL.md` : 'Nowy Microsoft Agent Skill (SKILL.md)' }}
+          </span>
+        </div>
+        <v-chip size="x-small" color="cyan" variant="tonal" class="font-monospace">
+          agentskills.io
+        </v-chip>
+      </v-card-title>
+
+      <v-divider />
+
+      <v-card-text class="pt-4">
+        <v-text-field
+            v-model="skillFormName"
+            label="Nazwa folderu i skilla (name)"
+            placeholder="np. code-review, sql-architect"
+            hint="Małe litery, cyfry i myślniki (zostanie utworzony plik skills/<nazwa>/SKILL.md)"
+            persistent-hint
+            variant="outlined"
+            density="compact"
+            :disabled="isEditingSkill"
+            prepend-inner-icon="mdi-folder-outline"
+            class="mb-3"
+        />
+
+        <v-textarea
+            v-model="skillFormDescription"
+            label="Opis skilla (YAML frontmatter: description)"
+            placeholder="Opisz kiedy i do czego AI Agent powinien użyć tego skilla..."
+            rows="2"
+            auto-grow
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+        />
+
+        <v-textarea
+            v-model="skillFormContent"
+            label="Instrukcje Markdown (Body pliku SKILL.md)"
+            placeholder="# Instrukcje wykonania skilla..."
+            rows="6"
+            auto-grow
+            variant="outlined"
+            density="compact"
+            class="font-monospace mb-3"
+        />
+
+        <div class="text-caption text-grey-lighten-1 mb-1 font-weight-bold">
+          Podgląd generowanego pliku <code>skills/{{ skillFormName || 'skill' }}/SKILL.md</code>:
+        </div>
+        <pre class="pa-2 rounded bg-grey-darken-4 text-caption font-monospace text-cyan-lighten-3 overflow-x-auto" style="max-height: 150px; border: 1px solid rgba(6, 182, 212, 0.25);">{{ skillMdPreview }}</pre>
+      </v-card-text>
+
+      <v-card-actions class="px-4 pb-4">
+        <v-spacer />
+        <v-btn variant="text" size="small" @click="isSkillDialogOpen = false">Anuluj</v-btn>
+        <v-btn color="cyan" variant="flat" size="small" prepend-icon="mdi-content-save" @click="confirmSaveSkill">
+          Zapisz SKILL.md
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

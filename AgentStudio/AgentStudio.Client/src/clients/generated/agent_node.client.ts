@@ -4,6 +4,12 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { AgentFlowService } from "./agent_node";
+import type { DeleteSkillResponse } from "./agent_node";
+import type { DeleteSkillRequest } from "./agent_node";
+import type { SaveSkillResponse } from "./agent_node";
+import type { SaveSkillRequest } from "./agent_node";
+import type { GetSkillsResponse } from "./agent_node";
+import type { GetSkillsRequest } from "./agent_node";
 import type { GetWorkflowEdgesResponse } from "./agent_node";
 import type { GetWorkflowEdgesRequest } from "./agent_node";
 import type { SaveWorkflowEdgesResponse } from "./agent_node";
@@ -53,6 +59,18 @@ export interface IAgentFlowServiceClient {
      * @generated from protobuf rpc: GetWorkflowEdges
      */
     getWorkflowEdges(input: GetWorkflowEdgesRequest, options?: RpcOptions): UnaryCall<GetWorkflowEdgesRequest, GetWorkflowEdgesResponse>;
+    /**
+     * @generated from protobuf rpc: GetSkills
+     */
+    getSkills(input: GetSkillsRequest, options?: RpcOptions): UnaryCall<GetSkillsRequest, GetSkillsResponse>;
+    /**
+     * @generated from protobuf rpc: SaveSkill
+     */
+    saveSkill(input: SaveSkillRequest, options?: RpcOptions): UnaryCall<SaveSkillRequest, SaveSkillResponse>;
+    /**
+     * @generated from protobuf rpc: DeleteSkill
+     */
+    deleteSkill(input: DeleteSkillRequest, options?: RpcOptions): UnaryCall<DeleteSkillRequest, DeleteSkillResponse>;
 }
 /**
  * @generated from protobuf service agentstudio.v1.AgentFlowService
@@ -111,5 +129,26 @@ export class AgentFlowServiceClient implements IAgentFlowServiceClient, ServiceI
     getWorkflowEdges(input: GetWorkflowEdgesRequest, options?: RpcOptions): UnaryCall<GetWorkflowEdgesRequest, GetWorkflowEdgesResponse> {
         const method = this.methods[6], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetWorkflowEdgesRequest, GetWorkflowEdgesResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetSkills
+     */
+    getSkills(input: GetSkillsRequest, options?: RpcOptions): UnaryCall<GetSkillsRequest, GetSkillsResponse> {
+        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetSkillsRequest, GetSkillsResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: SaveSkill
+     */
+    saveSkill(input: SaveSkillRequest, options?: RpcOptions): UnaryCall<SaveSkillRequest, SaveSkillResponse> {
+        const method = this.methods[8], opt = this._transport.mergeOptions(options);
+        return stackIntercept<SaveSkillRequest, SaveSkillResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: DeleteSkill
+     */
+    deleteSkill(input: DeleteSkillRequest, options?: RpcOptions): UnaryCall<DeleteSkillRequest, DeleteSkillResponse> {
+        const method = this.methods[9], opt = this._transport.mergeOptions(options);
+        return stackIntercept<DeleteSkillRequest, DeleteSkillResponse>("unary", this._transport, method, opt, input);
     }
 }

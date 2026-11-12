@@ -60,6 +60,23 @@ const { t } = useI18n()
               size="small"
               variant="text"
               class="rail-icon-btn"
+              :class="{ 'active-rail-btn': props.activeLeftPanel === 'skills' }"
+              @click="emit('toggle-left-panel', 'skills')"
+            >
+              <v-icon icon="mdi-book-open-page-variant-outline" size="20" />
+            </v-btn>
+          </template>
+          <span>{{ t('layout.sidebar.skills') }}</span>
+        </v-tooltip>
+
+        <v-tooltip location="right">
+          <template v-slot:activator="{ props: tooltipProps }">
+            <v-btn
+              icon
+              v-bind="tooltipProps"
+              size="small"
+              variant="text"
+              class="rail-icon-btn"
               :class="{ 'active-rail-btn': props.activeLeftPanel === 'settings' }"
               @click="emit('toggle-left-panel', 'settings')"
             >

@@ -74,7 +74,7 @@ const promptVariables = ['{{input}}', '{{date}}', '{{time}}', '{{agent}}', '{{fl
 
 const agentPortConnections = computed(() => {
   if (!localNode.value || localNode.value.type !== NodeType.AGENT) {
-    return { model: null as AgentNode | null, prompts: [] as AgentNode[], tools: [] as AgentNode[] }
+    return { model: null as AgentNode | null, prompts: [] as AgentNode[], tools: [] as AgentNode[], skills: [] as AgentNode[] }
   }
   const agentId = localNode.value.id
   const edges = globalViewModel.edges || []
@@ -90,12 +90,35 @@ const agentPortConnections = computed(() => {
   return {
     model: neighbors.find(n => n.type === NodeType.MODEL) || null,
     prompts: neighbors.filter(n => n.type === NodeType.PROMPT),
-    tools: neighbors.filter(n => n.type === NodeType.MCP_CONNECTOR)
+    tools: neighbors.filter(n => n.type === NodeType.MCP_CONNECTOR),
+    skills: neighbors.filter(n => n.type === NodeType.SKILL)
   }
 })
 
+const selectedSkillDetails = computed(() => {
+  if (!localNode.value || localNode.value.type !== NodeType.SKILL) return null
+  const skillName = localNode.value.endpoint || ''
+  return globalViewModel.skills.find(s => s.name === skillName) || null
+})
+
+function handleSelectSkillForNode(skillName: string) {
+  if (!localNode.value) return
+  localNode.value.endpoint = skillName
+  const matched = globalViewModel.skills.find(s => s.name === skillName)
+  if (matched) {
+    localNode.value.systemPrompt = matched.description
+    if (!localNode.value.name || localNode.value.name === 'Agent Skill' || localNode.value.name.startsWith('Skill:')) {
+      localNode.value.name = `Skill: ${matched.name}`
+    }
+  }
+  isDirty.value = true
+}
+
 watch(() => globalViewModel.selectedNode, (selected) => {
   if (selected) {
+    if (selected.type === NodeType.SKILL && globalViewModel.skills.length === 0) {
+      globalViewModel.loadSkills()
+    }
     localNode.value = JSON.parse(JSON.stringify(selected))
     if (!localNode.value!.modelConfig) {
       localNode.value!.modelConfig = { provider: 'Ollama', modelName: 'gemma3:12b', temperature: 0.7 }
@@ -186,7 +209,7 @@ async function attachSubNodeToAgent(subType: NodeType) {
   let targetHandle = ''
 
   if (subType === NodeType.MODEL) {
-    pos = { x: baseX - 200, y: baseY }
+    pos = { x: baseX - 240, y: baseY }
     name = 'Ollama Gemma 3 (12B)'
     customConfig = {
       modelConfig: { provider: 'Ollama', modelName: 'gemma3:12b', temperature: 0.3 },
@@ -195,7 +218,7 @@ async function attachSubNodeToAgent(subType: NodeType) {
     sourceHandle = 'model-out'
     targetHandle = 'model'
   } else if (subType === NodeType.PROMPT) {
-    pos = { x: baseX, y: baseY }
+    pos = { x: baseX - 60, y: baseY }
     name = 'System Prompt'
     customConfig = {
       systemPrompt: 'Jesteś inteligentnym asystentem AI. Zadanie użytkownika: {{input}}'
@@ -203,7 +226,7 @@ async function attachSubNodeToAgent(subType: NodeType) {
     sourceHandle = 'prompt-out'
     targetHandle = 'prompt'
   } else if (subType === NodeType.MCP_CONNECTOR) {
-    pos = { x: baseX + 200, y: baseY }
+    pos = { x: baseX + 120, y: baseY }
     name = 'MCP Tools'
     customConfig = {
       mcpConfig: {
@@ -214,6 +237,20 @@ async function attachSubNodeToAgent(subType: NodeType) {
     }
     sourceHandle = 'tool-out'
     targetHandle = 'tool'
+  } else if (subType === NodeType.SKILL) {
+    if (globalViewModel.skills.length === 0) {
+      await globalViewModel.loadSkills()
+    }
+    const defaultSkill = globalViewModel.skills[0]
+    const skillFolder = defaultSkill?.name || 'code-review'
+    pos = { x: baseX + 300, y: baseY }
+    name = `Skill: ${skillFolder}`
+    customConfig = {
+      endpoint: skillFolder,
+      systemPrompt: defaultSkill?.description || 'Specialized domain skill loaded via SKILL.md.'
+    }
+    sourceHandle = 'skill-out'
+    targetHandle = 'skill'
   }
 
   await globalViewModel.addNode(subType, pos, name, customConfig)
@@ -247,6 +284,8 @@ const inspectorTitle = computed(() => {
       return 'Sticky Note Inspector'
     case NodeType.LABEL:
       return 'Section Label Inspector'
+    case NodeType.SKILL:
+      return 'Agent Skill Inspector (SKILL.md)'
     default:
       return 'Node Inspector'
   }
@@ -267,6 +306,8 @@ const nodeTypeBadge = computed(() => {
       return 'STICKY NOTE'
     case NodeType.LABEL:
       return 'LABEL'
+    case NodeType.SKILL:
+      return 'SKILL PORT (SKILL.md)'
     default:
       return 'CUSTOM'
   }
@@ -473,7 +514,7 @@ function copyNodeId() {
         </v-card>
 
         <!-- Port 3: MCP Tool -->
-        <v-card variant="outlined" class="pa-2.5 mb-4 port-card port-card-tool">
+        <v-card variant="outlined" class="pa-2.5 mb-2.5 port-card port-card-tool">
           <div class="d-flex align-center justify-space-between mb-1">
             <div class="d-flex align-center">
               <v-icon icon="mdi-connection" size="16" color="success" class="mr-1.5" />
@@ -503,6 +544,107 @@ function copyNodeId() {
               Podłącz MCP Tool
             </v-btn>
           </div>
+        </v-card>
+
+        <!-- Port 4: Agent Skill (SKILL.md) -->
+        <v-card variant="outlined" class="pa-2.5 mb-4 port-card port-card-skill">
+          <div class="d-flex align-center justify-space-between mb-1">
+            <div class="d-flex align-center">
+              <v-icon icon="mdi-book-open-page-variant-outline" size="16" color="cyan" class="mr-1.5" />
+              <span class="text-caption font-weight-bold">Port [skill] — Agent Skills (SKILL.md)</span>
+            </div>
+            <v-chip size="x-small" :color="agentPortConnections.skills.length ? 'cyan' : 'grey'" variant="tonal">
+              {{ agentPortConnections.skills.length }} ACTIVE
+            </v-chip>
+          </div>
+          <div v-if="agentPortConnections.skills.length > 0">
+            <div
+              v-for="sNode in agentPortConnections.skills"
+              :key="sNode.id"
+              class="d-flex align-center justify-space-between mt-1"
+            >
+              <span class="text-caption text-truncate mr-2 font-monospace">
+                {{ sNode.name }} ({{ sNode.endpoint ? `${sNode.endpoint}/SKILL.md` : 'brak' }})
+              </span>
+              <v-btn size="x-small" variant="tonal" color="cyan" @click="globalViewModel.openInspector(sNode.id)">
+                Konfiguruj Skill
+              </v-btn>
+            </div>
+          </div>
+          <div v-else class="d-flex align-center justify-space-between mt-1">
+            <span class="text-caption text-grey">Brak podłączonego węzła Skill</span>
+            <v-btn size="x-small" variant="tonal" color="cyan" prepend-icon="mdi-plus" @click="attachSubNodeToAgent(NodeType.SKILL)">
+              Podłącz Skill
+            </v-btn>
+          </div>
+        </v-card>
+      </template>
+
+      <!-- Agent Skill Node Inspector (Microsoft SKILL.md Convention) -->
+      <template v-if="localNode?.type === NodeType.SKILL">
+        <v-alert
+          type="info"
+          variant="tonal"
+          density="compact"
+          color="cyan"
+          class="text-caption mb-3"
+        >
+          Ten węzeł podpina <strong>pojedynczy skill</strong> zgodny z konwencją <code>Microsoft.Agents.AI</code> (folder <code>skills/&lt;nazwa&gt;/SKILL.md</code>) do portu <code>[skill]</code> wybranego Agenta AI.
+        </v-alert>
+
+        <v-select
+          :model-value="localNode.endpoint"
+          :items="globalViewModel.skills"
+          item-title="name"
+          item-value="name"
+          label="Wybierz Skill (folder z plikiem SKILL.md)"
+          variant="outlined"
+          density="compact"
+          prepend-inner-icon="mdi-folder-outline"
+          class="mb-3 font-monospace"
+          @update:model-value="handleSelectSkillForNode"
+        >
+          <template v-slot:item="{ props: itemProps, item }">
+            <v-list-item v-bind="itemProps" :subtitle="((item as any).raw ?? item).description">
+              <template v-slot:title>
+                <span class="font-monospace font-weight-bold">{{ ((item as any).raw ?? item).name }}/SKILL.md</span>
+              </template>
+            </v-list-item>
+          </template>
+        </v-select>
+
+        <v-text-field
+          v-model="localNode.endpoint"
+          label="Folder Skilla (skills/<folder>/SKILL.md)"
+          placeholder="np. code-review"
+          variant="outlined"
+          density="compact"
+          class="mb-3 font-monospace"
+          @input="isDirty = true"
+        />
+
+        <v-textarea
+          v-model="localNode.systemPrompt"
+          label="Opis / adnotacja skilla na węźle"
+          rows="2"
+          auto-grow
+          variant="outlined"
+          density="compact"
+          class="mb-3"
+          @input="isDirty = true"
+        />
+
+        <v-card v-if="selectedSkillDetails" variant="outlined" color="cyan" class="pa-2.5 mb-4 bg-grey-darken-4">
+          <div class="d-flex align-center justify-space-between mb-1">
+            <span class="text-caption font-weight-bold text-cyan-lighten-2 font-monospace">
+              {{ selectedSkillDetails.path || `skills/${selectedSkillDetails.name}/SKILL.md` }}
+            </span>
+            <v-chip size="x-small" color="cyan" variant="tonal">SKILL.md</v-chip>
+          </div>
+          <div class="text-caption text-grey-lighten-1 mb-2">
+            {{ selectedSkillDetails.description }}
+          </div>
+          <pre class="pa-2 rounded bg-black text-caption font-monospace text-grey-lighten-2 overflow-x-auto" style="max-height: 180px; white-space: pre-wrap;">{{ selectedSkillDetails.content }}</pre>
         </v-card>
       </template>
 
@@ -823,6 +965,10 @@ function copyNodeId() {
 
 .port-card-tool {
   border-color: rgba(76, 175, 80, 0.35) !important;
+}
+
+.port-card-skill {
+  border-color: rgba(6, 182, 212, 0.35) !important;
 }
 
 .empty-inspector-state {

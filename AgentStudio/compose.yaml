@@ -1,6 +1,7 @@
 services:
   agentstudio.gateway:
     image: agentstudio.gateway
+    user: root
     build:
       context: .
       dockerfile: AgentStudio.Gateway/Dockerfile

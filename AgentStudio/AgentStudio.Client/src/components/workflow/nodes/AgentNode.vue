@@ -31,7 +31,8 @@ const connectedNodes = computed(() => {
   return {
     model: neighbors.find(n => n.type === NodeType.MODEL),
     prompts: neighbors.filter(n => n.type === NodeType.PROMPT),
-    tools: neighbors.filter(n => n.type === NodeType.MCP_CONNECTOR)
+    tools: neighbors.filter(n => n.type === NodeType.MCP_CONNECTOR),
+    skills: neighbors.filter(n => n.type === NodeType.SKILL)
   }
 })
 </script>
@@ -76,16 +77,20 @@ const connectedNodes = computed(() => {
           <v-icon icon="mdi-connection" size="11" color="#34D399" />
           <span>Tool ({{ connectedNodes.tools.length }})</span>
         </div>
+        <div class="port-slot" :class="{ connected: connectedNodes.skills.length > 0 }">
+          <v-icon icon="mdi-book-open-page-variant-outline" size="11" color="#22D3EE" />
+          <span>Skill ({{ connectedNodes.skills.length }})</span>
+        </div>
       </div>
     </div>
 
-    <!-- Dedicated n8n-style Bottom Ports for Model, System Prompt, and MCP Tool -->
+    <!-- Dedicated n8n-style Bottom Ports for Model, System Prompt, MCP Tool, and Agent Skill -->
     <Handle
       id="model"
       type="target"
       :position="Position.Bottom"
       class="subnode-handle port-model"
-      style="left: 20%"
+      style="left: 14%"
       title="Port: LLM Model"
     />
     <Handle
@@ -93,7 +98,7 @@ const connectedNodes = computed(() => {
       type="target"
       :position="Position.Bottom"
       class="subnode-handle port-prompt"
-      style="left: 50%"
+      style="left: 38%"
       title="Port: System Prompt"
     />
     <Handle
@@ -101,15 +106,23 @@ const connectedNodes = computed(() => {
       type="target"
       :position="Position.Bottom"
       class="subnode-handle port-tool"
-      style="left: 80%"
+      style="left: 62%"
       title="Port: MCP Tool"
+    />
+    <Handle
+      id="skill"
+      type="target"
+      :position="Position.Bottom"
+      class="subnode-handle port-skill"
+      style="left: 86%"
+      title="Port: Agent Skill (SKILL.md)"
     />
   </div>
 </template>
 
 <style scoped>
 .custom-node {
-  width: 225px;
+  width: 245px;
   background-color: #111827;
   border-radius: 8px;
   border: 1.5px solid #374151;
@@ -164,10 +177,10 @@ const connectedNodes = computed(() => {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 600;
   color: #9CA3AF;
-  width: 32%;
+  width: 24%;
   text-align: center;
 }
 
@@ -207,5 +220,9 @@ const connectedNodes = computed(() => {
 
 .port-tool {
   background-color: #4CAF50;
+}
+
+.port-skill {
+  background-color: #06B6D4;
 }
 </style>

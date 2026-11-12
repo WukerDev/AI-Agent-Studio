@@ -43,3 +43,24 @@ public class ExecuteWorkflowRequestValidator : AbstractValidator<ExecuteWorkflow
             .WithMessage("error.validation.flow_id_required");
     }
 }
+
+public class SaveSkillRequestValidator : AbstractValidator<SaveSkillRequest>
+{
+    public SaveSkillRequestValidator()
+    {
+        RuleFor(request => request.Name)
+            .NotEmpty()
+            .WithMessage("error.validation.skill_name_required");
+    }
+}
+
+public class DeleteSkillRequestValidator : AbstractValidator<DeleteSkillRequest>
+{
+    public DeleteSkillRequestValidator()
+    {
+        RuleFor(request => request.Name)
+            .NotEmpty()
+            .WithMessage("error.validation.skill_name_required");
+    }
+}
+

@@ -304,4 +304,83 @@ public class AgentFlowGrpcApiTests : IClassFixture<AgentStudioTestFactory>
         metricsText.Should().Contain("agentstudio_workflows_started_total");
         metricsText.Should().Contain("agentstudio_nodes_saved_total");
     }
+
+    [Fact]
+    public async Task SkillsCrudAndSkillNodePersistence_ShouldFollowMicrosoftAgentSkillsConvention()
+    {
+        // 1. GetSkills should return seeded default skills (<skill-name>/SKILL.md)
+        var initialSkills = await this.grpcClient.GetSkillsAsync(new GetSkillsRequest());
+        initialSkills.Success.Should().BeTrue();
+        initialSkills.Skills.Should().Contain(s => s.Name == "code-review" && s.Path == "skills/code-review/SKILL.md");
+
+        // 2. SaveSkill should create <skill-name>/SKILL.md and return normalized SkillItem
+        var uniqueSkillName = "custom-skill-" + Guid.NewGuid().ToString("N")[..8];
+        var saveSkillRes = await this.grpcClient.SaveSkillAsync(new SaveSkillRequest
+        {
+            Name = uniqueSkillName,
+            Description = "Use this skill when performing specialized security checks.",
+            Content = "# Security Audit Skill\n1. Check OWASP Top 10.\n2. Validate JWT claims."
+        });
+
+        saveSkillRes.Success.Should().BeTrue();
+        saveSkillRes.Skill.Should().NotBeNull();
+        saveSkillRes.Skill.Name.Should().Be(uniqueSkillName);
+        saveSkillRes.Skill.Path.Should().Be($"skills/{uniqueSkillName}/SKILL.md");
+        saveSkillRes.Skill.Content.Should().Contain("OWASP Top 10");
+
+        // 3. Save a NodeType.Skill node connected to an Agent node via port 'skill'
+        var flowId = "flow-skill-test-" + Guid.NewGuid();
+        var skillNodeId = "node-skill-" + Guid.NewGuid();
+        var agentNodeId = "node-agent-" + Guid.NewGuid();
+
+        var saveNodeRes = await this.grpcClient.SaveAgentNodeAsync(new SaveAgentNodeRequest
+        {
+            FlowId = flowId,
+            Node = new AgentNode
+            {
+                Id = skillNodeId,
+                Name = $"Skill: {uniqueSkillName}",
+                Type = NodeType.Skill,
+                Position = new Position { X = 320, Y = 280 },
+                Endpoint = uniqueSkillName,
+                SystemPrompt = saveSkillRes.Skill.Description
+            }
+        });
+        saveNodeRes.Success.Should().BeTrue();
+
+        await this.grpcClient.SaveAgentNodeAsync(new SaveAgentNodeRequest
+        {
+            FlowId = flowId,
+            Node = new AgentNode
+            {
+                Id = agentNodeId,
+                Name = "Security Agent",
+                Type = NodeType.Agent,
+                Position = new Position { X = 300, Y = 100 }
+            }
+        });
+
+        var edgesReq = new SaveWorkflowEdgesRequest { FlowId = flowId };
+        edgesReq.Edges.Add(new WorkflowEdge
+        {
+            Id = $"e_{skillNodeId}_{agentNodeId}",
+            FlowId = flowId,
+            SourceNodeId = skillNodeId,
+            SourceHandle = "skill-out",
+            TargetNodeId = agentNodeId,
+            TargetHandle = "skill"
+        });
+        var saveEdgesRes = await this.grpcClient.SaveWorkflowEdgesAsync(edgesReq);
+        saveEdgesRes.Success.Should().BeTrue();
+
+        var loadedNodes = await this.grpcClient.GetAgentNodesAsync(new GetAgentNodesRequest { FlowId = flowId });
+        loadedNodes.Nodes.Should().Contain(n => n.Id == skillNodeId && n.Type == NodeType.Skill && n.Endpoint == uniqueSkillName);
+
+        // 4. DeleteSkill should remove the skill folder
+        var delRes = await this.grpcClient.DeleteSkillAsync(new DeleteSkillRequest { Name = uniqueSkillName });
+        delRes.Success.Should().BeTrue();
+
+        var afterDeleteSkills = await this.grpcClient.GetSkillsAsync(new GetSkillsRequest());
+        afterDeleteSkills.Skills.Should().NotContain(s => s.Name == uniqueSkillName);
+    }
 }

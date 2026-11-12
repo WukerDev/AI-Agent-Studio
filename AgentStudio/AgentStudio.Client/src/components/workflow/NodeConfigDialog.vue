@@ -70,6 +70,8 @@ const dialogTitle = computed(() => {
       return 'Configure System Prompt'
     case NodeType.MCP_CONNECTOR:
       return 'Configure MCP Connector'
+    case NodeType.SKILL:
+      return 'Configure Agent Skill (SKILL.md)'
     default:
       return 'Configure Node'
   }
@@ -186,8 +188,29 @@ function handleSave() {
         <!-- Agent Node Info (n8n-style ports) -->
         <template v-if="localNode.type === NodeType.AGENT">
           <v-alert type="info" variant="tonal" density="compact" class="text-caption mb-2">
-            Węzeł <strong>AI Agent</strong> posiada dedykowane porty na dole karty: <strong>Model</strong>, <strong>Prompt</strong> oraz <strong>Tool</strong>. Podłącz do nich odpowiednie węzły na płótnie.
+            Węzeł <strong>AI Agent</strong> posiada dedykowane porty na dole karty: <strong>Model</strong>, <strong>Prompt</strong>, <strong>Tool</strong> oraz <strong>Skill</strong>. Podłącz do nich odpowiednie węzły na płótnie.
           </v-alert>
+        </template>
+
+        <!-- Skill Node Inspector -->
+        <template v-if="localNode.type === NodeType.SKILL">
+          <v-text-field
+            v-model="localNode.endpoint"
+            label="Skill Folder Name (skills/<name>/SKILL.md)"
+            placeholder="e.g. code-review"
+            variant="outlined"
+            density="compact"
+            class="mb-3 font-monospace"
+          />
+
+          <v-textarea
+            v-model="localNode.systemPrompt"
+            label="Skill Description / Notes"
+            rows="3"
+            variant="outlined"
+            density="compact"
+            class="mb-3"
+          />
         </template>
 
         <!-- Note Node Inspector -->

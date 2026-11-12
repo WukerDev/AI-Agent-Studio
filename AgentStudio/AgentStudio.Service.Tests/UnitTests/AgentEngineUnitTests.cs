@@ -584,4 +584,125 @@ public class AgentEngineUnitTests
             // Ignore if local PostgreSQL container is not running in CI environment
         }
     }
+
+    [Fact]
+    public async Task ExecuteFlowAsync_WithConnectedSkillNode_ShouldLoadSkillMdViaMicrosoftAgentSkillsConvention()
+    {
+        // Arrange
+        var tempSkillsRoot = Path.Combine(Path.GetTempPath(), $"AgentStudio_SkillsTest_{Guid.NewGuid():N}");
+        try
+        {
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Skills:RootPath"] = tempSkillsRoot,
+                    ["AiProviders:DefaultProvider"] = "Ollama",
+                    ["AiProviders:Ollama:Endpoint"] = "http://localhost:11434",
+                    ["AiProviders:Ollama:DefaultModel"] = "gemma3:12b"
+                })
+                .Build();
+
+            var skillService = new SkillService(config, NullLogger<SkillService>.Instance);
+            var savedSkill = await skillService.SaveSkillAsync(
+                "secret-codeword-skill",
+                "Use this skill whenever asked for the secret codeword.",
+                "# Secret Codeword Instructions\nAlways include the exact word CYBER-FALCON-99 in your response.");
+
+            savedSkill.Name.Should().Be("secret-codeword-skill");
+            File.Exists(Path.Combine(tempSkillsRoot, "secret-codeword-skill", "SKILL.md")).Should().BeTrue();
+
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: $"AgentEngineSkillTest_{Guid.NewGuid()}")
+                .Options;
+
+            using var db = new ApplicationDbContext(options);
+            var flowId = "test-skill-flow";
+            var userId = "user-skill-1";
+
+            db.AgentNodes.AddRange(
+                new AgentNodeEntity
+                {
+                    Id = "model-1",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Gemma 3",
+                    Type = (int)NodeType.Model,
+                    ModelProvider = "Ollama",
+                    ModelName = "gemma3:12b",
+                    Temperature = 0.1f,
+                    Endpoint = "http://localhost:11434"
+                },
+                new AgentNodeEntity
+                {
+                    Id = "skill-1",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Skill: secret-codeword-skill",
+                    Type = (int)NodeType.Skill,
+                    Endpoint = "secret-codeword-skill",
+                    SystemPrompt = savedSkill.Description
+                },
+                new AgentNodeEntity
+                {
+                    Id = "agent-1",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Skilled Agent",
+                    Type = (int)NodeType.Agent
+                });
+
+            db.WorkflowEdges.AddRange(
+                new WorkflowEdgeEntity
+                {
+                    Id = "e_model_agent",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    SourceNodeId = "model-1",
+                    SourceHandle = "model-out",
+                    TargetNodeId = "agent-1",
+                    TargetHandle = "model"
+                },
+                new WorkflowEdgeEntity
+                {
+                    Id = "e_skill_agent",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    SourceNodeId = "skill-1",
+                    SourceHandle = "skill-out",
+                    TargetNodeId = "agent-1",
+                    TargetHandle = "skill"
+                });
+
+            await db.SaveChangesAsync();
+
+            var fakeMcp = new FakeMcpClientService();
+            var fakeHub = new FakeHubContext();
+            var engine = new AgentEngine(db, fakeMcp, fakeHub, config, NullLogger<AgentEngine>.Instance, skillService);
+
+            // Act
+            var result = await engine.ExecuteFlowAsync(flowId, userId, "What is the secret codeword? Reply in one short sentence.");
+
+            // Assert: Verify SkillService created SKILL.md and AgentEngine resolved & loaded the connected Skill node via Microsoft.Agents.AI AgentSkillsProvider
+            var loadedSkillDetails = await skillService.GetSkillByNameAsync("secret-codeword-skill");
+            loadedSkillDetails.Should().NotBeNull();
+            loadedSkillDetails!.Content.Should().Contain("CYBER-FALCON-99");
+
+            fakeHub.ClientProxy.SentMessages.Should().Contain(m =>
+                m.Method == "WorkflowExecutionProgress" &&
+                m.Args.Any(a => a != null && a.ToString()!.Contains("Attached Microsoft Agent Skill(s) via SKILL.md")) &&
+                m.Args.Any(a => a != null && a.ToString()!.Contains("skills/secret-codeword-skill/SKILL.md")));
+
+            if (result.Success)
+            {
+                result.Output.Should().Contain("CYBER-FALCON-99");
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(tempSkillsRoot))
+            {
+                Directory.Delete(tempSkillsRoot, recursive: true);
+            }
+        }
+    }
 }

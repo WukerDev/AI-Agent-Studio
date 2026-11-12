@@ -5,7 +5,8 @@ import {
     ItemType,
     type AgentNode,
     type WorkflowEdge,
-    type ExplorerItem
+    type ExplorerItem,
+    type SkillItem
 } from './clients/generated/agent_node'
 
 export interface HistorySnapshot {
@@ -31,6 +32,10 @@ export class GlobalViewModel {
 
     public get explorerItems(): ExplorerItem[] {
         return this.globalStore.explorerItems
+    }
+
+    public get skills(): SkillItem[] {
+        return this.globalStore.skills
     }
 
     public get currentFlowId(): string {
@@ -135,6 +140,18 @@ export class GlobalViewModel {
 
     public moveExplorerItem(sourceIndex: number, targetFolder: ExplorerItem): void {
         this.globalStore.moveExplorerItem(sourceIndex, targetFolder)
+    }
+
+    public async loadSkills(): Promise<void> {
+        await this.globalStore.getSkills({})
+    }
+
+    public async saveSkill(name: string, description: string, content: string): Promise<SkillItem | null> {
+        return await this.globalStore.saveSkill({ name, description, content })
+    }
+
+    public async deleteSkill(name: string): Promise<boolean> {
+        return await this.globalStore.deleteSkill({ name })
     }
 
     public async saveNode(node: AgentNode): Promise<void> {
@@ -352,16 +369,24 @@ export class GlobalViewModel {
             [NodeType.PROMPT]: 'System Prompt',
             [NodeType.MCP_CONNECTOR]: 'MCP Tools Connector',
             [NodeType.NOTE]: 'Sticky Note',
-            [NodeType.LABEL]: 'Section Label'
+            [NodeType.LABEL]: 'Section Label',
+            [NodeType.SKILL]: 'Agent Skill'
         }
 
         let defaultPrompt = ''
         if (type === NodeType.PROMPT) defaultPrompt = 'You are an intelligent AI Agent.'
         if (type === NodeType.NOTE) defaultPrompt = 'Notes or workflow annotations...'
+        if (type === NodeType.SKILL) {
+            const firstSkill = this.globalStore.skills[0]
+            defaultPrompt = firstSkill?.description || 'Specialized domain skill loaded via SKILL.md.'
+        }
 
         let defaultEndpoint = ''
         if (type === NodeType.NOTE) defaultEndpoint = '#F59E0B'
         if (type === NodeType.LABEL) defaultEndpoint = 'medium'
+        if (type === NodeType.SKILL) {
+            defaultEndpoint = this.globalStore.skills[0]?.name || 'code-review'
+        }
 
         let defaultModelConfig = undefined
         if (type === NodeType.MODEL) {
@@ -430,6 +455,8 @@ export class GlobalViewModel {
                 return '#F59E0B'
             case NodeType.LABEL:
                 return '#8B5CF6'
+            case NodeType.SKILL:
+                return '#06B6D4'
             default:
                 return '#9E9E9E'
         }
@@ -449,6 +476,8 @@ export class GlobalViewModel {
                 return 'mdi-note-text-outline'
             case NodeType.LABEL:
                 return 'mdi-format-title'
+            case NodeType.SKILL:
+                return 'mdi-book-open-page-variant-outline'
             default:
                 return 'mdi-shape'
         }
