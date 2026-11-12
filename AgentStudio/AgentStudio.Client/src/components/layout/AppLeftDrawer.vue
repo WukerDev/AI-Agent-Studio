@@ -27,7 +27,6 @@ const isOpen = computed({
 
 const isCreateItemDialogOpen = ref(false)
 const newItemName = ref('')
-const newItemType = ref<ItemType>(ItemType.FILE)
 
 watch([isOpen, () => props.tab], ([newIsOpen, newTab]) => {
   if (newIsOpen && newTab === 'files') {
@@ -78,10 +77,10 @@ function handleNavigateUp() {
 function handleAddNode(type: NodeType, name?: string, customConfig?: any) {
   const currentCount = globalViewModel.nodes.length
   globalViewModel.addNode(
-    type,
-    { x: 180 + (currentCount % 4) * 200, y: 120 + Math.floor(currentCount / 4) * 120 },
-    name,
-    customConfig
+      type,
+      { x: 180 + (currentCount % 4) * 200, y: 120 + Math.floor(currentCount / 4) * 120 },
+      name,
+      customConfig
   )
   notifStore.info(`Added ${name || 'node'} to canvas`)
 }
@@ -93,9 +92,8 @@ function onPaletteDragStart(event: DragEvent, payload: { type: NodeType; name: s
   event.dataTransfer.effectAllowed = 'copy'
 }
 
-function openCreateDialog(type: ItemType) {
-  newItemType.value = type
-  newItemName.value = type === ItemType.FOLDER ? 'NewFolder' : 'workflow.agentflow'
+function openCreateDialog() {
+  newItemName.value = 'workflow.agentflow'
   isCreateItemDialogOpen.value = true
 }
 
@@ -103,22 +101,17 @@ async function confirmCreateItem() {
   let name = newItemName.value.trim()
   if (!name) return
 
-  if (newItemType.value === ItemType.FILE) {
-    if (!name.endsWith('.agentflow')) {
-      name = `${name}.agentflow`
-    }
-    const cleanParent = (globalViewModel.currentExplorerPath || '/').replace(/\/$/, '')
-    const path = cleanParent === '' ? `/${name}` : `${cleanParent}/${name}`
-
-    globalViewModel.createExplorerItem(name, ItemType.FILE, globalViewModel.currentExplorerPath || '/')
-    const flowId = getFlowIdFromItem({ name, path })
-    await globalViewModel.switchWorkflow(flowId)
-    await globalViewModel.saveEdges([], flowId)
-    notifStore.success(`Created & opened workflow "${name}"`)
-  } else {
-    globalViewModel.createExplorerItem(name, ItemType.FOLDER, globalViewModel.currentExplorerPath || '/')
-    notifStore.success(`Created folder "${name}"`)
+  if (!name.endsWith('.agentflow')) {
+    name = `${name}.agentflow`
   }
+  const cleanParent = (globalViewModel.currentExplorerPath || '/').replace(/\/$/, '')
+  const path = cleanParent === '' ? `/${name}` : `${cleanParent}/${name}`
+
+  globalViewModel.createExplorerItem(name, ItemType.FILE, globalViewModel.currentExplorerPath || '/')
+  const flowId = getFlowIdFromItem({ name, path })
+  await globalViewModel.switchWorkflow(flowId)
+  await globalViewModel.saveEdges([], flowId)
+  notifStore.success(`Created & opened workflow "${name}"`)
 
   isCreateItemDialogOpen.value = false
   newItemName.value = ''
@@ -246,27 +239,16 @@ const paletteArguments = [
       </v-toolbar-title>
       <v-spacer></v-spacer>
 
-      <v-menu v-if="props.tab === 'files'" offset-y>
-        <template v-slot:activator="{ props: menuProps }">
-          <v-btn
-            icon="mdi-plus"
-            variant="tonal"
-            size="x-small"
-            color="primary"
-            v-bind="menuProps"
-            title="Utwórz nowy plik lub folder"
-            class="mr-1"
-          />
-        </template>
-        <v-list density="compact">
-          <v-list-item prepend-icon="mdi-file-plus-outline" @click="openCreateDialog(ItemType.FILE)">
-            <v-list-item-title class="text-caption font-weight-medium">Nowy plik</v-list-item-title>
-          </v-list-item>
-          <v-list-item prepend-icon="mdi-folder-plus-outline" @click="openCreateDialog(ItemType.FOLDER)">
-            <v-list-item-title class="text-caption font-weight-medium">Nowy folder</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+      <v-btn
+          v-if="props.tab === 'files'"
+          icon="mdi-plus"
+          variant="tonal"
+          size="x-small"
+          color="primary"
+          title="Utwórz nowy plik"
+          class="mr-1"
+          @click="openCreateDialog"
+      />
 
       <v-btn icon="mdi-close" variant="text" size="small" @click="isOpen = false"></v-btn>
     </v-toolbar>
@@ -277,13 +259,13 @@ const paletteArguments = [
       <div class="px-3 py-2 bg-grey-darken-4 d-flex align-center justify-space-between border-b">
         <div class="d-flex align-center overflow-hidden">
           <v-btn
-            v-if="globalViewModel.currentExplorerPath && globalViewModel.currentExplorerPath !== '/'"
-            icon="mdi-arrow-up"
-            size="x-small"
-            variant="text"
-            class="mr-1"
-            title="Przejdź w górę"
-            @click="handleNavigateUp"
+              v-if="globalViewModel.currentExplorerPath && globalViewModel.currentExplorerPath !== '/'"
+              icon="mdi-arrow-up"
+              size="x-small"
+              variant="text"
+              class="mr-1"
+              title="Przejdź w górę"
+              @click="handleNavigateUp"
           />
           <v-icon icon="mdi-folder-outline" size="14" class="mr-1 text-grey" />
           <span class="text-caption font-monospace text-truncate text-grey-lighten-1">
@@ -292,18 +274,11 @@ const paletteArguments = [
         </div>
         <div class="d-flex align-center">
           <v-btn
-            variant="text"
-            size="x-small"
-            icon="mdi-file-plus"
-            title="Nowy plik"
-            @click="openCreateDialog(ItemType.FILE)"
-          />
-          <v-btn
-            variant="text"
-            size="x-small"
-            icon="mdi-folder-plus"
-            title="Nowy folder"
-            @click="openCreateDialog(ItemType.FOLDER)"
+              variant="text"
+              size="x-small"
+              icon="mdi-file-plus"
+              title="Nowy plik"
+              @click="openCreateDialog"
           />
         </div>
       </div>
@@ -311,56 +286,56 @@ const paletteArguments = [
       <div class="flex-grow-1 overflow-y-auto">
         <v-list v-if="globalViewModel.explorerItems.length > 0" density="compact" nav class="pa-2">
           <v-list-item
-            v-for="item in globalViewModel.explorerItems"
-            :key="item.path"
-            :value="item.path"
-            :active="isItemActive(item)"
-            active-color="primary"
-            class="explorer-list-item mb-1 rounded"
-            :class="{ 'active-flow-item': isItemActive(item) }"
-            @click="handleItemClick(item)"
+              v-for="item in globalViewModel.explorerItems"
+              :key="item.path"
+              :value="item.path"
+              :active="isItemActive(item)"
+              active-color="primary"
+              class="explorer-list-item mb-1 rounded"
+              :class="{ 'active-flow-item': isItemActive(item) }"
+              @click="handleItemClick(item)"
           >
             <template v-slot:prepend>
               <v-icon
-                :color="isItemActive(item) ? 'primary' : globalViewModel.getExplorerItemColor(item.type)"
-                class="mr-2"
-                size="18"
+                  :color="isItemActive(item) ? 'primary' : globalViewModel.getExplorerItemColor(item.type)"
+                  class="mr-2"
+                  size="18"
               >
                 {{ isItemActive(item) ? 'mdi-sitemap' : globalViewModel.getExplorerItemIcon(item.type) }}
               </v-icon>
             </template>
             <v-list-item-title
-              class="text-caption"
-              :class="{ 'font-weight-bold text-primary': isItemActive(item), 'font-weight-medium': !isItemActive(item) }"
+                class="text-caption"
+                :class="{ 'font-weight-bold text-primary': isItemActive(item), 'font-weight-medium': !isItemActive(item) }"
             >
               {{ item.name }}
             </v-list-item-title>
             <template v-slot:append>
               <v-chip
-                v-if="item.type === ItemType.FOLDER"
-                size="x-small"
-                variant="tonal"
-                color="warning"
-                class="text-caption font-weight-bold"
+                  v-if="item.type === ItemType.FOLDER"
+                  size="x-small"
+                  variant="tonal"
+                  color="warning"
+                  class="text-caption font-weight-bold"
               >
                 DIR
               </v-chip>
               <v-chip
-                v-else-if="isItemActive(item)"
-                size="x-small"
-                variant="flat"
-                color="primary"
-                class="text-caption font-weight-bold px-1.5"
+                  v-else-if="isItemActive(item)"
+                  size="x-small"
+                  variant="flat"
+                  color="primary"
+                  class="text-caption font-weight-bold px-1.5"
               >
                 <v-icon icon="mdi-check" start size="10" />
                 ACTIVE
               </v-chip>
               <v-chip
-                v-else
-                size="x-small"
-                variant="tonal"
-                color="grey"
-                class="text-caption"
+                  v-else
+                  size="x-small"
+                  variant="tonal"
+                  color="grey"
+                  class="text-caption"
               >
                 FLOW
               </v-chip>
@@ -372,12 +347,12 @@ const paletteArguments = [
           <v-icon icon="mdi-folder-open-outline" size="36" color="grey" class="mb-2" />
           <p class="text-body-2 text-medium-emphasis">{{ t('layout.leftDrawer.filesEmpty') }}</p>
           <v-btn
-            prepend-icon="mdi-plus"
-            variant="tonal"
-            size="small"
-            color="primary"
-            class="mt-2"
-            @click="openCreateDialog(ItemType.FILE)"
+              prepend-icon="mdi-plus"
+              variant="tonal"
+              size="small"
+              color="primary"
+              class="mt-2"
+              @click="openCreateDialog"
           >
             Utwórz plik
           </v-btn>
@@ -393,14 +368,14 @@ const paletteArguments = [
 
       <div class="palette-container ga-3 mb-4">
         <v-card
-          v-for="item in paletteNodes"
-          :key="item.name"
-          variant="tonal"
-          :color="item.color"
-          draggable="true"
-          class="pa-2 cursor-grab hover-card palette-card"
-          @dragstart="onPaletteDragStart($event, item)"
-          @click="handleAddNode(item.type, item.name)"
+            v-for="item in paletteNodes"
+            :key="item.name"
+            variant="tonal"
+            :color="item.color"
+            draggable="true"
+            class="pa-2 cursor-grab hover-card palette-card"
+            @dragstart="onPaletteDragStart($event, item)"
+            @click="handleAddNode(item.type, item.name)"
         >
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center overflow-hidden">
@@ -423,14 +398,14 @@ const paletteArguments = [
 
       <div class="palette-container ga-3">
         <v-card
-          v-for="item in paletteArguments"
-          :key="item.name"
-          variant="outlined"
-          :color="item.color"
-          draggable="true"
-          class="pa-2 cursor-grab hover-card palette-card bg-surface-variant-subtle"
-          @dragstart="onPaletteDragStart($event, item)"
-          @click="handleAddNode(item.type, item.name, item.customConfig)"
+            v-for="item in paletteArguments"
+            :key="item.name"
+            variant="outlined"
+            :color="item.color"
+            draggable="true"
+            class="pa-2 cursor-grab hover-card palette-card bg-surface-variant-subtle"
+            @dragstart="onPaletteDragStart($event, item)"
+            @click="handleAddNode(item.type, item.name, item.customConfig)"
         >
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center overflow-hidden">
@@ -454,8 +429,8 @@ const paletteArguments = [
         <v-list-item>
           <template v-slot:prepend>
             <v-icon
-              :color="globalViewModel.isSignalRConnected ? 'success' : 'error'"
-              :icon="globalViewModel.isSignalRConnected ? 'mdi-check-circle' : 'mdi-alert-circle'"
+                :color="globalViewModel.isSignalRConnected ? 'success' : 'error'"
+                :icon="globalViewModel.isSignalRConnected ? 'mdi-check-circle' : 'mdi-alert-circle'"
             />
           </template>
           <v-list-item-title class="text-caption">SignalR Realtime</v-list-item-title>
@@ -501,21 +476,21 @@ const paletteArguments = [
     <v-card color="surface" rounded="lg">
       <v-card-title class="d-flex align-center">
         <v-icon
-          :icon="newItemType === ItemType.FOLDER ? 'mdi-folder-plus-outline' : 'mdi-file-plus-outline'"
-          color="primary"
-          class="mr-2"
+            icon="mdi-file-plus-outline"
+            color="primary"
+            class="mr-2"
         />
-        <span>{{ newItemType === ItemType.FOLDER ? 'Nowy folder' : 'Nowy plik' }}</span>
+        <span>Nowy plik</span>
       </v-card-title>
       <v-card-text>
         <v-text-field
-          v-model="newItemName"
-          :label="newItemType === ItemType.FOLDER ? 'Nazwa folderu' : 'Nazwa pliku z rozszerzeniem'"
-          placeholder="np. workflow.agentflow"
-          variant="outlined"
-          density="compact"
-          autofocus
-          @keydown.enter="confirmCreateItem"
+            v-model="newItemName"
+            label="Nazwa pliku z rozszerzeniem"
+            placeholder="np. workflow.agentflow"
+            variant="outlined"
+            density="compact"
+            autofocus
+            @keydown.enter="confirmCreateItem"
         />
       </v-card-text>
       <v-card-actions class="px-4 pb-4">
