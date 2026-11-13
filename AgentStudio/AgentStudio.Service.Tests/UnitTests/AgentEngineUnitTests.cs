@@ -487,6 +487,102 @@ public class AgentEngineUnitTests
     }
 
     [Fact]
+    public async Task ExecuteFlowAsync_WithBuiltInMcpSearchWebTool_ShouldRetrieveLiveEncyclopediaResult_WithGemma3_12b()
+    {
+        // Arrange
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: $"AgentEngineReActSearchWebTest_{Guid.NewGuid()}")
+            .Options;
+
+        using var db = new ApplicationDbContext(options);
+        var flowId = "test-react-mcp-search-web";
+        var userId = "user-react-search";
+
+        db.AgentNodes.AddRange(
+            new AgentNodeEntity
+            {
+                Id = "model-gemma",
+                FlowId = flowId,
+                OwnerId = userId,
+                Name = "Ollama Gemma3 12B",
+                Type = (int)NodeType.Model,
+                ModelProvider = "Ollama",
+                ModelName = "gemma3:12b",
+                Temperature = 0.2f,
+                Endpoint = "http://localhost:11434"
+            },
+            new AgentNodeEntity
+            {
+                Id = "prompt-sys",
+                FlowId = flowId,
+                OwnerId = userId,
+                Name = "System Prompt (Polski Asystent)",
+                Type = (int)NodeType.Prompt,
+                SystemPrompt = "Jesteś pomocnym polskim asystentem AI. Zadanie użytkownika: {{input}}"
+            },
+            new AgentNodeEntity
+            {
+                Id = "mcp-search",
+                FlowId = flowId,
+                OwnerId = userId,
+                Name = "Web Search Tools MCP",
+                Type = (int)NodeType.McpConnector,
+                McpServerUrl = "builtin://tools",
+                McpEnabledTools = new List<string> { "search_web", "fetch_page" }
+            },
+            new AgentNodeEntity
+            {
+                Id = "agent-main",
+                FlowId = flowId,
+                OwnerId = userId,
+                Name = "Główny Agent AI",
+                Type = (int)NodeType.Agent
+            });
+
+        db.WorkflowEdges.AddRange(
+            new WorkflowEdgeEntity { Id = "e1", FlowId = flowId, OwnerId = userId, SourceNodeId = "model-gemma", TargetNodeId = "agent-main", SourceHandle = "model-out", TargetHandle = "model" },
+            new WorkflowEdgeEntity { Id = "e2", FlowId = flowId, OwnerId = userId, SourceNodeId = "prompt-sys", TargetNodeId = "agent-main", SourceHandle = "prompt-out", TargetHandle = "prompt" },
+            new WorkflowEdgeEntity { Id = "e3", FlowId = flowId, OwnerId = userId, SourceNodeId = "mcp-search", TargetNodeId = "agent-main", SourceHandle = "tool-out", TargetHandle = "tool" });
+
+        await db.SaveChangesAsync();
+
+        var realMcpService = new McpClientService(NullLogger<McpClientService>.Instance);
+        var fakeHub = new FakeHubContext();
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["AiProviders:DefaultProvider"] = "Ollama",
+                ["AiProviders:Ollama:Endpoint"] = "http://localhost:11434",
+                ["AiProviders:Ollama:DefaultModel"] = "gemma3:12b"
+            })
+            .Build();
+
+        var engine = new AgentEngine(db, realMcpService, fakeHub, config, NullLogger<AgentEngine>.Instance);
+
+        // Act 1: General encyclopedia query ("co to jest wodór")
+        var result = await engine.ExecuteFlowAsync(
+            flowId,
+            userId,
+            "co to jest wodór");
+
+        // Assert 1
+        result.Success.Should().BeTrue(because: $"Error: {result.ErrorMessage}");
+        result.Output.ToLowerInvariant().Should().ContainAny("pierwiastek", "wodór", "chemiczny", "atomow");
+        result.Output.ToLowerInvariant().Should().NotContain("nie zawierają definicji wodoru");
+
+        // Act 2: Live web + GitHub releases query ("jaka jest najnowsza wersja GTNH")
+        var gtnhResult = await engine.ExecuteFlowAsync(
+            flowId,
+            userId,
+            "jaka jest najnowsza wersja GTNH");
+
+        // Assert 2
+        gtnhResult.Success.Should().BeTrue(because: $"Error: {gtnhResult.ErrorMessage}");
+        gtnhResult.Output.Should().ContainAny("2.9", "2.10", "GTNH", "New Horizons");
+        gtnhResult.Output.ToLowerInvariant().Should().NotContain("nie mogę podać");
+    }
+
+    [Fact]
     public async Task CreateChatClient_ForGeminiProvider_ShouldConfigureClient_AndRequireApiKeyWhenMissing()
     {
         // Arrange

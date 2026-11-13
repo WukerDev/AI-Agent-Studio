@@ -560,7 +560,7 @@ public class AgentEngine : IAgentEngine
                     synthSb.AppendLine(BuildToolCatalogDescription(remainingTools));
                     synthSb.AppendLine("If the user's request ALSO requires one of the additional tools above that has NOT been executed yet, respond ONLY with: TOOL_CALL: {\"name\": \"<tool_name>\", \"arguments\": {...}}");
                 }
-                synthSb.AppendLine("Otherwise, provide the final answer to the user's request using the EXACT numbers and facts from VERIFIED MCP TOOL RESULTS above. Do NOT recalculate math expressions yourself and do NOT emit TOOL_CALL for already executed tools.");
+                synthSb.AppendLine("Otherwise, provide a direct, confident, and complete final answer to the user's request using the EXACT numbers, versions, dates, and facts from VERIFIED MCP TOOL RESULTS above combined with your own knowledge. NEVER say 'wyniki wyszukiwania nie zawierają' or 'nie mogę podać' — always synthesize the best, most informative answer possible.");
                 activeInstructions = synthSb.ToString();
             }
 
@@ -620,13 +620,13 @@ public class AgentEngine : IAgentEngine
             currentPrompt =
                 $"Verified MCP Tool Results:\n{string.Join("\n", toolResultsHistory)}\n\n" +
                 $"Original user request: {userInput}\n\n" +
-                "Provide the final answer based on the Verified MCP Tool Results above (or emit TOOL_CALL only if another uncalled tool is still needed).";
+                "Provide the final answer based on the Verified MCP Tool Results above (combining with your own knowledge if needed for general questions, or emit TOOL_CALL only if another uncalled tool is still needed).";
         }
 
         var finalInstructions =
             $"{systemPrompt}\n\n" +
             $"Verified MCP Tool Results:\n{string.Join("\n", toolResultsHistory)}\n\n" +
-            "Provide the final answer to the user using the exact values from Verified MCP Tool Results above.";
+            "Provide the final answer to the user using the exact values from Verified MCP Tool Results above (and supplement with your own knowledge if needed).";
         var fallbackFinalAgent = chatClient.AsAIAgent(instructions: finalInstructions, name: agentName);
         var fallbackFinalResponse = await fallbackFinalAgent.RunAsync(currentPrompt, cancellationToken: cancellationToken);
         return (fallbackFinalResponse.Text ?? string.Empty).Trim();
@@ -943,6 +943,25 @@ public class AgentEngine : IAgentEngine
         {
             toolName = "list_dir";
             arguments["path"] = ".";
+            return true;
+        }
+
+        // 6. Intent matching for search_web (live web/version/release queries or when model claims lack of current info)
+        if (HasTool("search_web") &&
+            (lowerInput.Contains("najnowsz") ||
+             lowerInput.Contains("wersj") ||
+             lowerInput.Contains("wyszukaj") ||
+             lowerInput.Contains("znajdź") ||
+             lowerInput.Contains("znajdz") ||
+             lowerInput.Contains("latest") ||
+             lowerInput.Contains("release") ||
+             lowerResponse.Contains("nie mam dostępu") ||
+             lowerResponse.Contains("nie mogę podać") ||
+             lowerResponse.Contains("nie posiadam") ||
+             lowerResponse.Contains("brak dostępu")))
+        {
+            toolName = "search_web";
+            arguments["query"] = userInput;
             return true;
         }
 

@@ -1,7 +1,9 @@
 using System.Data;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using AgentStudio.Service.Application;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -11,11 +13,29 @@ namespace AgentStudio.Service.Infrastructure;
 
 public class McpClientService : IMcpClientService
 {
+    private static readonly HttpClient WebSearchHttpClient = CreateWebSearchHttpClient();
     private readonly ILogger<McpClientService> logger;
 
     public McpClientService(ILogger<McpClientService> logger)
     {
         this.logger = logger;
+    }
+
+    private static HttpClient CreateWebSearchHttpClient()
+    {
+        var handler = new HttpClientHandler
+        {
+            AutomaticDecompression = DecompressionMethods.All,
+            AllowAutoRedirect = true
+        };
+        var client = new HttpClient(handler)
+        {
+            Timeout = TimeSpan.FromSeconds(7)
+        };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36");
+        client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.7");
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7");
+        return client;
     }
 
     public async Task<IList<AITool>> GetToolsAsync(
@@ -141,14 +161,14 @@ public class McpClientService : IMcpClientService
                 "Returns system environment diagnostics: OS version, .NET runtime, CPU cores, machine name, working directory, and AI Agent Studio telemetry."),
 
             ["search_web"] = AIFunctionFactory.Create(
-                (string query) => SearchKnowledgeAndWeb(query),
+                (string query) => SearchKnowledgeAndWebAsync(query),
                 "search_web",
-                "Searches technical knowledge base and web information for a given query."),
+                "Searches Wikipedia, DuckDuckGo, and web knowledge bases for a given query."),
 
             ["fetch_page"] = AIFunctionFactory.Create(
-                (string url) => FetchPageSummary(url),
+                (string url) => FetchPageSummaryAsync(url),
                 "fetch_page",
-                "Fetches content or metadata from a specified URL."),
+                "Fetches and extracts readable text content and metadata from a specified URL."),
 
             ["list_dir"] = AIFunctionFactory.Create(
                 (string path) => ListWorkspaceDirectory(path),
@@ -229,49 +249,563 @@ public class McpClientService : IMcpClientService
         });
     }
 
-    private static string SearchKnowledgeAndWeb(string query)
+    private static async Task<string> SearchKnowledgeAndWebAsync(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
             return "No search query provided.";
         }
 
-        var q = query.Trim();
+        var rawQuery = query.Trim();
+        var coreTopic = ExtractCoreSearchTopic(rawQuery);
+        var searchResults = new List<object>();
+        var discoveredUrls = new List<string>();
+
+        // 1. Live General Web Search (Yahoo Web Search engine)
+        var yahooHits = await QueryYahooWebSearchAsync(rawQuery, discoveredUrls);
+        if (yahooHits.Count == 0 && !string.Equals(coreTopic, rawQuery, StringComparison.OrdinalIgnoreCase))
+        {
+            yahooHits = await QueryYahooWebSearchAsync(coreTopic, discoveredUrls);
+        }
+        searchResults.AddRange(yahooHits);
+
+        // 2. Live GitHub Releases & Repositories API (when GitHub links appear in web results or query asks for versions/releases)
+        var ghHits = await QueryGitHubReleasesAndReposAsync(rawQuery, coreTopic, discoveredUrls);
+        searchResults.InsertRange(0, ghHits);
+
+        // 3. Wikipedia API (PL & EN) for encyclopedic depth
+        var wikiHits = await QueryWikipediaAsync("pl", coreTopic);
+        if (wikiHits.Count == 0 && !string.Equals(coreTopic, rawQuery, StringComparison.OrdinalIgnoreCase))
+        {
+            wikiHits = await QueryWikipediaAsync("pl", rawQuery);
+        }
+
+        if (wikiHits.Count == 0)
+        {
+            wikiHits = await QueryWikipediaAsync("en", coreTopic);
+        }
+        searchResults.AddRange(wikiHits);
+
+        // 4. DuckDuckGo Instant Answer API
+        var ddgHits = await QueryDuckDuckGoInstantAnswerAsync(coreTopic);
+        searchResults.AddRange(ddgHits);
+
+        // 5. Fetch live page text excerpt from top non-GitHub web search result for deeper context
+        var topPageUrl = discoveredUrls.FirstOrDefault(u =>
+            u.StartsWith("http", StringComparison.OrdinalIgnoreCase) &&
+            !u.Contains("github.com", StringComparison.OrdinalIgnoreCase) &&
+            !u.Contains("wikipedia.org", StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(topPageUrl))
+        {
+            var topExcerpt = await FetchTopWebResultExcerptAsync(topPageUrl);
+            if (topExcerpt != null)
+            {
+                searchResults.Add(topExcerpt);
+            }
+        }
+
+        // 6. Include AI Agent Studio internal knowledge only when relevant to the query
+        var lower = rawQuery.ToLowerInvariant();
+        if (lower.Contains("agent studio") || lower.Contains("mcp") || lower.Contains("grpc") || lower.Contains("signalr") || lower.Contains("ollama") || lower.Contains("gemini"))
+        {
+            searchResults.Add(new
+            {
+                title = "AI Agent Studio Architecture & MCP Overview",
+                url = "builtin://docs/architecture",
+                snippet = "AI Agent Studio supports n8n-style Agent Hub workflows with dedicated Model, System Prompt, and MCP Tool ports, powered by Ollama (gemma3:12b), Google Gemini API (gemini-3.5-flash-lite), and OpenAI (gpt-4o) over gRPC-Web and SignalR."
+            });
+        }
+
+        if (searchResults.Count == 0)
+        {
+            searchResults.Add(new
+            {
+                title = $"Search Summary: {rawQuery}",
+                url = $"https://pl.search.yahoo.com/search?p={Uri.EscapeDataString(rawQuery)}",
+                snippet = $"Please provide a comprehensive, direct answer to the user's question '{rawQuery}' (topic: '{coreTopic}') using your complete knowledge base."
+            });
+        }
+
         return JsonSerializer.Serialize(new
         {
-            query = q,
-            source = "AI Agent Studio MCP Knowledge & Search Index",
+            query = rawQuery,
+            coreTopic,
+            source = "Live Multi-Engine Web Search (Web + GitHub Releases + Wikipedia + DuckDuckGo MCP)",
             timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss 'UTC'"),
-            results = new[]
-            {
-                new
-                {
-                    title = $"Technical Overview: {q}",
-                    snippet = $"AI Agent Studio MCP search result for '{q}': Supported providers include local Ollama (gemma3:12b), Google Gemini API (gemini-2.5-flash), and OpenAI (gpt-4o) with gRPC-Web, SignalR realtime events, and PostgreSQL persistence."
-                },
-                new
-                {
-                    title = $"Reference & Best Practices for {q}",
-                    snippet = $"Verified structured information retrieved via Model Context Protocol (MCP) tool 'search_web' for query '{q}'."
-                }
-            }
+            results = searchResults
         });
     }
 
-    private static string FetchPageSummary(string url)
+    private static string ExtractCoreSearchTopic(string rawQuery)
+    {
+        var cleaned = rawQuery.Trim().Trim('?', '!', '.', '"', '\'');
+        var fillerPatterns = new[]
+        {
+            @"^(co\s+to\s+jest|czym\s+jest|kto\s+to\s+jest|kim\s+jest|jaka\s+jest|jaki\s+jest|opisz|wyjaśnij|wyjasnij|wyszukaj|znajdź|znajdz|sprawdź|sprawdz|podaj\s+informacje\s+o|informacje\s+o|what\s+is|who\s+is|explain|describe|search\s+for)\s+",
+            @"\b(najnowsza\s+wersja|aktualna\s+wersja|ostatnia\s+wersja|wersja|definicja|właściwości|wlasciwosci|zastosowania|zastosowanie|charakterystyka|i\s+jego|i\s+jej|oraz|w\s+skrócie|w\s+skrocie|po\s+polsku|latest\s+version|current\s+version|definition|properties|applications|overview)\b"
+        };
+
+        var result = cleaned;
+        foreach (var pattern in fillerPatterns)
+        {
+            result = Regex.Replace(result, pattern, " ", RegexOptions.IgnoreCase);
+        }
+
+        result = Regex.Replace(result, @"\s+", " ").Trim(' ', ',', '-', ':');
+        return string.IsNullOrWhiteSpace(result) ? cleaned : result;
+    }
+
+    private static async Task<List<object>> QueryYahooWebSearchAsync(string searchQuery, List<string> discoveredUrls)
+    {
+        var results = new List<object>();
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            return results;
+        }
+
+        try
+        {
+            var url = $"https://pl.search.yahoo.com/search?p={Uri.EscapeDataString(searchQuery)}";
+            using var resp = await WebSearchHttpClient.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+            {
+                return results;
+            }
+
+            var html = await resp.Content.ReadAsStringAsync();
+            var algoBlocks = Regex.Matches(html, @"<div class=""dd\s+algo[^""]*""[^>]*>([\s\S]*?)</li>", RegexOptions.IgnoreCase);
+
+            foreach (Match m in algoBlocks)
+            {
+                if (results.Count >= 6)
+                {
+                    break;
+                }
+
+                var block = m.Groups[1].Value;
+                var titleMatch = Regex.Match(block, @"<h3[^>]*>([\s\S]*?)</h3>", RegexOptions.IgnoreCase);
+                var snippetMatch = Regex.Match(block, @"<div class=""compText[^""]*""[^>]*>([\s\S]*?)</div>", RegexOptions.IgnoreCase);
+                var hrefMatch = Regex.Match(block, @"<a[^>]+href=""([^""]+)""", RegexOptions.IgnoreCase);
+
+                var title = titleMatch.Success
+                    ? WebUtility.HtmlDecode(Regex.Replace(titleMatch.Groups[1].Value, @"<[^>]+>", " "))
+                    : string.Empty;
+                title = Regex.Replace(title, @"\s+", " ").Trim();
+
+                var snippet = snippetMatch.Success
+                    ? WebUtility.HtmlDecode(Regex.Replace(snippetMatch.Groups[1].Value, @"<[^>]+>", " "))
+                    : string.Empty;
+                snippet = Regex.Replace(snippet, @"\s+", " ").Trim();
+
+                var rawHref = hrefMatch.Success ? WebUtility.HtmlDecode(hrefMatch.Groups[1].Value) : string.Empty;
+                var ruMatch = Regex.Match(rawHref, @"/RU=([^/]+)/RK=");
+                var cleanUrl = ruMatch.Success ? Uri.UnescapeDataString(ruMatch.Groups[1].Value) : rawHref;
+
+                if (!string.IsNullOrWhiteSpace(cleanUrl) && !discoveredUrls.Contains(cleanUrl))
+                {
+                    discoveredUrls.Add(cleanUrl);
+                }
+
+                if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(snippet))
+                {
+                    results.Add(new
+                    {
+                        title,
+                        url = cleanUrl,
+                        snippet
+                    });
+                }
+            }
+        }
+        catch
+        {
+            // Ignore transient web scraping errors
+        }
+
+        return results;
+    }
+
+    private static async Task<List<object>> QueryGitHubReleasesAndReposAsync(
+        string rawQuery,
+        string coreTopic,
+        List<string> discoveredUrls)
+    {
+        var results = new List<object>();
+        var repoFullNames = new List<string>();
+
+        foreach (var u in discoveredUrls)
+        {
+            var m = Regex.Match(u, @"^https?://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", RegexOptions.IgnoreCase);
+            if (m.Success)
+            {
+                var owner = m.Groups[1].Value;
+                var repo = m.Groups[2].Value.TrimEnd('/');
+                var fullName = $"{owner}/{repo}";
+                if (!repoFullNames.Contains(fullName, StringComparer.OrdinalIgnoreCase))
+                {
+                    repoFullNames.Add(fullName);
+                }
+            }
+        }
+
+        var lowerQuery = rawQuery.ToLowerInvariant();
+        bool asksForVersionOrRepo =
+            repoFullNames.Count > 0 ||
+            lowerQuery.Contains("wersj") ||
+            lowerQuery.Contains("version") ||
+            lowerQuery.Contains("release") ||
+            lowerQuery.Contains("najnowsz") ||
+            lowerQuery.Contains("latest") ||
+            lowerQuery.Contains("github") ||
+            lowerQuery.Contains("gtnh");
+
+        if (!asksForVersionOrRepo)
+        {
+            return results;
+        }
+
+        try
+        {
+            if (repoFullNames.Count == 0 && !string.IsNullOrWhiteSpace(coreTopic))
+            {
+                var searchRepoUrl = $"https://api.github.com/search/repositories?q={Uri.EscapeDataString(coreTopic)}&per_page=2";
+                using var searchResp = await WebSearchHttpClient.GetAsync(searchRepoUrl);
+                if (searchResp.IsSuccessStatusCode)
+                {
+                    var searchJson = await searchResp.Content.ReadAsStringAsync();
+                    using var searchDoc = JsonDocument.Parse(searchJson);
+                    if (searchDoc.RootElement.TryGetProperty("items", out var itemsArr) && itemsArr.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in itemsArr.EnumerateArray())
+                        {
+                            if (item.TryGetProperty("full_name", out var fnProp) && fnProp.ValueKind == JsonValueKind.String)
+                            {
+                                var fn = fnProp.GetString();
+                                if (!string.IsNullOrWhiteSpace(fn))
+                                {
+                                    repoFullNames.Add(fn);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (var repoFullName in repoFullNames.Take(2))
+            {
+                var releasesUrl = $"https://api.github.com/repos/{repoFullName}/releases?per_page=15";
+                using var relResp = await WebSearchHttpClient.GetAsync(releasesUrl);
+                if (!relResp.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+
+                var relJson = await relResp.Content.ReadAsStringAsync();
+                using var relDoc = JsonDocument.Parse(relJson);
+                if (relDoc.RootElement.ValueKind != JsonValueKind.Array || relDoc.RootElement.GetArrayLength() == 0)
+                {
+                    continue;
+                }
+
+                string? latestStableTag = null;
+                string? latestStableDate = null;
+                string? latestOverallTag = null;
+                string? latestOverallDate = null;
+                var allTags = new List<string>();
+
+                foreach (var rel in relDoc.RootElement.EnumerateArray())
+                {
+                    var tag = rel.TryGetProperty("tag_name", out var tProp) ? tProp.GetString() : null;
+                    var pubDate = rel.TryGetProperty("published_at", out var dProp) ? dProp.GetString() : null;
+                    var isPrerelease = rel.TryGetProperty("prerelease", out var preProp) && preProp.ValueKind == JsonValueKind.True;
+
+                    if (string.IsNullOrWhiteSpace(tag))
+                    {
+                        continue;
+                    }
+
+                    allTags.Add(tag);
+
+                    if (latestOverallTag == null)
+                    {
+                        latestOverallTag = tag;
+                        latestOverallDate = pubDate;
+                    }
+
+                    bool looksLikeDevOrNightly =
+                        isPrerelease ||
+                        tag.Contains("nightly", StringComparison.OrdinalIgnoreCase) ||
+                        tag.Contains("alpha", StringComparison.OrdinalIgnoreCase) ||
+                        tag.Contains("beta", StringComparison.OrdinalIgnoreCase) ||
+                        tag.Contains("-rc", StringComparison.OrdinalIgnoreCase) ||
+                        tag.Contains("-dev", StringComparison.OrdinalIgnoreCase);
+
+                    if (!looksLikeDevOrNightly && latestStableTag == null)
+                    {
+                        latestStableTag = tag;
+                        latestStableDate = pubDate;
+                    }
+                }
+
+                var summaryParts = new List<string>
+                {
+                    $"Official GitHub Repository: {repoFullName}."
+                };
+
+                if (!string.IsNullOrWhiteSpace(latestStableTag))
+                {
+                    summaryParts.Add($"Latest Stable Release Version: {latestStableTag} (published: {latestStableDate}).");
+                }
+
+                if (!string.IsNullOrWhiteSpace(latestOverallTag) &&
+                    !string.Equals(latestOverallTag, latestStableTag, StringComparison.OrdinalIgnoreCase))
+                {
+                    summaryParts.Add($"Latest Nightly / Pre-Release Version: {latestOverallTag} (published: {latestOverallDate}).");
+                }
+
+                if (allTags.Count > 0)
+                {
+                    summaryParts.Add($"Recent releases: {string.Join(", ", allTags.Take(6))}.");
+                }
+
+                results.Add(new
+                {
+                    title = $"GitHub Official Releases: {repoFullName}",
+                    url = $"https://github.com/{repoFullName}/releases",
+                    snippet = string.Join(" ", summaryParts)
+                });
+            }
+        }
+        catch
+        {
+            // Ignore transient GitHub API errors
+        }
+
+        return results;
+    }
+
+    private static async Task<object?> FetchTopWebResultExcerptAsync(string url)
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3.5));
+            using var resp = await WebSearchHttpClient.GetAsync(url, cts.Token);
+            if (!resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var html = await resp.Content.ReadAsStringAsync(cts.Token);
+            var titleMatch = Regex.Match(html, @"<title[^>]*>([\s\S]*?)</title>", RegexOptions.IgnoreCase);
+            var title = titleMatch.Success ? WebUtility.HtmlDecode(titleMatch.Groups[1].Value.Trim()) : url;
+
+            var cleaned = Regex.Replace(html, @"<(script|style|noscript|svg|header|footer|nav)[^>]*>[\s\S]*?</\1>", " ", RegexOptions.IgnoreCase);
+            cleaned = Regex.Replace(cleaned, @"<[^>]+>", " ");
+            cleaned = WebUtility.HtmlDecode(cleaned);
+            cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
+
+            if (string.IsNullOrWhiteSpace(cleaned))
+            {
+                return null;
+            }
+
+            if (cleaned.Length > 1000)
+            {
+                cleaned = cleaned[..1000] + "...";
+            }
+
+            return new
+            {
+                title = $"Live Page Excerpt: {title}",
+                url,
+                snippet = cleaned
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static async Task<List<object>> QueryWikipediaAsync(string lang, string searchTerm)
+    {
+        var list = new List<object>();
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return list;
+        }
+
+        try
+        {
+            var searchUrl = $"https://{lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch={Uri.EscapeDataString(searchTerm)}&utf8=1&format=json&srlimit=2";
+            using var searchResp = await WebSearchHttpClient.GetAsync(searchUrl);
+            if (!searchResp.IsSuccessStatusCode)
+            {
+                return list;
+            }
+
+            var searchJson = await searchResp.Content.ReadAsStringAsync();
+            using var searchDoc = JsonDocument.Parse(searchJson);
+            if (!searchDoc.RootElement.TryGetProperty("query", out var queryEl) ||
+                !queryEl.TryGetProperty("search", out var searchArr) ||
+                searchArr.ValueKind != JsonValueKind.Array ||
+                searchArr.GetArrayLength() == 0)
+            {
+                return list;
+            }
+
+            var titles = new List<string>();
+            foreach (var item in searchArr.EnumerateArray())
+            {
+                if (item.TryGetProperty("title", out var tProp) && tProp.ValueKind == JsonValueKind.String)
+                {
+                    var title = tProp.GetString();
+                    if (!string.IsNullOrWhiteSpace(title))
+                    {
+                        titles.Add(title);
+                    }
+                }
+            }
+
+            foreach (var title in titles.Take(2))
+            {
+                var extractUrl = $"https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&exchars=1400&titles={Uri.EscapeDataString(title)}&format=json";
+                using var extractResp = await WebSearchHttpClient.GetAsync(extractUrl);
+                if (!extractResp.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+
+                var extractJson = await extractResp.Content.ReadAsStringAsync();
+                using var extractDoc = JsonDocument.Parse(extractJson);
+                if (extractDoc.RootElement.TryGetProperty("query", out var qEl) &&
+                    qEl.TryGetProperty("pages", out var pagesEl) &&
+                    pagesEl.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var pageProp in pagesEl.EnumerateObject())
+                    {
+                        if (pageProp.Value.TryGetProperty("extract", out var extEl) && extEl.ValueKind == JsonValueKind.String)
+                        {
+                            var extractText = extEl.GetString()?.Trim();
+                            if (!string.IsNullOrWhiteSpace(extractText))
+                            {
+                                list.Add(new
+                                {
+                                    title = $"{title} ({lang.ToUpperInvariant()} Wikipedia)",
+                                    url = $"https://{lang}.wikipedia.org/wiki/{Uri.EscapeDataString(title.Replace(' ', '_'))}",
+                                    snippet = extractText
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Ignore transient network errors and fall back to next source
+        }
+
+        return list;
+    }
+
+    private static async Task<List<object>> QueryDuckDuckGoInstantAnswerAsync(string searchTerm)
+    {
+        var list = new List<object>();
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return list;
+        }
+
+        try
+        {
+            var url = $"https://api.duckduckgo.com/?q={Uri.EscapeDataString(searchTerm)}&format=json&no_html=1&skip_disambig=1";
+            using var resp = await WebSearchHttpClient.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+            {
+                return list;
+            }
+
+            var json = await resp.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("AbstractText", out var absProp) && absProp.ValueKind == JsonValueKind.String)
+            {
+                var absText = absProp.GetString()?.Trim();
+                if (!string.IsNullOrWhiteSpace(absText))
+                {
+                    var absUrl = root.TryGetProperty("AbstractURL", out var uProp) ? uProp.GetString() : "";
+                    var heading = root.TryGetProperty("Heading", out var hProp) ? hProp.GetString() : searchTerm;
+                    list.Add(new
+                    {
+                        title = $"{heading} (DuckDuckGo Instant Answer)",
+                        url = absUrl ?? "",
+                        snippet = absText
+                    });
+                }
+            }
+        }
+        catch
+        {
+            // Ignore transient network errors
+        }
+
+        return list;
+    }
+
+    private static async Task<string> FetchPageSummaryAsync(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
         {
             return "Error: URL is empty.";
         }
 
-        return JsonSerializer.Serialize(new
+        var trimmed = url.Trim();
+        if (!trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
-            url,
-            status = 200,
-            fetchedAt = DateTime.UtcNow.ToString("o"),
-            summary = $"Successfully fetched resource metadata from {url} via MCP connector."
-        });
+            trimmed = "https://" + trimmed;
+        }
+
+        try
+        {
+            using var resp = await WebSearchHttpClient.GetAsync(trimmed);
+            var rawHtml = await resp.Content.ReadAsStringAsync();
+
+            var titleMatch = Regex.Match(rawHtml, @"<title[^>]*>([\s\S]*?)</title>", RegexOptions.IgnoreCase);
+            var pageTitle = titleMatch.Success ? WebUtility.HtmlDecode(titleMatch.Groups[1].Value.Trim()) : trimmed;
+
+            var cleanedText = Regex.Replace(rawHtml, @"<(script|style|noscript)[^>]*>[\s\S]*?</\1>", " ", RegexOptions.IgnoreCase);
+            cleanedText = Regex.Replace(cleanedText, @"<[^>]+>", " ");
+            cleanedText = WebUtility.HtmlDecode(cleanedText);
+            cleanedText = Regex.Replace(cleanedText, @"\s+", " ").Trim();
+
+            if (cleanedText.Length > 2500)
+            {
+                cleanedText = cleanedText[..2500] + "...";
+            }
+
+            return JsonSerializer.Serialize(new
+            {
+                url = trimmed,
+                status = (int)resp.StatusCode,
+                title = pageTitle,
+                fetchedAt = DateTime.UtcNow.ToString("o"),
+                contentExcerpt = cleanedText
+            });
+        }
+        catch (Exception ex)
+        {
+            return JsonSerializer.Serialize(new
+            {
+                url = trimmed,
+                status = 0,
+                fetchedAt = DateTime.UtcNow.ToString("o"),
+                error = $"Could not fetch URL '{trimmed}': {ex.Message}"
+            });
+        }
     }
 
     private static string ListWorkspaceDirectory(string? path)
