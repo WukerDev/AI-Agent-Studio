@@ -26,26 +26,26 @@ const noteColor = computed(() => {
   >
     <Handle type="target" :position="Position.Top" class="node-handle" />
 
-    <div class="node-header d-flex align-center justify-space-between px-2 py-1">
-      <div class="d-flex align-center overflow-hidden mr-1">
-        <v-icon icon="mdi-note-text-outline" size="14" class="mr-1.5 flex-shrink-0" color="white" />
+    <div class="node-header d-flex align-center justify-space-between px-2.5">
+      <div class="d-flex align-center ga-2 overflow-hidden mr-1">
+        <v-icon icon="mdi-note-text-outline" size="14" class="flex-shrink-0" :style="{ color: noteColor }" />
         <span class="node-title text-truncate">{{ props.data.name || 'Sticky Note' }}</span>
       </div>
-      <div class="d-flex align-center flex-shrink-0">
+      <div class="node-actions d-flex align-center flex-shrink-0">
         <v-btn
-          icon="mdi-cog"
-          size="20"
+          icon="mdi-cog-outline"
+          size="18"
           variant="text"
-          color="white"
+          color="grey-lighten-1"
           class="node-action-btn"
           title="Configure Note"
           @click.stop="emit('configure', props.data)"
         />
         <v-btn
-          icon="mdi-delete"
-          size="20"
+          icon="mdi-delete-outline"
+          size="18"
           variant="text"
-          color="white"
+          color="grey-lighten-1"
           class="node-action-btn"
           title="Delete Note"
           @click.stop="emit('delete', props.id)"
@@ -53,13 +53,13 @@ const noteColor = computed(() => {
       </div>
     </div>
 
-    <div class="node-body px-2 py-2" @dblclick.stop="emit('configure', props.data)">
+    <div class="node-body px-2.5 py-2" @dblclick.stop="emit('configure', props.data)">
       <div class="note-content">
         {{ props.data.systemPrompt || 'Add workflow note or documentation here...' }}
       </div>
-      <div class="d-flex align-center justify-space-between mt-2 pt-1 border-top-subtle">
+      <div class="d-flex align-center justify-space-between mt-2 pt-1.5 border-top-subtle">
         <span class="badge-tag">NOTE</span>
-        <v-icon icon="mdi-pin-outline" size="11" color="grey" />
+        <v-icon icon="mdi-pin-outline" size="11" color="#64748B" />
       </div>
     </div>
 
@@ -69,14 +69,15 @@ const noteColor = computed(() => {
 
 <style scoped>
 .custom-node {
-  width: 190px;
+  width: 215px;
   min-height: 110px;
-  background-color: #1a1714;
-  border-radius: 6px;
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  background-color: #131824;
+  border-radius: 7px;
+  border: 1px solid #283548;
+  border-top: 3px solid var(--note-accent, #F59E0B);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
   font-family: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s ease;
   user-select: none;
   display: flex;
   flex-direction: column;
@@ -84,20 +85,29 @@ const noteColor = computed(() => {
 
 .custom-node.selected {
   border-color: var(--note-accent, #F59E0B) !important;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5) !important;
+  border-top: 3px solid var(--note-accent, #F59E0B) !important;
 }
 
-.note-node .node-header {
-  background-color: var(--note-accent, #F59E0B);
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-  height: 26px;
+.node-header {
+  background-color: #172030;
+  border-bottom: 1px solid #1E293B;
+  height: 30px;
 }
 
 .node-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #F8FAFC;
+}
+
+.node-actions {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.custom-node:hover .node-actions,
+.custom-node.selected .node-actions {
+  opacity: 1;
 }
 
 .node-body {
@@ -109,27 +119,29 @@ const noteColor = computed(() => {
 
 .note-content {
   font-size: 11px;
-  line-height: 1.4;
-  color: #FDE68A;
-  background-color: rgba(0, 0, 0, 0.25);
-  padding: 6px 8px;
-  border-radius: 4px;
+  line-height: 1.45;
+  color: #E2E8F0;
+  background-color: #0D131F;
+  border: 1px solid #1E293B;
+  padding: 7px 8px;
+  border-radius: 5px;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 150px;
+  max-height: 165px;
   overflow-y: auto;
 }
 
 .border-top-subtle {
-  border-top: 1px dashed rgba(245, 158, 11, 0.2);
+  border-top: 1px solid #1E293B;
 }
 
 .badge-tag {
   font-size: 9px;
-  font-weight: 700;
-  color: #FBBF24;
-  background: rgba(245, 158, 11, 0.15);
-  padding: 1px 4px;
+  font-weight: 600;
+  color: #94A3B8;
+  background-color: #0D131F;
+  border: 1px solid #24324B;
+  padding: 1px 5px;
   border-radius: 3px;
 }
 
@@ -144,6 +156,6 @@ const noteColor = computed(() => {
   width: 8px;
   height: 8px;
   background: var(--note-accent, #F59E0B);
-  border: 1px solid #FFFFFF;
+  border: 1.5px solid #F8FAFC;
 }
 </style>

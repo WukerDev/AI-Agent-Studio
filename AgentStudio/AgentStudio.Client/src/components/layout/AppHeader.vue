@@ -27,151 +27,230 @@ const userInitials = computed(() => {
 </script>
 
 <template>
-  <v-app-bar elevation="0" density="compact" class="app-header-bar px-2">
-    <div class="d-flex align-center px-2 w-100 ga-3">
+  <v-app-bar elevation="0" density="compact" class="app-header-bar px-3">
+    <div class="d-flex align-center w-100 ga-3">
+      <!-- Brand Identity -->
       <div class="d-flex align-center cursor-pointer">
         <div class="logo-box mr-2">
-          <v-icon icon="mdi-robot-excited-outline" color="primary" size="20" />
+          <v-icon icon="mdi-robot-outline" color="#E63946" size="18" />
         </div>
-        <div class="d-flex align-center">
-          <span class="text-subtitle-1 font-weight-bold tracking-wide text-white">
-            Agent Studio
-          </span>
-          <span class="studio-badge ml-1.5">v2.0</span>
+        <div class="d-flex align-center ga-2">
+          <span class="header-title">Agent Studio</span>
+          <span class="studio-badge">v2.0</span>
         </div>
       </div>
 
-      <v-chip size="small" variant="tonal" color="primary" class="ml-2 font-weight-medium flow-badge">
-        <v-icon icon="mdi-sitemap" start size="14" />
-        {{ globalViewModel.currentFlowId || 'default-flow' }}
-      </v-chip>
+      <div class="header-divider" />
+
+      <!-- Active Flow Indicator -->
+      <div class="flow-indicator d-flex align-center ga-1.5">
+        <v-icon icon="mdi-sitemap-outline" size="14" color="#94A3B8" />
+        <span class="flow-indicator-label">Flow:</span>
+        <span class="flow-indicator-value font-monospace">
+          {{ globalViewModel.currentFlowId || 'default-flow' }}
+        </span>
+      </div>
 
       <v-progress-circular
         v-if="globalViewModel.isGrpcLoading"
         indeterminate
-        color="primary"
-        size="18"
+        color="info"
+        size="16"
         width="2"
-        class="ml-2"
+        class="ml-1"
       />
 
-      <v-spacer></v-spacer>
+      <v-spacer />
 
-      <v-tooltip location="bottom">
-        <template v-slot:activator="{ props: tooltipProps }">
-          <v-chip
-            size="x-small"
-            variant="flat"
-            :color="globalViewModel.isSignalRConnected ? 'success' : 'error'"
-            v-bind="tooltipProps"
-            class="text-caption font-weight-bold px-2 status-chip"
-          >
-            <span class="pulse-dot mr-1" :class="globalViewModel.isSignalRConnected ? 'pulse-green' : 'pulse-red'"></span>
-            {{ globalViewModel.isSignalRConnected ? 'LIVE' : 'OFFLINE' }}
-          </v-chip>
-        </template>
-        <span>
-          SignalR Event Bus: {{ globalViewModel.isSignalRConnected ? 'Connected & listening' : 'Disconnected' }}
-        </span>
-      </v-tooltip>
+      <!-- Right Controls -->
+      <div class="d-flex align-center ga-2">
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props: tooltipProps }">
+            <div
+              v-bind="tooltipProps"
+              class="status-pill d-flex align-center ga-1.5"
+              :class="globalViewModel.isSignalRConnected ? 'status-online' : 'status-offline'"
+            >
+              <span class="status-dot" />
+              <span>{{ globalViewModel.isSignalRConnected ? 'LIVE' : 'OFFLINE' }}</span>
+            </div>
+          </template>
+          <span>
+            SignalR Event Bus: {{ globalViewModel.isSignalRConnected ? 'Connected & listening' : 'Disconnected' }}
+          </span>
+        </v-tooltip>
 
-      <v-btn
-        variant="tonal"
-        size="small"
-        density="compact"
-        @click="toggleLocale"
-        class="font-weight-bold text-caption rounded-pill px-3"
-      >
-        <v-icon icon="mdi-translate" start size="14" />
-        {{ locale.toUpperCase() }}
-      </v-btn>
+        <button
+          type="button"
+          class="lang-switch-btn d-flex align-center ga-1"
+          title="Switch Language (PL / EN)"
+          @click="toggleLocale"
+        >
+          <v-icon icon="mdi-translate" size="14" color="#94A3B8" />
+          <span>{{ locale.toUpperCase() }}</span>
+        </button>
 
-      <v-menu offset-y>
-        <template v-slot:activator="{ props: menuProps }">
-          <v-btn icon v-bind="menuProps" size="small" density="compact" class="user-avatar-btn">
-            <v-avatar color="primary" size="28">
-              <span class="text-white text-caption font-weight-bold">{{ userInitials }}</span>
-            </v-avatar>
-          </v-btn>
-        </template>
+        <v-menu offset-y>
+          <template v-slot:activator="{ props: menuProps }">
+            <button type="button" v-bind="menuProps" class="user-avatar-btn" title="Account">
+              {{ userInitials }}
+            </button>
+          </template>
 
-        <v-list density="compact" min-width="190" class="glass-menu rounded-lg">
-          <v-list-item>
-            <template v-slot:prepend>
-              <v-icon icon="mdi-account" class="mr-2" size="18" color="primary" />
-            </template>
-            <v-list-item-title class="text-caption font-weight-bold">{{ userDisplay }}</v-list-item-title>
-            <v-list-item-subtitle class="text-caption text-grey">Keycloak Authenticated</v-list-item-subtitle>
-          </v-list-item>
+          <v-list density="compact" min-width="200" class="solid-menu rounded-lg pa-1">
+            <v-list-item class="rounded">
+              <template v-slot:prepend>
+                <v-icon icon="mdi-account-circle-outline" class="mr-2" size="18" color="#94A3B8" />
+              </template>
+              <v-list-item-title class="text-caption font-weight-bold text-white">{{ userDisplay }}</v-list-item-title>
+              <v-list-item-subtitle class="text-caption" style="color: #64748B;">Keycloak IAM</v-list-item-subtitle>
+            </v-list-item>
 
-          <v-divider class="my-1 border-opacity-25" />
+            <v-divider class="my-1" />
 
-          <v-list-item @click="handleLogout">
-            <template v-slot:prepend>
-              <v-icon icon="mdi-logout" class="mr-2" size="18" color="error" />
-            </template>
-            <v-list-item-title class="text-caption font-weight-medium text-error">{{ t('layout.header.logout') }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+            <v-list-item class="rounded" @click="handleLogout">
+              <template v-slot:prepend>
+                <v-icon icon="mdi-logout" class="mr-2" size="16" color="error" />
+              </template>
+              <v-list-item-title class="text-caption font-weight-medium text-error">
+                {{ t('layout.header.logout') }}
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </div>
     </div>
   </v-app-bar>
 </template>
 
 <style scoped>
 .app-header-bar {
-  background: rgba(15, 23, 42, 0.9) !important;
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #0D131F !important;
+  border-bottom: 1px solid #1E293B !important;
 }
-.tracking-wide {
-  letter-spacing: 0.5px;
-}
+
 .logo-box {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: rgba(230, 57, 70, 0.15);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: #1E151C;
+  border: 1px solid #4C1D24;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(230, 57, 70, 0.3);
 }
-.studio-badge {
-  font-size: 9px;
+
+.header-title {
+  font-size: 14px;
   font-weight: 700;
-  color: #E63946;
-  background: rgba(230, 57, 70, 0.15);
-  border: 1px solid rgba(230, 57, 70, 0.3);
-  padding: 1px 5px;
+  color: #F8FAFC;
+  letter-spacing: -0.01em;
+}
+
+.studio-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94A3B8;
+  background-color: #161F30;
+  border: 1px solid #283548;
+  padding: 1px 6px;
   border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
-.flow-badge {
-  border: 1px solid rgba(230, 57, 70, 0.25);
-  background: rgba(230, 57, 70, 0.08);
+
+.header-divider {
+  width: 1px;
+  height: 18px;
+  background-color: #1E293B;
 }
-.status-chip {
-  letter-spacing: 0.5px;
+
+.flow-indicator {
+  background-color: #131C2E;
+  border: 1px solid #233047;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
 }
-.pulse-dot {
+
+.flow-indicator-label {
+  color: #64748B;
+  font-weight: 500;
+}
+
+.flow-indicator-value {
+  color: #E2E8F0;
+  font-weight: 600;
+}
+
+.status-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 5px;
+  letter-spacing: 0.03em;
+  cursor: default;
+}
+
+.status-online {
+  background-color: #0D281E;
+  border: 1px solid #14532D;
+  color: #4ADE80;
+}
+
+.status-offline {
+  background-color: #2A1215;
+  border: 1px solid #7F1D1D;
+  color: #F87171;
+}
+
+.status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  display: inline-block;
+  background-color: currentColor;
 }
-.pulse-green {
-  background-color: #4CAF50;
-  box-shadow: 0 0 6px #4CAF50;
+
+.lang-switch-btn {
+  background-color: #161F30;
+  border: 1px solid #283548;
+  color: #E2E8F0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
 }
-.pulse-red {
-  background-color: #EF4444;
-  box-shadow: 0 0 6px #EF4444;
+
+.lang-switch-btn:hover {
+  background-color: #1E293B;
+  border-color: #3B4D6B;
 }
-.glass-menu {
-  background: #172136 !important;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
+
 .user-avatar-btn {
-  margin-left: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: #1E293B;
+  border: 1px solid #334155;
+  color: #F8FAFC;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.user-avatar-btn:hover {
+  background-color: #283548;
+  border-color: #475569;
+}
+
+.solid-menu {
+  background-color: #111827 !important;
+  border: 1px solid #283548 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
 }
 </style>

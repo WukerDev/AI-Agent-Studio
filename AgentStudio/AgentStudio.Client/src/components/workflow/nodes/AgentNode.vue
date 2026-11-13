@@ -44,41 +44,43 @@ const connectedNodes = computed(() => {
     <Handle id="agent-out" type="source" :position="Position.Right" class="pipeline-handle pipeline-out" title="Wyjście do kolejnego Agenta" />
 
     <!-- Header -->
-    <div class="node-header d-flex align-center justify-space-between px-2.5 py-1.5">
-      <div class="d-flex align-center overflow-hidden mr-1">
-        <v-icon icon="mdi-robot" size="15" class="mr-1.5 flex-shrink-0" color="white" />
+    <div class="node-header d-flex align-center justify-space-between px-2.5">
+      <div class="d-flex align-center ga-2 overflow-hidden mr-1">
+        <div class="node-icon-badge flex-shrink-0">
+          <v-icon icon="mdi-robot-outline" size="13" color="#F87171" />
+        </div>
         <span class="node-title text-truncate">{{ props.data.name || 'AI Agent' }}</span>
       </div>
-      <div class="d-flex align-center flex-shrink-0">
-        <v-btn icon="mdi-cog" size="20" variant="text" color="white" class="node-action-btn" @click.stop="emit('configure', props.data)" />
-        <v-btn icon="mdi-delete" size="20" variant="text" color="white" class="node-action-btn" @click.stop="emit('delete', props.id)" />
+      <div class="node-actions d-flex align-center ga-0.5 flex-shrink-0">
+        <v-btn icon="mdi-cog-outline" size="18" variant="text" color="grey-lighten-1" class="node-action-btn" @click.stop="emit('configure', props.data)" />
+        <v-btn icon="mdi-delete-outline" size="18" variant="text" color="grey-lighten-1" class="node-action-btn" @click.stop="emit('delete', props.id)" />
       </div>
     </div>
 
     <!-- Body: Connected Sub-Nodes Summary -->
     <div class="node-body px-2.5 py-2">
-      <div class="d-flex align-center justify-space-between mb-1">
-        <span class="badge-tag">N8N AGENT HUB</span>
-        <span class="status-text">
+      <div class="d-flex align-center justify-space-between mb-2">
+        <span class="badge-tag">AGENT HUB</span>
+        <span class="status-text text-truncate" style="max-width: 135px;">
           {{ connectedNodes.model ? connectedNodes.model.modelConfig?.modelName || 'Model OK' : 'Brak modelu' }}
         </span>
       </div>
 
-      <div class="ports-status-row d-flex align-center justify-space-between mt-1.5 pt-1.5">
+      <div class="ports-status-row d-flex align-center justify-space-between pt-2">
         <div class="port-slot" :class="{ connected: !!connectedNodes.model }">
-          <v-icon icon="mdi-brain" size="11" color="#60A5FA" />
+          <v-icon icon="mdi-brain" size="12" color="#60A5FA" />
           <span>Model*</span>
         </div>
         <div class="port-slot" :class="{ connected: connectedNodes.prompts.length > 0 }">
-          <v-icon icon="mdi-script-text-outline" size="11" color="#FBBF24" />
+          <v-icon icon="mdi-script-text-outline" size="12" color="#FBBF24" />
           <span>Prompt ({{ connectedNodes.prompts.length }})</span>
         </div>
         <div class="port-slot" :class="{ connected: connectedNodes.tools.length > 0 }">
-          <v-icon icon="mdi-connection" size="11" color="#34D399" />
+          <v-icon icon="mdi-connection" size="12" color="#34D399" />
           <span>Tool ({{ connectedNodes.tools.length }})</span>
         </div>
         <div class="port-slot" :class="{ connected: connectedNodes.skills.length > 0 }">
-          <v-icon icon="mdi-book-open-page-variant-outline" size="11" color="#22D3EE" />
+          <v-icon icon="mdi-book-open-page-variant-outline" size="12" color="#22D3EE" />
           <span>Skill ({{ connectedNodes.skills.length }})</span>
         </div>
       </div>
@@ -122,53 +124,75 @@ const connectedNodes = computed(() => {
 
 <style scoped>
 .custom-node {
-  width: 245px;
+  width: 260px;
   background-color: #111827;
-  border-radius: 8px;
-  border: 1.5px solid #374151;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  border-radius: 7px;
+  border: 1px solid #283548;
+  border-top: 3px solid #E63946;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
   font-family: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s ease;
   user-select: none;
   position: relative;
 }
 
 .custom-node.selected {
   border-color: #E63946;
-  box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.45);
+  border-top: 3px solid #E63946;
 }
 
-.agent-node .node-header {
-  background: linear-gradient(90deg, #E63946 0%, #BE123C 100%);
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
-  height: 28px;
+.node-header {
+  background-color: #151E2E;
+  border-bottom: 1px solid #1E293B;
+  height: 32px;
+}
+
+.node-icon-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background-color: #2A1215;
+  border: 1px solid #7F1D1D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .node-title {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #F8FAFC;
+}
+
+.node-actions {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.custom-node:hover .node-actions,
+.custom-node.selected .node-actions {
+  opacity: 1;
 }
 
 .badge-tag {
-  font-size: 8.5px;
+  font-size: 9px;
   font-weight: 700;
-  color: #F87171;
-  background: rgba(239, 68, 68, 0.15);
+  color: #FCA5A5;
+  background-color: #2A1215;
+  border: 1px solid #7F1D1D;
   padding: 1px 5px;
   border-radius: 3px;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.03em;
 }
 
 .status-text {
-  font-size: 9.5px;
-  color: #D1D5DB;
-  font-family: monospace;
+  font-size: 10px;
+  color: #94A3B8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .ports-status-row {
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  border-top: 1px solid #1E293B;
   padding-bottom: 4px;
 }
 
@@ -177,21 +201,21 @@ const connectedNodes = computed(() => {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  font-size: 8.5px;
+  font-size: 9px;
   font-weight: 600;
-  color: #9CA3AF;
+  color: #64748B;
   width: 24%;
   text-align: center;
 }
 
 .port-slot.connected {
-  color: #F9FAFB;
+  color: #E2E8F0;
 }
 
 .node-action-btn {
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
   padding: 0 !important;
 }
 
@@ -199,27 +223,27 @@ const connectedNodes = computed(() => {
   width: 9px;
   height: 9px;
   background-color: #E63946;
-  border: 2px solid #FFFFFF;
+  border: 1.5px solid #F8FAFC;
 }
 
 .subnode-handle {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 2px;
   transform: translate(-50%, 50%) rotate(45deg);
-  border: 1.5px solid #FFFFFF;
+  border: 1.5px solid #F8FAFC;
 }
 
 .port-model {
-  background-color: #2196F3;
+  background-color: #3B82F6;
 }
 
 .port-prompt {
-  background-color: #FB8C00;
+  background-color: #F59E0B;
 }
 
 .port-tool {
-  background-color: #4CAF50;
+  background-color: #10B981;
 }
 
 .port-skill {

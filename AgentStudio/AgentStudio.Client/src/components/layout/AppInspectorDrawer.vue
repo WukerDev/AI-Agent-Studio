@@ -21,16 +21,16 @@ const isDirty = ref(false)
 const providers = ['Ollama', 'Gemini', 'OpenAI', 'Custom']
 
 const geminiModels = [
-  { name: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite (Domyślny, najszybszy i najtańszy)' },
-  { name: 'gemini-flash-lite-latest', label: 'gemini-flash-lite-latest (Zawsze najnowszy Flash-Lite)' },
-  { name: 'gemini-3.1-flash-lite', label: 'gemini-3.1-flash-lite (Lekki i stabilny)' },
-  { name: 'gemini-3.8-flash', label: 'gemini-3.8-flash (Rekomendowany następca Flash)' },
-  { name: 'gemini-flash-latest', label: 'gemini-flash-latest (Najnowszy Flash)' },
-  { name: 'gemini-3.5-flash', label: 'gemini-3.5-flash (Flash 3.5)' },
-  { name: 'gemini-3.1-pro-preview', label: 'gemini-3.1-pro-preview (Rekomendowany następca Pro)' },
-  { name: 'gemini-pro-latest', label: 'gemini-pro-latest (Najnowszy Pro)' },
-  { name: 'gemini-4-argon', label: 'gemini-4-argon (Flagowy model Gemini 4)' },
-  { name: 'gemma-4-26b-a4b-it', label: 'gemma-4-26b-a4b-it (Otwarty model Gemma 4 w API)' }
+  { name: 'gemini-3.5-flash-lite', desc: 'Domyślny · najszybszy', label: 'gemini-3.5-flash-lite (Domyślny, najszybszy i najtańszy)' },
+  { name: 'gemini-flash-lite-latest', desc: 'Najnowszy Flash-Lite', label: 'gemini-flash-lite-latest (Zawsze najnowszy Flash-Lite)' },
+  { name: 'gemini-3.1-flash-lite', desc: 'Lekki i stabilny', label: 'gemini-3.1-flash-lite (Lekki i stabilny)' },
+  { name: 'gemini-3.8-flash', desc: 'Rekomendowany Flash', label: 'gemini-3.8-flash (Rekomendowany następca Flash)' },
+  { name: 'gemini-flash-latest', desc: 'Najnowszy Flash', label: 'gemini-flash-latest (Najnowszy Flash)' },
+  { name: 'gemini-3.5-flash', desc: 'Flash 3.5', label: 'gemini-3.5-flash (Flash 3.5)' },
+  { name: 'gemini-3.1-pro-preview', desc: 'Rekomendowany Pro', label: 'gemini-3.1-pro-preview (Rekomendowany następca Pro)' },
+  { name: 'gemini-pro-latest', desc: 'Najnowszy Pro', label: 'gemini-pro-latest (Najnowszy Pro)' },
+  { name: 'gemini-4-argon', desc: 'Flagowy Gemini 4', label: 'gemini-4-argon (Flagowy model Gemini 4)' },
+  { name: 'gemma-4-26b-a4b-it', desc: 'Otwarty Gemma 4', label: 'gemma-4-26b-a4b-it (Otwarty model Gemma 4 w API)' }
 ]
 
 const noteColorOptions = [
@@ -72,6 +72,19 @@ const commonMcpTools = [
 
 const promptVariables = ['{{input}}', '{{date}}', '{{time}}', '{{agent}}', '{{flowId}}', '{{previous_output}}']
 
+const formattedTemperature = computed(() => {
+  const raw = localNode.value?.modelConfig?.temperature ?? 0.7
+  return Number(raw).toFixed(2)
+})
+
+function handleTemperatureInput(event: Event) {
+  const val = parseFloat((event.target as HTMLInputElement).value)
+  if (!isNaN(val) && localNode.value?.modelConfig) {
+    localNode.value.modelConfig.temperature = Math.round(val * 100) / 100
+    isDirty.value = true
+  }
+}
+
 const agentPortConnections = computed(() => {
   if (!localNode.value || localNode.value.type !== NodeType.AGENT) {
     return { model: null as AgentNode | null, prompts: [] as AgentNode[], tools: [] as AgentNode[], skills: [] as AgentNode[] }
@@ -101,7 +114,8 @@ const selectedSkillDetails = computed(() => {
   return globalViewModel.skills.find(s => s.name === skillName) || null
 })
 
-function handleSelectSkillForNode(skillName: string) {
+function handleSelectSkillForNode(event: Event) {
+  const skillName = (event.target as HTMLSelectElement).value
   if (!localNode.value) return
   localNode.value.endpoint = skillName
   const matched = globalViewModel.skills.find(s => s.name === skillName)
@@ -122,17 +136,22 @@ watch(() => globalViewModel.selectedNode, (selected) => {
     localNode.value = JSON.parse(JSON.stringify(selected))
     if (!localNode.value!.modelConfig) {
       localNode.value!.modelConfig = { provider: 'Ollama', modelName: 'gemma3:12b', temperature: 0.7 }
-    } else if (localNode.value!.type === NodeType.MODEL) {
-      if (!localNode.value!.modelConfig.provider) {
-        localNode.value!.modelConfig.provider = 'Ollama'
+    } else {
+      if (typeof localNode.value!.modelConfig.temperature === 'number') {
+        localNode.value!.modelConfig.temperature = Math.round(localNode.value!.modelConfig.temperature * 100) / 100
       }
-      if (!localNode.value!.modelConfig.modelName) {
-        localNode.value!.modelConfig.modelName =
-          localNode.value!.modelConfig.provider === 'Ollama'
-            ? 'gemma3:12b'
-            : localNode.value!.modelConfig.provider === 'Gemini'
-              ? 'gemini-3.5-flash-lite'
-              : 'gpt-4o'
+      if (localNode.value!.type === NodeType.MODEL) {
+        if (!localNode.value!.modelConfig.provider) {
+          localNode.value!.modelConfig.provider = 'Ollama'
+        }
+        if (!localNode.value!.modelConfig.modelName) {
+          localNode.value!.modelConfig.modelName =
+            localNode.value!.modelConfig.provider === 'Ollama'
+              ? 'gemma3:12b'
+              : localNode.value!.modelConfig.provider === 'Gemini'
+                ? 'gemini-3.5-flash-lite'
+                : 'gpt-4o'
+        }
       }
     }
     if (!localNode.value!.mcpConfig) {
@@ -162,9 +181,11 @@ watch(() => globalViewModel.selectedNode, (selected) => {
   }
 }, { immediate: true })
 
-function handleProviderChange(provider: string) {
+function handleProviderSelectChange(event: Event) {
+  const provider = (event.target as HTMLSelectElement).value
   isDirty.value = true
   if (!localNode.value?.modelConfig) return
+  localNode.value.modelConfig.provider = provider
   if (provider === 'Ollama') {
     if (!localNode.value.modelConfig.modelName || localNode.value.modelConfig.modelName === 'gpt-4o' || localNode.value.modelConfig.modelName.startsWith('gemini-')) {
       localNode.value.modelConfig.modelName = 'gemma3:12b'
@@ -285,7 +306,7 @@ const inspectorTitle = computed(() => {
     case NodeType.LABEL:
       return 'Section Label Inspector'
     case NodeType.SKILL:
-      return 'Agent Skill Inspector (SKILL.md)'
+      return 'Agent Skill Inspector'
     default:
       return 'Node Inspector'
   }
@@ -318,6 +339,14 @@ const nameFieldLabel = computed(() => {
   if (localNode.value?.type === NodeType.NOTE) return 'Note Title'
   return 'Node Name'
 })
+
+function isToolActive(tool: string): boolean {
+  return enabledToolsInput.value
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+    .includes(tool)
+}
 
 function toggleTool(tool: string) {
   const current = enabledToolsInput.value
@@ -377,550 +406,593 @@ function copyNodeId() {
     v-model="isOpen"
     location="right"
     width="380"
-    elevation="6"
+    elevation="0"
     border="0"
     class="app-inspector-drawer"
   >
     <!-- Drawer Header -->
-    <v-toolbar density="compact" color="surface" class="px-3 border-bottom-subtle">
-      <v-avatar size="24" :color="localNode ? globalViewModel.getNodeColor(localNode.type) : 'primary'" class="mr-2">
-        <v-icon
-          :icon="localNode ? globalViewModel.getNodeIcon(localNode.type) : 'mdi-tune-variant'"
-          size="14"
-          color="white"
-        />
-      </v-avatar>
-      <div class="overflow-hidden mr-2">
-        <div class="text-subtitle-2 font-weight-bold text-truncate">
-          {{ inspectorTitle }}
+    <div class="inspector-header d-flex align-center justify-space-between px-3">
+      <div class="d-flex align-center ga-2 overflow-hidden mr-2">
+        <div
+          class="inspector-icon-badge flex-shrink-0"
+          :style="{ '--badge-color': localNode ? globalViewModel.getNodeColor(localNode.type) : '#3B82F6' }"
+        >
+          <v-icon
+            :icon="localNode ? globalViewModel.getNodeIcon(localNode.type) : 'mdi-tune-variant'"
+            size="15"
+            :color="localNode ? globalViewModel.getNodeColor(localNode.type) : '#3B82F6'"
+          />
         </div>
+        <span class="inspector-title text-truncate">{{ inspectorTitle }}</span>
       </div>
-      <v-spacer />
+
       <v-btn
         icon="mdi-close"
         variant="text"
-        size="small"
+        size="x-small"
         color="grey-lighten-1"
         title="Close Inspector"
         @click="handleClose"
       />
-    </v-toolbar>
+    </div>
 
-    <!-- Drawer Content -->
-    <div v-if="localNode" class="inspector-scroll-area pa-4">
-      <!-- Node Identification -->
-      <div class="d-flex align-center justify-space-between mb-3 pb-2 border-bottom-subtle">
-        <v-chip
-          size="x-small"
-          :color="globalViewModel.getNodeColor(localNode.type)"
-          variant="tonal"
-          class="font-weight-bold"
-        >
-          {{ nodeTypeBadge }}
-        </v-chip>
+    <!-- Drawer Content Wrapper -->
+    <div v-if="localNode" class="inspector-wrapper">
+      <!-- Scrollable Block Body (Display Block: Never Flex-Stretches Inputs!) -->
+      <div class="inspector-scroll-body">
+        <!-- Node Identification Row -->
+        <div class="d-flex align-center justify-space-between mb-3 pb-3 border-bottom-subtle">
+          <span
+            class="type-pill"
+            :style="{ '--pill-color': globalViewModel.getNodeColor(localNode.type) }"
+          >
+            {{ nodeTypeBadge }}
+          </span>
 
-        <v-chip
-          size="x-small"
-          variant="text"
-          class="font-monospace text-grey"
-          prepend-icon="mdi-content-copy"
-          title="Click to copy node ID"
-          @click="copyNodeId"
-        >
-          {{ localNode.id ? localNode.id.slice(0, 16) + '...' : '' }}
-        </v-chip>
-      </div>
-
-      <!-- Common Name / Title -->
-      <v-text-field
-        v-model="localNode.name"
-        :label="nameFieldLabel"
-        variant="outlined"
-        density="compact"
-        class="mb-3"
-        @input="isDirty = true"
-      />
-
-      <!-- AI Agent Inspector (n8n-style Hub: Sub-nodes provide Model, System Prompt & MCP Tools) -->
-      <template v-if="localNode?.type === NodeType.AGENT">
-        <div class="text-caption text-grey mb-3">
-          Węzeł <strong>AI Agent</strong> działa w architekturze portów (jak w n8n). Konfiguracja modelu LLM, instrukcji System Prompt oraz narzędzi MCP jest dostarczana przez osobne węzły podłączone do dolnych portów agenta:
+          <button
+            type="button"
+            class="id-copy-btn font-monospace d-flex align-center ga-1"
+            title="Click to copy node ID"
+            @click="copyNodeId"
+          >
+            <v-icon icon="mdi-content-copy" size="11" />
+            <span>{{ localNode.id ? localNode.id.slice(0, 16) + '...' : '' }}</span>
+          </button>
         </div>
 
-        <!-- Port 1: Model -->
-        <v-card variant="outlined" class="pa-2.5 mb-2.5 port-card port-card-model">
-          <div class="d-flex align-center justify-space-between mb-1">
-            <div class="d-flex align-center">
-              <v-icon icon="mdi-brain" size="16" color="info" class="mr-1.5" />
-              <span class="text-caption font-weight-bold">Port [model] — LLM Model *</span>
-            </div>
-            <v-chip size="x-small" :color="agentPortConnections.model ? 'info' : 'grey'" variant="tonal">
-              {{ agentPortConnections.model ? 'CONNECTED' : 'UNCONNECTED' }}
-            </v-chip>
-          </div>
-          <div v-if="agentPortConnections.model" class="d-flex align-center justify-space-between mt-1">
-            <div class="text-caption text-grey-lighten-1">
-              {{ agentPortConnections.model.name }}
-              <span class="font-monospace text-info">
-                ({{ agentPortConnections.model.modelConfig?.provider }}: {{ agentPortConnections.model.modelConfig?.modelName }})
-              </span>
-            </div>
-            <v-btn
-              size="x-small"
-              variant="tonal"
-              color="info"
-              @click="globalViewModel.openInspector(agentPortConnections.model.id)"
-            >
-              Konfiguruj
-            </v-btn>
-          </div>
-          <div v-else class="d-flex align-center justify-space-between mt-1">
-            <span class="text-caption text-grey">Brak podłączonego węzła Model</span>
-            <v-btn size="x-small" variant="tonal" color="info" prepend-icon="mdi-plus" @click="attachSubNodeToAgent(NodeType.MODEL)">
-              Podłącz Model
-            </v-btn>
-          </div>
-        </v-card>
-
-        <!-- Port 2: System Prompt -->
-        <v-card variant="outlined" class="pa-2.5 mb-2.5 port-card port-card-prompt">
-          <div class="d-flex align-center justify-space-between mb-1">
-            <div class="d-flex align-center">
-              <v-icon icon="mdi-script-text-outline" size="16" color="warning" class="mr-1.5" />
-              <span class="text-caption font-weight-bold">Port [prompt] — System Prompt</span>
-            </div>
-            <v-chip size="x-small" :color="agentPortConnections.prompts.length ? 'warning' : 'grey'" variant="tonal">
-              {{ agentPortConnections.prompts.length }} ACTIVE
-            </v-chip>
-          </div>
-          <div v-if="agentPortConnections.prompts.length > 0">
-            <div
-              v-for="pNode in agentPortConnections.prompts"
-              :key="pNode.id"
-              class="d-flex align-center justify-space-between mt-1"
-            >
-              <span class="text-caption text-truncate mr-2">{{ pNode.name }}</span>
-              <v-btn size="x-small" variant="tonal" color="warning" @click="globalViewModel.openInspector(pNode.id)">
-                Edytuj Prompt
-              </v-btn>
-            </div>
-          </div>
-          <div v-else class="d-flex align-center justify-space-between mt-1">
-            <span class="text-caption text-grey">Brak podłączonego węzła Prompt</span>
-            <v-btn size="x-small" variant="tonal" color="warning" prepend-icon="mdi-plus" @click="attachSubNodeToAgent(NodeType.PROMPT)">
-              Podłącz Prompt
-            </v-btn>
-          </div>
-        </v-card>
-
-        <!-- Port 3: MCP Tool -->
-        <v-card variant="outlined" class="pa-2.5 mb-2.5 port-card port-card-tool">
-          <div class="d-flex align-center justify-space-between mb-1">
-            <div class="d-flex align-center">
-              <v-icon icon="mdi-connection" size="16" color="success" class="mr-1.5" />
-              <span class="text-caption font-weight-bold">Port [tool] — MCP Tools</span>
-            </div>
-            <v-chip size="x-small" :color="agentPortConnections.tools.length ? 'success' : 'grey'" variant="tonal">
-              {{ agentPortConnections.tools.length }} ACTIVE
-            </v-chip>
-          </div>
-          <div v-if="agentPortConnections.tools.length > 0">
-            <div
-              v-for="tNode in agentPortConnections.tools"
-              :key="tNode.id"
-              class="d-flex align-center justify-space-between mt-1"
-            >
-              <span class="text-caption text-truncate mr-2">
-                {{ tNode.name }} ({{ tNode.mcpConfig?.enabledTools?.length || 'All' }} tools)
-              </span>
-              <v-btn size="x-small" variant="tonal" color="success" @click="globalViewModel.openInspector(tNode.id)">
-                Konfiguruj MCP
-              </v-btn>
-            </div>
-          </div>
-          <div v-else class="d-flex align-center justify-space-between mt-1">
-            <span class="text-caption text-grey">Brak podłączonego węzła MCP</span>
-            <v-btn size="x-small" variant="tonal" color="success" prepend-icon="mdi-plus" @click="attachSubNodeToAgent(NodeType.MCP_CONNECTOR)">
-              Podłącz MCP Tool
-            </v-btn>
-          </div>
-        </v-card>
-
-        <!-- Port 4: Agent Skill (SKILL.md) -->
-        <v-card variant="outlined" class="pa-2.5 mb-4 port-card port-card-skill">
-          <div class="d-flex align-center justify-space-between mb-1">
-            <div class="d-flex align-center">
-              <v-icon icon="mdi-book-open-page-variant-outline" size="16" color="cyan" class="mr-1.5" />
-              <span class="text-caption font-weight-bold">Port [skill] — Agent Skills (SKILL.md)</span>
-            </div>
-            <v-chip size="x-small" :color="agentPortConnections.skills.length ? 'cyan' : 'grey'" variant="tonal">
-              {{ agentPortConnections.skills.length }} ACTIVE
-            </v-chip>
-          </div>
-          <div v-if="agentPortConnections.skills.length > 0">
-            <div
-              v-for="sNode in agentPortConnections.skills"
-              :key="sNode.id"
-              class="d-flex align-center justify-space-between mt-1"
-            >
-              <span class="text-caption text-truncate mr-2 font-monospace">
-                {{ sNode.name }} ({{ sNode.endpoint ? `${sNode.endpoint}/SKILL.md` : 'brak' }})
-              </span>
-              <v-btn size="x-small" variant="tonal" color="cyan" @click="globalViewModel.openInspector(sNode.id)">
-                Konfiguruj Skill
-              </v-btn>
-            </div>
-          </div>
-          <div v-else class="d-flex align-center justify-space-between mt-1">
-            <span class="text-caption text-grey">Brak podłączonego węzła Skill</span>
-            <v-btn size="x-small" variant="tonal" color="cyan" prepend-icon="mdi-plus" @click="attachSubNodeToAgent(NodeType.SKILL)">
-              Podłącz Skill
-            </v-btn>
-          </div>
-        </v-card>
-      </template>
-
-      <!-- Agent Skill Node Inspector (Microsoft SKILL.md Convention) -->
-      <template v-if="localNode?.type === NodeType.SKILL">
-        <v-alert
-          type="info"
-          variant="tonal"
-          density="compact"
-          color="cyan"
-          class="text-caption mb-3"
-        >
-          Ten węzeł podpina <strong>pojedynczy skill</strong> zgodny z konwencją <code>Microsoft.Agents.AI</code> (folder <code>skills/&lt;nazwa&gt;/SKILL.md</code>) do portu <code>[skill]</code> wybranego Agenta AI.
-        </v-alert>
-
-        <v-select
-          :model-value="localNode.endpoint"
-          :items="globalViewModel.skills"
-          item-title="name"
-          item-value="name"
-          label="Wybierz Skill (folder z plikiem SKILL.md)"
-          variant="outlined"
-          density="compact"
-          prepend-inner-icon="mdi-folder-outline"
-          class="mb-3 font-monospace"
-          @update:model-value="handleSelectSkillForNode"
-        >
-          <template v-slot:item="{ props: itemProps, item }">
-            <v-list-item v-bind="itemProps" :subtitle="((item as any).raw ?? item).description">
-              <template v-slot:title>
-                <span class="font-monospace font-weight-bold">{{ ((item as any).raw ?? item).name }}/SKILL.md</span>
-              </template>
-            </v-list-item>
-          </template>
-        </v-select>
-
-        <v-text-field
-          v-model="localNode.endpoint"
-          label="Folder Skilla (skills/<folder>/SKILL.md)"
-          placeholder="np. code-review"
-          variant="outlined"
-          density="compact"
-          class="mb-3 font-monospace"
-          @input="isDirty = true"
-        />
-
-        <v-textarea
-          v-model="localNode.systemPrompt"
-          label="Opis / adnotacja skilla na węźle"
-          rows="2"
-          auto-grow
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-          @input="isDirty = true"
-        />
-
-        <v-card v-if="selectedSkillDetails" variant="outlined" color="cyan" class="pa-2.5 mb-4 bg-grey-darken-4">
-          <div class="d-flex align-center justify-space-between mb-1">
-            <span class="text-caption font-weight-bold text-cyan-lighten-2 font-monospace">
-              {{ selectedSkillDetails.path || `skills/${selectedSkillDetails.name}/SKILL.md` }}
-            </span>
-            <v-chip size="x-small" color="cyan" variant="tonal">SKILL.md</v-chip>
-          </div>
-          <div class="text-caption text-grey-lighten-1 mb-2">
-            {{ selectedSkillDetails.description }}
-          </div>
-          <pre class="pa-2 rounded bg-black text-caption font-monospace text-grey-lighten-2 overflow-x-auto" style="max-height: 180px; white-space: pre-wrap;">{{ selectedSkillDetails.content }}</pre>
-        </v-card>
-      </template>
-
-      <!-- Sticky Note Inspector -->
-      <template v-if="localNode?.type === NodeType.NOTE">
-        <v-textarea
-          v-model="localNode.systemPrompt"
-          label="Note Content"
-          placeholder="Write workflow notes, architectural guidelines, or markdown comments..."
-          variant="outlined"
-          density="compact"
-          rows="6"
-          hint="Supports multiline text and documentation."
-          persistent-hint
-          class="mb-3"
-          @input="isDirty = true"
-        />
-
-        <v-select
-          v-model="localNode.endpoint"
-          :items="noteColorOptions"
-          item-title="title"
-          item-value="value"
-          label="Sticky Note Color"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-          @update:model-value="isDirty = true"
-        />
-      </template>
-
-      <!-- Section Label Inspector -->
-      <template v-if="localNode?.type === NodeType.LABEL">
-        <v-text-field
-          v-model="localNode.systemPrompt"
-          label="Subtitle / Description (Optional)"
-          placeholder="e.g. Primary processing workflow"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-          @input="isDirty = true"
-        />
-
-        <v-row density="compact" class="mb-2">
-          <v-col cols="6">
-            <v-select
-              v-model="localNode.endpoint"
-              :items="labelSizeOptions"
-              item-title="title"
-              item-value="value"
-              label="Font Size"
-              variant="outlined"
-              density="compact"
-              @update:model-value="isDirty = true"
-            />
-          </v-col>
-          <v-col cols="6">
-            <v-select
-              v-model="localNode.modelConfig!.provider"
-              :items="labelColorOptions"
-              item-title="title"
-              item-value="value"
-              label="Accent Color"
-              variant="outlined"
-              density="compact"
-              @update:model-value="isDirty = true"
-            />
-          </v-col>
-        </v-row>
-      </template>
-
-      <!-- System Prompt Node Inspector ONLY -->
-      <template v-if="localNode?.type === NodeType.PROMPT">
-        <v-textarea
-          v-model="localNode.systemPrompt"
-          label="System Prompt / Instructions"
-          placeholder="You are an autonomous AI Agent with specialized reasoning..."
-          variant="outlined"
-          density="compact"
-          rows="6"
-          hint="Operational guidelines, persona role, and reasoning prompts."
-          persistent-hint
-          class="mb-2 font-monospace text-body-2"
-          @input="isDirty = true"
-        />
-
-        <div class="mb-3">
-          <div class="text-caption text-grey mb-1">Insert Variable:</div>
-          <div class="d-flex flex-wrap gap-1">
-            <v-chip
-              v-for="v in promptVariables"
-              :key="v"
-              size="x-small"
-              variant="tonal"
-              color="warning"
-              class="cursor-pointer font-monospace"
-              @click="insertPromptVariable(v)"
-            >
-              {{ v }}
-            </v-chip>
-          </div>
-        </div>
-      </template>
-
-      <!-- LLM Model Node Inspector ONLY -->
-      <template v-if="localNode?.type === NodeType.MODEL">
-        <v-select
-          v-model="localNode.modelConfig!.provider"
-          :items="providers"
-          label="LLM Provider"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-          @update:model-value="handleProviderChange"
-        />
-
-        <v-text-field
-          v-model="localNode.modelConfig!.modelName"
-          label="Model Name"
-          placeholder="e.g. gemma3:12b, gemini-2.5-flash-lite, gpt-4o"
-          variant="outlined"
-          density="compact"
-          class="mb-2"
-          @input="isDirty = true"
-        />
-
-        <!-- Quick Gemini Model Selector -->
-        <div v-if="localNode.modelConfig?.provider === 'Gemini'" class="mb-3">
-          <div class="text-caption text-grey mb-1">Dostępne modele Google Gemini API (kliknij, aby wybrać):</div>
-          <div class="d-flex flex-column gap-1">
-            <v-chip
-              v-for="gm in geminiModels"
-              :key="gm.name"
-              size="x-small"
-              variant="tonal"
-              :color="localNode.modelConfig.modelName === gm.name ? 'info' : 'grey'"
-              class="cursor-pointer justify-start"
-              @click="localNode.modelConfig.modelName = gm.name; isDirty = true"
-            >
-              {{ gm.label }}
-            </v-chip>
-          </div>
-        </div>
-
-        <v-text-field
-          v-if="localNode.modelConfig?.provider !== 'Ollama'"
-          v-model="localNode.mcpConfig!.authToken"
-          label="API Key (Gemini / OpenAI - Optional)"
-          placeholder="Paste Gemini or OpenAI API key (overrides server env)"
-          type="password"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-          @input="isDirty = true"
-        />
-
-        <v-text-field
-          v-model="localNode.endpoint"
-          label="Custom Endpoint URL (Optional)"
-          placeholder="e.g. http://localhost:11434 or https://generativelanguage.googleapis.com/v1beta/openai/"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-          @input="isDirty = true"
-        />
-
-        <div class="mb-4">
-          <div class="d-flex justify-space-between text-caption text-grey mb-1">
-            <span>Sampling Temperature</span>
-            <span class="font-weight-bold text-white">{{ localNode.modelConfig?.temperature }}</span>
-          </div>
-          <v-slider
-            v-model="localNode.modelConfig!.temperature"
-            min="0"
-            max="2"
-            step="0.05"
-            thumb-label
-            color="primary"
-            @update:model-value="isDirty = true"
+        <!-- Common Name / Title -->
+        <div class="as-field-group">
+          <label class="as-field-label">{{ nameFieldLabel }}</label>
+          <input
+            v-model="localNode.name"
+            type="text"
+            class="as-input"
+            placeholder="Enter node name..."
+            @input="isDirty = true"
           />
         </div>
-      </template>
 
-      <!-- MCP Connector Node Inspector ONLY -->
-      <template v-if="localNode?.type === NodeType.MCP_CONNECTOR">
-        <v-text-field
-          v-model="localNode!.mcpConfig!.serverUrl"
-          label="MCP Server URL"
-          placeholder="e.g. builtin://tools or http://localhost:8000/mcp"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-          @input="isDirty = true"
-        />
-
-        <v-text-field
-          v-model="localNode!.mcpConfig!.authToken"
-          label="MCP Auth Token (Optional)"
-          type="password"
-          variant="outlined"
-          density="compact"
-          class="mb-3"
-          @input="isDirty = true"
-        />
-
-        <v-text-field
-          v-model="enabledToolsInput"
-          label="Enabled Tools (comma-separated)"
-          placeholder="e.g. calculate_expression, get_system_info, get_current_time"
-          variant="outlined"
-          density="compact"
-          hint="Leave blank to grant all available MCP tools."
-          persistent-hint
-          class="mb-2"
-          @input="isDirty = true"
-        />
-
-        <!-- Quick MCP tool chips -->
-        <div class="mb-4">
-          <div class="text-caption text-grey mb-1">Quick Tools (click to toggle):</div>
-          <div class="d-flex flex-wrap gap-1">
-            <v-chip
-              v-for="tool in commonMcpTools"
-              :key="tool"
-              size="x-small"
-              variant="tonal"
-              :color="enabledToolsInput.includes(tool) ? 'success' : 'grey'"
-              class="cursor-pointer"
-              @click="toggleTool(tool)"
-            >
-              {{ tool }}
-            </v-chip>
+        <!-- =============================================================== -->
+        <!-- 1. AI AGENT HUB INSPECTOR                                       -->
+        <!-- =============================================================== -->
+        <template v-if="localNode?.type === NodeType.AGENT">
+          <div class="info-callout mb-3">
+            Węzeł <strong>AI Agent</strong> korzysta z architektury portów. Podłącz lub skonfiguruj moduły poniżej:
           </div>
-        </div>
-      </template>
 
-      <!-- Position Info -->
-      <div class="text-caption text-grey mb-4 d-flex align-center justify-space-between">
-        <span>Position: ({{ Math.round(localNode?.position?.x ?? 0) }}, {{ Math.round(localNode?.position?.y ?? 0) }})</span>
-        <span>Flow: {{ localNode?.flowId || 'default-flow' }}</span>
+          <div class="ports-stack">
+            <!-- Port 1: Model -->
+            <div class="port-card" style="--port-accent: #3B82F6;">
+              <div class="d-flex align-center justify-space-between mb-2">
+                <div class="d-flex align-center ga-2">
+                  <v-icon icon="mdi-brain" size="15" color="#60A5FA" />
+                  <span class="port-card-title">Port [model] — LLM Model *</span>
+                </div>
+                <span class="port-status-badge" :class="agentPortConnections.model ? 'badge-blue' : 'badge-muted'">
+                  {{ agentPortConnections.model ? 'CONNECTED' : 'UNCONNECTED' }}
+                </span>
+              </div>
+
+              <div v-if="agentPortConnections.model" class="d-flex align-center justify-space-between ga-2">
+                <div class="overflow-hidden">
+                  <div class="port-node-name text-truncate">{{ agentPortConnections.model.name }}</div>
+                  <div class="port-node-meta font-monospace text-truncate" style="color: #60A5FA;">
+                    {{ agentPortConnections.model.modelConfig?.provider }}: {{ agentPortConnections.model.modelConfig?.modelName }}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="port-action-btn btn-blue flex-shrink-0"
+                  @click="globalViewModel.openInspector(agentPortConnections.model.id)"
+                >
+                  Konfiguruj
+                </button>
+              </div>
+              <div v-else class="d-flex align-center justify-space-between ga-2">
+                <span class="port-empty-text">Brak podłączonego modelu</span>
+                <button
+                  type="button"
+                  class="port-action-btn btn-blue flex-shrink-0"
+                  @click="attachSubNodeToAgent(NodeType.MODEL)"
+                >
+                  + Podłącz Model
+                </button>
+              </div>
+            </div>
+
+            <!-- Port 2: System Prompt -->
+            <div class="port-card" style="--port-accent: #F59E0B;">
+              <div class="d-flex align-center justify-space-between mb-2">
+                <div class="d-flex align-center ga-2">
+                  <v-icon icon="mdi-script-text-outline" size="15" color="#FBBF24" />
+                  <span class="port-card-title">Port [prompt] — System Prompt</span>
+                </div>
+                <span class="port-status-badge" :class="agentPortConnections.prompts.length ? 'badge-amber' : 'badge-muted'">
+                  {{ agentPortConnections.prompts.length }} ACTIVE
+                </span>
+              </div>
+
+              <div v-if="agentPortConnections.prompts.length > 0" class="port-items-list">
+                <div
+                  v-for="pNode in agentPortConnections.prompts"
+                  :key="pNode.id"
+                  class="d-flex align-center justify-space-between ga-2"
+                >
+                  <span class="port-node-name text-truncate">{{ pNode.name }}</span>
+                  <button
+                    type="button"
+                    class="port-action-btn btn-amber flex-shrink-0"
+                    @click="globalViewModel.openInspector(pNode.id)"
+                  >
+                    Edytuj Prompt
+                  </button>
+                </div>
+              </div>
+              <div v-else class="d-flex align-center justify-space-between ga-2">
+                <span class="port-empty-text">Brak podłączonego promptu</span>
+                <button
+                  type="button"
+                  class="port-action-btn btn-amber flex-shrink-0"
+                  @click="attachSubNodeToAgent(NodeType.PROMPT)"
+                >
+                  + Podłącz Prompt
+                </button>
+              </div>
+            </div>
+
+            <!-- Port 3: MCP Tool -->
+            <div class="port-card" style="--port-accent: #10B981;">
+              <div class="d-flex align-center justify-space-between mb-2">
+                <div class="d-flex align-center ga-2">
+                  <v-icon icon="mdi-connection" size="15" color="#34D399" />
+                  <span class="port-card-title">Port [tool] — MCP Tools</span>
+                </div>
+                <span class="port-status-badge" :class="agentPortConnections.tools.length ? 'badge-green' : 'badge-muted'">
+                  {{ agentPortConnections.tools.length }} ACTIVE
+                </span>
+              </div>
+
+              <div v-if="agentPortConnections.tools.length > 0" class="port-items-list">
+                <div
+                  v-for="tNode in agentPortConnections.tools"
+                  :key="tNode.id"
+                  class="d-flex align-center justify-space-between ga-2"
+                >
+                  <div class="overflow-hidden">
+                    <div class="port-node-name text-truncate">{{ tNode.name }}</div>
+                    <div class="port-node-meta font-monospace" style="color: #34D399;">
+                      {{ tNode.mcpConfig?.enabledTools?.length || 'All' }} tools enabled
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="port-action-btn btn-green flex-shrink-0"
+                    @click="globalViewModel.openInspector(tNode.id)"
+                  >
+                    Konfiguruj MCP
+                  </button>
+                </div>
+              </div>
+              <div v-else class="d-flex align-center justify-space-between ga-2">
+                <span class="port-empty-text">Brak podłączonego węzła MCP</span>
+                <button
+                  type="button"
+                  class="port-action-btn btn-green flex-shrink-0"
+                  @click="attachSubNodeToAgent(NodeType.MCP_CONNECTOR)"
+                >
+                  + Podłącz MCP
+                </button>
+              </div>
+            </div>
+
+            <!-- Port 4: Agent Skill (SKILL.md) -->
+            <div class="port-card" style="--port-accent: #06B6D4;">
+              <div class="d-flex align-center justify-space-between mb-2">
+                <div class="d-flex align-center ga-2">
+                  <v-icon icon="mdi-book-open-page-variant-outline" size="15" color="#22D3EE" />
+                  <span class="port-card-title">Port [skill] — Agent Skills</span>
+                </div>
+                <span class="port-status-badge" :class="agentPortConnections.skills.length ? 'badge-cyan' : 'badge-muted'">
+                  {{ agentPortConnections.skills.length }} ACTIVE
+                </span>
+              </div>
+
+              <div v-if="agentPortConnections.skills.length > 0" class="port-items-list">
+                <div
+                  v-for="sNode in agentPortConnections.skills"
+                  :key="sNode.id"
+                  class="d-flex align-center justify-space-between ga-2"
+                >
+                  <div class="overflow-hidden">
+                    <div class="port-node-name text-truncate">{{ sNode.name }}</div>
+                    <div class="port-node-meta font-monospace text-truncate" style="color: #22D3EE;">
+                      {{ sNode.endpoint ? `${sNode.endpoint}/SKILL.md` : 'SKILL.md' }}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="port-action-btn btn-cyan flex-shrink-0"
+                    @click="globalViewModel.openInspector(sNode.id)"
+                  >
+                    Konfiguruj
+                  </button>
+                </div>
+              </div>
+              <div v-else class="d-flex align-center justify-space-between ga-2">
+                <span class="port-empty-text">Brak podłączonego węzła Skill</span>
+                <button
+                  type="button"
+                  class="port-action-btn btn-cyan flex-shrink-0"
+                  @click="attachSubNodeToAgent(NodeType.SKILL)"
+                >
+                  + Podłącz Skill
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- =============================================================== -->
+        <!-- 2. AGENT SKILL NODE INSPECTOR                                   -->
+        <!-- =============================================================== -->
+        <template v-if="localNode?.type === NodeType.SKILL">
+          <div class="info-callout info-callout-cyan mb-3">
+            Ten węzeł podpina skill zgodny z konwencją <code>Microsoft.Agents.AI</code> (plik <code>skills/&lt;nazwa&gt;/SKILL.md</code>) do portu <code>[skill]</code> Agenta AI.
+          </div>
+
+          <div class="as-field-group">
+            <label class="as-field-label">Wybierz Skill (folder SKILL.md)</label>
+            <select
+              :value="localNode.endpoint"
+              class="as-select font-monospace"
+              @change="handleSelectSkillForNode"
+            >
+              <option value="" disabled>-- Wybierz skill --</option>
+              <option v-for="s in globalViewModel.skills" :key="s.name" :value="s.name">
+                {{ s.name }}/SKILL.md
+              </option>
+            </select>
+          </div>
+
+          <div class="as-field-group">
+            <label class="as-field-label">Folder Skilla (skills/&lt;folder&gt;/SKILL.md)</label>
+            <input
+              v-model="localNode.endpoint"
+              type="text"
+              class="as-input font-monospace"
+              placeholder="np. code-review"
+              @input="isDirty = true"
+            />
+          </div>
+
+          <div class="as-field-group">
+            <label class="as-field-label">Opis / adnotacja skilla na węźle</label>
+            <textarea
+              v-model="localNode.systemPrompt"
+              rows="2"
+              class="as-textarea"
+              placeholder="Opis zastosowania skilla..."
+              @input="isDirty = true"
+            />
+          </div>
+
+          <div v-if="selectedSkillDetails" class="skill-detail-card">
+            <div class="d-flex align-center justify-space-between mb-2">
+              <span class="text-caption font-weight-bold font-monospace" style="color: #67E8F9;">
+                {{ selectedSkillDetails.path || `skills/${selectedSkillDetails.name}/SKILL.md` }}
+              </span>
+              <span class="port-status-badge badge-cyan">SKILL.md</span>
+            </div>
+            <div class="text-caption mb-2" style="color: #94A3B8; line-height: 1.4;">
+              {{ selectedSkillDetails.description }}
+            </div>
+            <pre class="skill-code-pre pa-2 rounded text-caption font-monospace overflow-x-auto">{{ selectedSkillDetails.content }}</pre>
+          </div>
+        </template>
+
+        <!-- =============================================================== -->
+        <!-- 3. STICKY NOTE INSPECTOR                                        -->
+        <!-- =============================================================== -->
+        <template v-if="localNode?.type === NodeType.NOTE">
+          <div class="as-field-group">
+            <label class="as-field-label">Note Content</label>
+            <textarea
+              v-model="localNode.systemPrompt"
+              rows="6"
+              class="as-textarea"
+              placeholder="Write workflow notes, architectural guidelines, or markdown comments..."
+              @input="isDirty = true"
+            />
+            <div class="as-field-hint">Supports multiline text and documentation.</div>
+          </div>
+
+          <div class="as-field-group">
+            <label class="as-field-label">Sticky Note Color</label>
+            <select
+              v-model="localNode.endpoint"
+              class="as-select"
+              @change="isDirty = true"
+            >
+              <option v-for="opt in noteColorOptions" :key="opt.value" :value="opt.value">
+                {{ opt.title }}
+              </option>
+            </select>
+          </div>
+        </template>
+
+        <!-- =============================================================== -->
+        <!-- 4. SECTION LABEL INSPECTOR                                      -->
+        <!-- =============================================================== -->
+        <template v-if="localNode?.type === NodeType.LABEL">
+          <div class="as-field-group">
+            <label class="as-field-label">Subtitle / Description (Optional)</label>
+            <input
+              v-model="localNode.systemPrompt"
+              type="text"
+              class="as-input"
+              placeholder="e.g. Primary processing workflow"
+              @input="isDirty = true"
+            />
+          </div>
+
+          <div class="two-col-grid">
+            <div class="as-field-group">
+              <label class="as-field-label">Font Size</label>
+              <select v-model="localNode.endpoint" class="as-select" @change="isDirty = true">
+                <option v-for="opt in labelSizeOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.title }}
+                </option>
+              </select>
+            </div>
+            <div class="as-field-group">
+              <label class="as-field-label">Accent Color</label>
+              <select v-model="localNode.modelConfig!.provider" class="as-select" @change="isDirty = true">
+                <option v-for="opt in labelColorOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.title }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </template>
+
+        <!-- =============================================================== -->
+        <!-- 5. SYSTEM PROMPT INSPECTOR                                      -->
+        <!-- =============================================================== -->
+        <template v-if="localNode?.type === NodeType.PROMPT">
+          <div class="as-field-group">
+            <label class="as-field-label">System Prompt / Instructions</label>
+            <textarea
+              v-model="localNode.systemPrompt"
+              rows="7"
+              class="as-textarea font-monospace"
+              placeholder="You are an autonomous AI Agent with specialized reasoning..."
+              @input="isDirty = true"
+            />
+            <div class="as-field-hint">Operational guidelines, persona role, and reasoning prompts.</div>
+          </div>
+
+          <div class="as-field-group">
+            <label class="as-field-label">Insert Template Variable (click to append):</label>
+            <div class="chips-wrap-grid">
+              <button
+                v-for="v in promptVariables"
+                :key="v"
+                type="button"
+                class="var-chip-btn font-monospace"
+                @click="insertPromptVariable(v)"
+              >
+                {{ v }}
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <!-- =============================================================== -->
+        <!-- 6. LLM MODEL INSPECTOR                                          -->
+        <!-- =============================================================== -->
+        <template v-if="localNode?.type === NodeType.MODEL">
+          <div class="as-field-group">
+            <label class="as-field-label">LLM Provider</label>
+            <select
+              :value="localNode.modelConfig!.provider"
+              class="as-select"
+              @change="handleProviderSelectChange"
+            >
+              <option v-for="p in providers" :key="p" :value="p">{{ p }}</option>
+            </select>
+          </div>
+
+          <div class="as-field-group">
+            <label class="as-field-label">Model Name</label>
+            <input
+              v-model="localNode.modelConfig!.modelName"
+              type="text"
+              class="as-input font-monospace"
+              placeholder="e.g. gemma3:12b, gemini-3.5-flash-lite, gpt-4o"
+              @input="isDirty = true"
+            />
+          </div>
+
+          <!-- Structured, Clean Gemini Model Selector -->
+          <div v-if="localNode.modelConfig?.provider === 'Gemini'" class="as-field-group">
+            <label class="as-field-label">Dostępne modele Google Gemini API:</label>
+            <div class="gemini-model-list">
+              <button
+                v-for="gm in geminiModels"
+                :key="gm.name"
+                type="button"
+                class="gemini-model-row"
+                :class="{ 'gemini-model-row-active': localNode.modelConfig.modelName === gm.name }"
+                @click="localNode.modelConfig.modelName = gm.name; isDirty = true"
+              >
+                <div class="d-flex align-center ga-2 overflow-hidden">
+                  <v-icon
+                    :icon="localNode.modelConfig.modelName === gm.name ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                    size="13"
+                    :color="localNode.modelConfig.modelName === gm.name ? '#60A5FA' : '#64748B'"
+                  />
+                  <span class="gemini-model-name font-monospace text-truncate">{{ gm.name }}</span>
+                </div>
+                <span class="gemini-model-desc flex-shrink-0">{{ gm.desc }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div v-if="localNode.modelConfig?.provider !== 'Ollama'" class="as-field-group">
+            <label class="as-field-label">API Key (Gemini / OpenAI — Optional)</label>
+            <input
+              v-model="localNode.mcpConfig!.authToken"
+              type="password"
+              class="as-input font-monospace"
+              placeholder="Paste API key (overrides server env)"
+              @input="isDirty = true"
+            />
+          </div>
+
+          <div class="as-field-group">
+            <label class="as-field-label">Custom Endpoint URL (Optional)</label>
+            <input
+              v-model="localNode.endpoint"
+              type="text"
+              class="as-input font-monospace"
+              placeholder="e.g. http://localhost:11434"
+              @input="isDirty = true"
+            />
+          </div>
+
+          <div class="temp-control-box">
+            <div class="d-flex align-center justify-space-between mb-2">
+              <span class="as-field-label mb-0">Sampling Temperature</span>
+              <span class="temp-value-badge font-monospace">{{ formattedTemperature }}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="2"
+              step="0.05"
+              :value="localNode.modelConfig!.temperature"
+              class="as-range-slider"
+              @input="handleTemperatureInput"
+            />
+            <div class="d-flex justify-space-between font-monospace mt-1" style="font-size: 10px; color: #64748B;">
+              <span>0.00 (Precise)</span>
+              <span>1.00 (Balanced)</span>
+              <span>2.00 (Creative)</span>
+            </div>
+          </div>
+        </template>
+
+        <!-- =============================================================== -->
+        <!-- 7. MCP CONNECTOR INSPECTOR                                      -->
+        <!-- =============================================================== -->
+        <template v-if="localNode?.type === NodeType.MCP_CONNECTOR">
+          <div class="as-field-group">
+            <label class="as-field-label">MCP Server URL</label>
+            <input
+              v-model="localNode!.mcpConfig!.serverUrl"
+              type="text"
+              class="as-input font-monospace"
+              placeholder="e.g. builtin://tools or http://localhost:8000/mcp"
+              @input="isDirty = true"
+            />
+          </div>
+
+          <div class="as-field-group">
+            <label class="as-field-label">MCP Auth Token (Optional)</label>
+            <input
+              v-model="localNode!.mcpConfig!.authToken"
+              type="password"
+              class="as-input"
+              placeholder="Optional bearer token..."
+              @input="isDirty = true"
+            />
+          </div>
+
+          <div class="as-field-group">
+            <label class="as-field-label">Enabled Tools (comma-separated)</label>
+            <input
+              v-model="enabledToolsInput"
+              type="text"
+              class="as-input font-monospace"
+              placeholder="e.g. calculate_expression, get_system_info"
+              @input="isDirty = true"
+            />
+            <div class="as-field-hint">Leave blank to grant all available MCP tools.</div>
+          </div>
+
+          <!-- Quick MCP tool toggles -->
+          <div class="as-field-group">
+            <label class="as-field-label">Quick Tools (click to toggle):</label>
+            <div class="chips-wrap-grid">
+              <button
+                v-for="tool in commonMcpTools"
+                :key="tool"
+                type="button"
+                class="tool-toggle-btn font-monospace"
+                :class="{ 'tool-toggle-btn-active': isToolActive(tool) }"
+                @click="toggleTool(tool)"
+              >
+                <v-icon
+                  :icon="isToolActive(tool) ? 'mdi-check' : 'mdi-plus'"
+                  size="11"
+                />
+                <span>{{ tool }}</span>
+              </button>
+            </div>
+          </div>
+        </template>
       </div>
 
-      <!-- Action Footer -->
-      <div class="d-flex align-center gap-2 pt-2 border-top-subtle">
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="small"
-          prepend-icon="mdi-content-save-outline"
-          class="flex-grow-1"
-          @click="handleSave"
-        >
-          Save Changes
-        </v-btn>
+      <!-- Sticky Bottom Footer (Always Visible, Cleanly Separated) -->
+      <div class="inspector-footer">
+        <div class="meta-footer-bar d-flex align-center justify-space-between font-monospace mb-2">
+          <span>Pos: ({{ Math.round(localNode?.position?.x ?? 0) }}, {{ Math.round(localNode?.position?.y ?? 0) }})</span>
+          <span>Flow: {{ localNode?.flowId || 'default-flow' }}</span>
+        </div>
 
-        <v-btn
-          color="error"
-          variant="tonal"
-          size="small"
-          icon="mdi-delete-outline"
-          title="Delete Node"
-          @click="handleDelete"
-        />
+        <div class="footer-actions-row">
+          <button type="button" class="save-btn-solid" @click="handleSave">
+            <v-icon icon="mdi-content-save-outline" size="15" />
+            <span>Save Changes</span>
+          </button>
+
+          <button type="button" class="delete-btn-solid" title="Delete Node" @click="handleDelete">
+            <v-icon icon="mdi-delete-outline" size="16" />
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div v-else class="empty-inspector-state pa-6 d-flex flex-column align-center justify-center fill-height text-center">
-      <v-avatar size="56" color="rgba(255, 255, 255, 0.05)" class="mb-3">
-        <v-icon icon="mdi-cursor-default-click-outline" size="28" color="grey" />
-      </v-avatar>
-      <div class="text-subtitle-2 font-weight-bold text-grey-lighten-1 mb-1">
+    <div v-else class="empty-inspector-state pa-6 d-flex flex-column align-center justify-center text-center">
+      <div class="empty-icon-box mb-3">
+        <v-icon icon="mdi-cursor-default-click-outline" size="24" color="#64748B" />
+      </div>
+      <div class="text-subtitle-2 font-weight-bold text-white mb-1">
         No Node Selected
       </div>
-      <p class="text-caption text-grey">
-        Click on any agent, model, prompt, connector, note, or label on the canvas to inspect and configure its parameters.
+      <p class="text-caption" style="color: #64748B; max-width: 240px;">
+        Click on any agent, model, prompt, connector, skill, note, or label on the canvas to configure its parameters.
       </p>
     </div>
   </v-navigation-drawer>
@@ -928,50 +1000,454 @@ function copyNodeId() {
 
 <style scoped>
 .app-inspector-drawer {
-  background-color: #0b1220 !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background-color: #111827 !important;
+  border-left: 1px solid #1E293B !important;
   color: #E2E8F0;
   z-index: 20;
 }
 
-.border-bottom-subtle {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+.inspector-header {
+  height: 44px;
+  background-color: #0D131F;
+  border-bottom: 1px solid #1E293B;
 }
 
-.border-top-subtle {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.inspector-icon-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background-color: #161F30;
+  border: 1px solid #283548;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.inspector-scroll-area {
+.inspector-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #F8FAFC;
+  letter-spacing: -0.01em;
+}
+
+.inspector-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 44px);
+}
+
+.inspector-scroll-body {
+  flex: 1 1 auto;
   overflow-y: auto;
-  height: calc(100% - 48px);
+  padding: 14px 16px;
+  display: block;
 }
 
-.cursor-pointer {
+.inspector-footer {
+  flex: 0 0 auto;
+  padding: 10px 16px 12px;
+  background-color: #0D131F;
+  border-top: 1px solid #1E293B;
+}
+
+.border-bottom-subtle {
+  border-bottom: 1px solid #1E293B;
+}
+
+.type-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: #E2E8F0;
+  background-color: #161F30;
+  border: 1px solid #283548;
+  border-left: 3px solid var(--pill-color, #3B82F6);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.id-copy-btn {
+  font-size: 11px;
+  color: #64748B;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 2px 6px;
+  border-radius: 4px;
   cursor: pointer;
+  transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.id-copy-btn:hover {
+  color: #E2E8F0;
+  background-color: #161F30;
+  border-color: #283548;
+}
+
+/* Info Callouts */
+.info-callout {
+  background-color: #141C2B;
+  border: 1px solid #1E293B;
+  border-left: 3px solid #E63946;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #94A3B8;
+}
+
+.info-callout-cyan {
+  border-left-color: #06B6D4;
+}
+
+.info-callout code {
+  color: #67E8F9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Port Cards Stack (AI Agent Hub Inspector) */
+.ports-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .port-card {
-  background-color: rgba(17, 24, 39, 0.7);
+  background-color: #151E2E;
+  border: 1px solid #24324B;
+  border-left: 3px solid var(--port-accent, #3B82F6);
+  border-radius: 7px;
+  padding: 10px 12px;
 }
 
-.port-card-model {
-  border-color: rgba(33, 150, 243, 0.35) !important;
+.port-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.port-card-prompt {
-  border-color: rgba(251, 140, 0, 0.35) !important;
+.port-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #F1F5F9;
 }
 
-.port-card-tool {
-  border-color: rgba(76, 175, 80, 0.35) !important;
+.port-node-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #E2E8F0;
 }
 
-.port-card-skill {
-  border-color: rgba(6, 182, 212, 0.35) !important;
+.port-node-meta {
+  font-size: 10.5px;
+  line-height: 1.3;
+}
+
+.port-empty-text {
+  font-size: 11.5px;
+  color: #64748B;
+}
+
+.port-status-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+.badge-muted {
+  background-color: #0D131F;
+  border: 1px solid #1E293B;
+  color: #64748B;
+}
+
+.badge-blue {
+  background-color: #132542;
+  border: 1px solid #1D4ED8;
+  color: #93C5FD;
+}
+
+.badge-amber {
+  background-color: #291D0E;
+  border: 1px solid #B45309;
+  color: #FCD34D;
+}
+
+.badge-green {
+  background-color: #0D281E;
+  border: 1px solid #15803D;
+  color: #6EE7B7;
+}
+
+.badge-cyan {
+  background-color: #0F2937;
+  border: 1px solid #0E7490;
+  color: #67E8F9;
+}
+
+.port-action-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.btn-blue {
+  background-color: #162B4D;
+  border: 1px solid #2563EB;
+  color: #93C5FD;
+}
+.btn-blue:hover {
+  background-color: #1E3A66;
+}
+
+.btn-amber {
+  background-color: #2B1F10;
+  border: 1px solid #D97706;
+  color: #FCD34D;
+}
+.btn-amber:hover {
+  background-color: #3B2A14;
+}
+
+.btn-green {
+  background-color: #112E22;
+  border: 1px solid #059669;
+  color: #6EE7B7;
+}
+.btn-green:hover {
+  background-color: #163E2E;
+}
+
+.btn-cyan {
+  background-color: #122B39;
+  border: 1px solid #0891B2;
+  color: #67E8F9;
+}
+.btn-cyan:hover {
+  background-color: #173A4C;
+}
+
+.two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Gemini Model Selector List */
+.gemini-model-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 195px;
+  overflow-y: auto;
+  background-color: #0D131F;
+  border: 1px solid #24324B;
+  border-radius: 6px;
+  padding: 5px;
+}
+
+.gemini-model-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 5px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.gemini-model-row:hover {
+  background-color: #161F30;
+}
+
+.gemini-model-row-active {
+  background-color: #152642 !important;
+  border-color: #2563EB !important;
+}
+
+.gemini-model-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #E2E8F0;
+}
+
+.gemini-model-row-active .gemini-model-name {
+  color: #93C5FD;
+}
+
+.gemini-model-desc {
+  font-size: 10.5px;
+  color: #64748B;
+}
+
+/* Temperature Control Box */
+.temp-control-box {
+  background-color: #141C2B;
+  border: 1px solid #1E293B;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.temp-value-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #93C5FD;
+  background-color: #0D131F;
+  border: 1px solid #24324B;
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+
+.as-range-slider {
+  width: 100%;
+  height: 5px;
+  accent-color: #3B82F6;
+  background-color: #0D131F;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* Chips Grid */
+.chips-wrap-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.var-chip-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: #FCD34D;
+  background-color: #241B0E;
+  border: 1px solid #78350F;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.var-chip-btn:hover {
+  background-color: #332512;
+  border-color: #B45309;
+}
+
+.tool-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #94A3B8;
+  background-color: #141C2B;
+  border: 1px solid #24324B;
+  padding: 4px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.tool-toggle-btn:hover {
+  background-color: #1A2538;
+  color: #E2E8F0;
+  border-color: #334155;
+}
+
+.tool-toggle-btn-active {
+  background-color: #0E291E !important;
+  border-color: #15803D !important;
+  color: #4ADE80 !important;
+  font-weight: 600;
+}
+
+/* Skill Detail Card */
+.skill-detail-card {
+  background-color: #141C2B;
+  border: 1px solid #24324B;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.skill-code-pre {
+  background-color: #090D16;
+  border: 1px solid #1E293B;
+  color: #CBD5E1;
+  max-height: 180px;
+  white-space: pre-wrap;
+}
+
+/* Footer Controls */
+.meta-footer-bar {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.footer-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.save-btn-solid {
+  flex: 1;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: #1D4ED8;
+  border: 1px solid #2563EB;
+  color: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.save-btn-solid:hover {
+  background-color: #2563EB;
+  border-color: #3B82F6;
+}
+
+.delete-btn-solid {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #2A1215;
+  border: 1px solid #7F1D1D;
+  color: #F87171;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.delete-btn-solid:hover {
+  background-color: #3B161B;
+  border-color: #991B1B;
 }
 
 .empty-inspector-state {
-  height: calc(100% - 48px);
+  height: calc(100% - 44px);
+}
+
+.empty-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background-color: #161F30;
+  border: 1px solid #26334D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

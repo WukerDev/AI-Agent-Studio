@@ -15,10 +15,10 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <v-navigation-drawer permanent rail elevation="0" class="app-sidebar-rail">
+  <v-navigation-drawer permanent rail rail-width="52" elevation="0" class="app-sidebar-rail">
     <div class="d-flex flex-column justify-space-between fill-height py-3">
       <div class="d-flex flex-column align-center ga-2">
-        <v-tooltip location="right">
+        <v-tooltip location="right" :open-delay="250">
           <template v-slot:activator="{ props: tooltipProps }">
             <v-btn
               icon
@@ -35,7 +35,7 @@ const { t } = useI18n()
           <span>{{ t('layout.sidebar.files') }}</span>
         </v-tooltip>
 
-        <v-tooltip location="right">
+        <v-tooltip location="right" :open-delay="250">
           <template v-slot:activator="{ props: tooltipProps }">
             <v-btn
               icon
@@ -52,7 +52,7 @@ const { t } = useI18n()
           <span>{{ t('layout.sidebar.agents') }}</span>
         </v-tooltip>
 
-        <v-tooltip location="right">
+        <v-tooltip location="right" :open-delay="250">
           <template v-slot:activator="{ props: tooltipProps }">
             <v-btn
               icon
@@ -69,7 +69,7 @@ const { t } = useI18n()
           <span>{{ t('layout.sidebar.skills') }}</span>
         </v-tooltip>
 
-        <v-tooltip location="right">
+        <v-tooltip location="right" :open-delay="250">
           <template v-slot:activator="{ props: tooltipProps }">
             <v-btn
               icon
@@ -88,7 +88,7 @@ const { t } = useI18n()
       </div>
 
       <div class="d-flex flex-column align-center ga-2">
-        <v-tooltip location="right">
+        <v-tooltip location="right" :open-delay="250">
           <template v-slot:activator="{ props: tooltipProps }">
             <v-btn
               icon
@@ -105,7 +105,7 @@ const { t } = useI18n()
           <span>{{ t('layout.sidebar.console') }}</span>
         </v-tooltip>
 
-        <v-tooltip location="right">
+        <v-tooltip location="right" :open-delay="250">
           <template v-slot:activator="{ props: tooltipProps }">
             <v-btn
               icon
@@ -128,22 +128,27 @@ const { t } = useI18n()
 
 <style scoped>
 .app-sidebar-rail {
-  background: rgba(11, 17, 32, 0.95) !important;
-  backdrop-filter: blur(10px);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #0D131F !important;
+  border-right: 1px solid #1E293B !important;
 }
+
 .rail-icon-btn {
-  color: #94A3B8;
-  border-radius: 8px;
-  transition: all 0.15s ease;
+  color: #64748B;
+  border-radius: 6px;
+  width: 36px !important;
+  height: 36px !important;
+  border: 1px solid transparent;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
+
 .rail-icon-btn:hover {
-  color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.06);
+  color: #E2E8F0;
+  background-color: #161F30;
 }
+
 .active-rail-btn {
-  background: rgba(230, 57, 70, 0.18) !important;
-  color: #E63946 !important;
-  border: 1px solid rgba(230, 57, 70, 0.3);
+  background-color: #1B263B !important;
+  color: #F8FAFC !important;
+  border-color: #334155 !important;
 }
 </style>

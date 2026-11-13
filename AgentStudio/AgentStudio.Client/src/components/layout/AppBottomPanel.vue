@@ -63,66 +63,65 @@ function getLogLevelColor(level: string): string {
 
 <template>
   <v-navigation-drawer
-      v-model="isOpen"
-      location="bottom"
-      temporary
-      elevation="6"
-      height="300"
-      class="app-bottom-drawer"
+    v-model="isOpen"
+    location="bottom"
+    temporary
+    elevation="0"
+    height="290"
+    class="app-bottom-drawer"
   >
-    <v-toolbar density="compact" color="surface" class="border-b px-2">
-      <v-tabs v-model="activeTab" density="compact" color="primary">
-        <v-tab value="console">
-          <v-badge
-            v-if="globalViewModel.executionLogs.length > 0"
-            color="primary"
-            :content="globalViewModel.executionLogs.length"
-            inline
-          >
-            {{ t('layout.bottomPanel.console') }}
-          </v-badge>
-          <span v-else>{{ t('layout.bottomPanel.console') }}</span>
+    <div class="bottom-drawer-header d-flex align-center justify-space-between px-3">
+      <v-tabs v-model="activeTab" density="compact" color="info">
+        <v-tab value="console" class="text-caption font-weight-bold">
+          <v-icon icon="mdi-console-line" size="15" class="mr-1.5" />
+          <span>{{ t('layout.bottomPanel.console') }}</span>
+          <span v-if="globalViewModel.executionLogs.length > 0" class="tab-count-pill ml-2">
+            {{ globalViewModel.executionLogs.length }}
+          </span>
         </v-tab>
-        <v-tab value="output">{{ t('layout.bottomPanel.output') }}</v-tab>
+        <v-tab value="output" class="text-caption font-weight-bold">
+          <v-icon icon="mdi-text-box-outline" size="15" class="mr-1.5" />
+          <span>{{ t('layout.bottomPanel.output') }}</span>
+        </v-tab>
       </v-tabs>
 
-      <v-spacer></v-spacer>
-
-      <v-btn
-        v-if="activeTab === 'console'"
-        icon="mdi-broom"
-        variant="text"
-        size="x-small"
-        class="mr-1 text-grey"
-        title="Wyczyść konsolę"
-        @click="clearLogs"
-      />
-      <v-btn
-        v-if="activeTab === 'output'"
-        icon="mdi-content-copy"
-        variant="text"
-        size="x-small"
-        class="mr-1 text-grey"
-        title="Kopiuj wynik"
-        @click="copyOutput"
-      />
-      <v-btn icon="mdi-close" variant="text" size="small" @click="closePanel"></v-btn>
-    </v-toolbar>
+      <div class="d-flex align-center ga-1">
+        <v-btn
+          v-if="activeTab === 'console'"
+          icon="mdi-broom"
+          variant="text"
+          size="x-small"
+          color="grey-lighten-1"
+          title="Wyczyść konsolę"
+          @click="clearLogs"
+        />
+        <v-btn
+          v-if="activeTab === 'output'"
+          icon="mdi-content-copy"
+          variant="text"
+          size="x-small"
+          color="grey-lighten-1"
+          title="Kopiuj wynik"
+          @click="copyOutput"
+        />
+        <v-btn icon="mdi-close" variant="text" size="x-small" color="grey-lighten-1" @click="closePanel" />
+      </div>
+    </div>
 
     <v-window v-model="activeTab" class="fill-height">
       <v-window-item value="console" class="fill-height">
-        <div class="fill-height overflow-y-auto bg-black text-white pa-4 font-monospace text-caption terminal-view">
-          <div v-if="globalViewModel.executionLogs.length === 0" class="text-grey-darken-1 font-italic">
-            > Ready. Run workflow to stream real-time agent execution telemetry...
+        <div class="fill-height overflow-y-auto pa-3 font-monospace text-caption terminal-view">
+          <div v-if="globalViewModel.executionLogs.length === 0" class="text-grey-darken-1">
+            $ Ready. Run workflow to stream real-time agent execution telemetry...
           </div>
           <div
             v-for="(log, idx) in globalViewModel.executionLogs"
             :key="idx"
             class="d-flex flex-column py-1 terminal-line"
           >
-            <div class="d-flex align-start">
-              <span class="text-grey-darken-1 mr-2 select-none">[{{ globalViewModel.formatTimestamp(log.timestamp) }}]</span>
-              <v-chip size="x-small" :color="getLogLevelColor(log.level)" variant="flat" class="mr-2 text-uppercase font-weight-bold">
+            <div class="d-flex align-start ga-2">
+              <span class="text-grey-darken-1 select-none">[{{ globalViewModel.formatTimestamp(log.timestamp) }}]</span>
+              <v-chip size="x-small" :color="getLogLevelColor(log.level)" variant="tonal" class="text-uppercase font-weight-bold">
                 {{ log.level }}
               </v-chip>
               <span class="flex-grow-1 text-grey-lighten-2">{{ log.message }}</span>
@@ -135,14 +134,12 @@ function getLogLevelColor(level: string): string {
       </v-window-item>
 
       <v-window-item value="output" class="fill-height">
-        <div class="fill-height overflow-y-auto bg-grey-darken-4 pa-4 font-monospace text-body-2 output-view">
+        <div class="fill-height overflow-y-auto pa-4 font-monospace text-body-2 output-view">
           <div v-if="globalViewModel.executionOutput" class="text-white whitespace-pre-wrap">
             {{ globalViewModel.executionOutput }}
           </div>
-          <div v-else class="text-grey-lighten-1">
-            Status: {{ globalViewModel.executionStatus }}
-            <br />
-            No agent response generated yet.
+          <div v-else class="text-grey">
+            Status: {{ globalViewModel.executionStatus }} — No agent response generated yet.
           </div>
         </div>
       </v-window-item>
@@ -152,23 +149,43 @@ function getLogLevelColor(level: string): string {
 
 <style scoped>
 .app-bottom-drawer {
-  background: rgba(11, 17, 32, 0.98) !important;
-  backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #0D131F !important;
+  border-top: 1px solid #283548 !important;
 }
+
+.bottom-drawer-header {
+  background-color: #111827;
+  border-bottom: 1px solid #1E293B;
+  height: 40px;
+}
+
+.tab-count-pill {
+  background-color: #1E293B;
+  border: 1px solid #334155;
+  color: #E2E8F0;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
 .terminal-view {
-  background-color: #030712 !important;
+  background-color: #080C14 !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+
 .output-view {
-  background-color: #0F172A !important;
+  background-color: #0B101B !important;
 }
+
 .whitespace-pre-wrap {
   white-space: pre-wrap;
 }
+
 .terminal-line {
-  line-height: 1.4;
+  line-height: 1.45;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.4);
 }
+
 .select-none {
   user-select: none;
 }

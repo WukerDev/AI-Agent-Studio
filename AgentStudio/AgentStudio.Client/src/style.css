@@ -1,14 +1,140 @@
+/* Global Reset & Solid Dark Engineering Theme (No Glass / No Blur / No Gradients) */
+
+:root {
+  --as-bg-canvas: #090D16;
+  --as-bg-surface: #111827;
+  --as-bg-elevated: #161F30;
+  --as-bg-muted: #0D131F;
+  --as-border-subtle: #1E293B;
+  --as-border-default: #283548;
+  --as-border-strong: #334155;
+  --as-text-primary: #F1F5F9;
+  --as-text-secondary: #94A3B8;
+  --as-text-muted: #64748B;
+}
+
+/* Prevent Vuetify inputs from ever stretching vertically inside flex columns */
+.v-input {
+  flex: 0 0 auto !important;
+}
+
+/* Complete utility fallbacks so fractional classes never fail */
+.gap-1, .ga-1 { gap: 4px !important; }
+.gap-1\.5, .ga-1\.5 { gap: 6px !important; }
+.gap-2, .ga-2 { gap: 8px !important; }
+.gap-2\.5, .ga-2\.5 { gap: 10px !important; }
+.gap-3, .ga-3 { gap: 12px !important; }
+.gap-4, .ga-4 { gap: 16px !important; }
+.ga-0\.5 { gap: 2px !important; }
+
+.mr-1\.5 { margin-right: 6px !important; }
+.ml-1\.5 { margin-left: 6px !important; }
+.mt-1\.5 { margin-top: 6px !important; }
+.mb-1\.5 { margin-bottom: 6px !important; }
+.mb-2\.5 { margin-bottom: 10px !important; }
+.pt-1\.5 { padding-top: 6px !important; }
+.pb-2\.5 { padding-bottom: 10px !important; }
+.pa-2\.5 { padding: 10px !important; }
+.px-2\.5 { padding-left: 10px !important; padding-right: 10px !important; }
+.py-1\.5 { padding-top: 6px !important; padding-bottom: 6px !important; }
+
+/* Standard Solid Dark Engineering Form Controls */
+.as-field-group {
+  margin-bottom: 14px;
+}
+
+.as-field-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94A3B8;
+  margin-bottom: 5px;
+  letter-spacing: 0.01em;
+}
+
+.as-input,
+.as-select,
+.as-textarea {
+  width: 100%;
+  background-color: #0D131F;
+  border: 1px solid #24324B;
+  border-radius: 6px;
+  color: #F1F5F9;
+  font-size: 12.5px;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+  outline: none;
+}
+
+.as-input,
+.as-select {
+  height: 34px;
+  padding: 0 10px;
+}
+
+.as-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  cursor: pointer;
+}
+
+.as-select option {
+  background-color: #0D131F;
+  color: #F1F5F9;
+}
+
+.as-textarea {
+  padding: 8px 10px;
+  line-height: 1.45;
+  resize: vertical;
+  min-height: 76px;
+}
+
+.as-input:hover,
+.as-select:hover,
+.as-textarea:hover {
+  border-color: #334155;
+}
+
+.as-input:focus,
+.as-select:focus,
+.as-textarea:focus {
+  border-color: #3B82F6;
+  background-color: #0B101B;
+}
+
+.as-input::placeholder,
+.as-textarea::placeholder {
+  color: #475569;
+}
+
+.as-input:disabled,
+.as-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.as-field-hint {
+  font-size: 11px;
+  color: #64748B;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+/* Vue Flow Controls - Solid Dark */
 .vue-flow__controls {
-  background-color: #172136 !important;
-  border: 1px solid #334155 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  background-color: #111827 !important;
+  border: 1px solid #283548 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
   overflow: hidden !important;
 }
 
 .vue-flow__controls-button {
-  background-color: #172136 !important;
-  border-bottom: 1px solid #334155 !important;
+  background-color: #111827 !important;
+  border-bottom: 1px solid #1E293B !important;
   border-top: none !important;
   border-left: none !important;
   border-right: none !important;
@@ -19,7 +145,7 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: background-color 0.15s ease, fill 0.15s ease !important;
+  transition: background-color 0.12s ease, fill 0.12s ease !important;
 }
 
 .vue-flow__controls-button:last-child {
@@ -28,32 +154,33 @@
 
 .vue-flow__controls-button:hover {
   background-color: #1E293B !important;
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+  fill: #F8FAFC !important;
+  color: #F8FAFC !important;
 }
 
 .vue-flow__controls-button svg {
   fill: #94A3B8 !important;
-  width: 14px !important;
-  height: 14px !important;
+  width: 13px !important;
+  height: 13px !important;
 }
 
 .vue-flow__controls-button:hover svg {
-  fill: #FFFFFF !important;
+  fill: #F8FAFC !important;
 }
 
+/* Vue Flow MiniMap - Solid Dark */
 .vue-flow__minimap {
-  background-color: #0B1120 !important;
-  border: 1px solid #334155 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+  background-color: #0D131F !important;
+  border: 1px solid #283548 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
   overflow: hidden !important;
 }
 
 .vue-flow__minimap-mask {
-  fill: rgba(15, 23, 42, 0.75) !important;
-  stroke: #E63946 !important;
-  stroke-width: 2px !important;
+  fill: rgba(9, 13, 22, 0.78) !important;
+  stroke: #475569 !important;
+  stroke-width: 1.5px !important;
 }
 
 .vue-flow__minimap-node {
@@ -61,20 +188,21 @@
   stroke: none !important;
 }
 
+/* Clean Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #0D131F;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #283548;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #3B4D6B;
 }

@@ -352,7 +352,7 @@ function handleSave() {
           <div class="mb-3">
             <div class="d-flex justify-space-between text-caption text-grey mb-1">
               <span>Temperature</span>
-              <span>{{ localNode.modelConfig.temperature }}</span>
+              <span class="font-monospace">{{ Number(localNode.modelConfig.temperature ?? 0.7).toFixed(2) }}</span>
             </div>
             <v-slider
               v-model="localNode.modelConfig.temperature"
@@ -360,7 +360,7 @@ function handleSave() {
               max="2"
               step="0.05"
               thumb-label
-              color="primary"
+              color="info"
             />
           </div>
         </template>

@@ -157,15 +157,15 @@ function resolveEdgeHandlesAndColor(edge: {
     if (normalizedSource?.type === NodeType.MODEL) {
       sourceHandle = 'model-out'
       targetHandle = 'model'
-      strokeColor = '#2196F3'
+      strokeColor = '#3B82F6'
     } else if (normalizedSource?.type === NodeType.PROMPT) {
       sourceHandle = 'prompt-out'
       targetHandle = 'prompt'
-      strokeColor = '#FB8C00'
+      strokeColor = '#F59E0B'
     } else if (normalizedSource?.type === NodeType.MCP_CONNECTOR) {
       sourceHandle = 'tool-out'
       targetHandle = 'tool'
-      strokeColor = '#4CAF50'
+      strokeColor = '#10B981'
     } else if (normalizedSource?.type === NodeType.SKILL) {
       sourceHandle = 'skill-out'
       targetHandle = 'skill'
@@ -327,11 +327,11 @@ function getMiniMapNodeColor(node: any): string {
     case 'agent':
       return '#E63946'
     case 'model':
-      return '#2196F3'
+      return '#3B82F6'
     case 'prompt':
-      return '#FB8C00'
+      return '#F59E0B'
     case 'mcp':
-      return '#4CAF50'
+      return '#10B981'
     case 'note':
       return '#F59E0B'
     case 'label':
@@ -600,173 +600,186 @@ function onDrop(event: DragEvent) {
     console.error('Failed to process drop on canvas', err)
   }
 }
-
-const executionStatusColor = computed(() => {
-  switch (globalViewModel.executionStatus) {
-    case 'Running':
-    case 'Starting':
-      return 'info'
-    case 'Completed':
-      return 'success'
-    case 'Failed':
-      return 'error'
-    default:
-      return 'grey'
-  }
-})
 </script>
 
 <template>
   <div class="canvas-container" @dragover.prevent="onDragOver" @drop="onDrop">
-    <div class="floating-toolbar d-flex align-center gap-2 pa-2">
+    <!-- Solid Dark Floating Toolbar -->
+    <div class="floating-toolbar d-flex align-center ga-1.5 px-2.5 py-1.5">
       <!-- Add Node Menu -->
       <v-menu offset-y>
         <template v-slot:activator="{ props: menuProps }">
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            variant="flat"
-            size="small"
-            v-bind="menuProps"
-          >
-            Add Node
-          </v-btn>
+          <button type="button" v-bind="menuProps" class="tb-btn tb-btn-primary">
+            <v-icon icon="mdi-plus" size="14" />
+            <span>Add Node</span>
+            <v-icon icon="mdi-chevron-down" size="13" />
+          </button>
         </template>
-        <v-list density="compact">
-          <v-list-item prepend-icon="mdi-robot" @click="handleAddNode(NodeType.AGENT)">
-            <v-list-item-title>AI Agent</v-list-item-title>
+        <v-list density="compact" min-width="210" class="solid-dropdown-menu pa-1 rounded-lg">
+          <v-list-item class="rounded" @click="handleAddNode(NodeType.AGENT)">
+            <template #prepend>
+              <v-icon icon="mdi-robot-outline" color="#E63946" size="16" class="mr-2" />
+            </template>
+            <v-list-item-title class="text-caption font-weight-medium">AI Agent Hub</v-list-item-title>
           </v-list-item>
-          <v-list-item prepend-icon="mdi-brain" @click="handleAddNode(NodeType.MODEL)">
-            <v-list-item-title>LLM Model</v-list-item-title>
+          <v-list-item class="rounded" @click="handleAddNode(NodeType.MODEL)">
+            <template #prepend>
+              <v-icon icon="mdi-brain" color="#3B82F6" size="16" class="mr-2" />
+            </template>
+            <v-list-item-title class="text-caption font-weight-medium">LLM Model</v-list-item-title>
           </v-list-item>
-          <v-list-item prepend-icon="mdi-script-text-outline" @click="handleAddNode(NodeType.PROMPT)">
-            <v-list-item-title>System Prompt</v-list-item-title>
+          <v-list-item class="rounded" @click="handleAddNode(NodeType.PROMPT)">
+            <template #prepend>
+              <v-icon icon="mdi-script-text-outline" color="#F59E0B" size="16" class="mr-2" />
+            </template>
+            <v-list-item-title class="text-caption font-weight-medium">System Prompt</v-list-item-title>
           </v-list-item>
-          <v-list-item prepend-icon="mdi-connection" @click="handleAddNode(NodeType.MCP_CONNECTOR)">
-            <v-list-item-title>MCP Tools Connector</v-list-item-title>
+          <v-list-item class="rounded" @click="handleAddNode(NodeType.MCP_CONNECTOR)">
+            <template #prepend>
+              <v-icon icon="mdi-connection" color="#10B981" size="16" class="mr-2" />
+            </template>
+            <v-list-item-title class="text-caption font-weight-medium">MCP Tools Connector</v-list-item-title>
           </v-list-item>
-          <v-list-item prepend-icon="mdi-book-open-page-variant-outline" @click="handleAddNode(NodeType.SKILL)">
-            <v-list-item-title>Agent Skill (SKILL.md)</v-list-item-title>
+          <v-list-item class="rounded" @click="handleAddNode(NodeType.SKILL)">
+            <template #prepend>
+              <v-icon icon="mdi-book-open-page-variant-outline" color="#06B6D4" size="16" class="mr-2" />
+            </template>
+            <v-list-item-title class="text-caption font-weight-medium">Agent Skill (SKILL.md)</v-list-item-title>
           </v-list-item>
           <v-divider class="my-1" />
-          <v-list-item prepend-icon="mdi-note-text-outline" @click="handleAddNode(NodeType.NOTE)">
-            <v-list-item-title>Sticky Note</v-list-item-title>
+          <v-list-item class="rounded" @click="handleAddNode(NodeType.NOTE)">
+            <template #prepend>
+              <v-icon icon="mdi-note-text-outline" color="#FBBF24" size="16" class="mr-2" />
+            </template>
+            <v-list-item-title class="text-caption font-weight-medium">Sticky Note</v-list-item-title>
           </v-list-item>
-          <v-list-item prepend-icon="mdi-format-title" @click="handleAddNode(NodeType.LABEL)">
-            <v-list-item-title>Section Label</v-list-item-title>
+          <v-list-item class="rounded" @click="handleAddNode(NodeType.LABEL)">
+            <template #prepend>
+              <v-icon icon="mdi-format-title" color="#A855F7" size="16" class="mr-2" />
+            </template>
+            <v-list-item-title class="text-caption font-weight-medium">Section Label</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
 
-      <!-- Quick Add Note & Label Buttons -->
-      <v-btn
-        prepend-icon="mdi-note-plus-outline"
-        variant="tonal"
-        size="small"
-        color="amber-darken-1"
+      <!-- Quick Add Note & Label (Subtle Dark Buttons with Colored Icons) -->
+      <button
+        type="button"
+        class="tb-btn"
         title="Add Sticky Note to Canvas"
         @click="handleAddNode(NodeType.NOTE)"
       >
-        Note
-      </v-btn>
+        <v-icon icon="mdi-note-plus-outline" size="14" color="#FBBF24" />
+        <span>Note</span>
+      </button>
 
-      <v-btn
-        prepend-icon="mdi-format-title"
-        variant="tonal"
-        size="small"
-        color="purple-lighten-2"
+      <button
+        type="button"
+        class="tb-btn"
         title="Add Section Label to Canvas"
         @click="handleAddNode(NodeType.LABEL)"
       >
-        Label
-      </v-btn>
+        <v-icon icon="mdi-format-title" size="14" color="#A855F7" />
+        <span>Label</span>
+      </button>
 
-      <v-divider vertical class="mx-1" />
+      <div class="tb-divider" />
 
-      <!-- Undo / Redo Buttons -->
-      <v-btn
-        icon="mdi-undo"
-        variant="text"
-        size="small"
+      <!-- Undo / Redo -->
+      <button
+        type="button"
+        class="tb-icon-btn"
         :disabled="!globalViewModel.canUndo"
         title="Undo (Ctrl+Z)"
         @click="handleUndo"
-      />
+      >
+        <v-icon icon="mdi-undo" size="15" />
+      </button>
 
-      <v-btn
-        icon="mdi-redo"
-        variant="text"
-        size="small"
+      <button
+        type="button"
+        class="tb-icon-btn"
         :disabled="!globalViewModel.canRedo"
         title="Redo (Ctrl+Y / Ctrl+Shift+Z)"
         @click="handleRedo"
-      />
-
-      <v-divider vertical class="mx-1" />
-
-      <v-btn
-        prepend-icon="mdi-content-save-outline"
-        variant="tonal"
-        size="small"
-        @click="handleSaveAll"
-        :loading="globalViewModel.isGrpcLoading"
       >
-        Save All
-      </v-btn>
+        <v-icon icon="mdi-redo" size="15" />
+      </button>
 
-      <v-btn
-        color="success"
-        prepend-icon="mdi-play"
-        variant="flat"
-        size="small"
-        :loading="globalViewModel.executionStatus === 'Running'"
+      <div class="tb-divider" />
+
+      <!-- Save All -->
+      <button
+        type="button"
+        class="tb-btn"
+        :disabled="globalViewModel.isGrpcLoading"
+        @click="handleSaveAll"
+      >
+        <v-icon icon="mdi-content-save-outline" size="14" color="#94A3B8" />
+        <span>Save All</span>
+      </button>
+
+      <!-- Run Flow -->
+      <button
+        type="button"
+        class="tb-btn tb-btn-run"
         @click="isRunDialogOpen = true"
       >
-        Run Flow...
-      </v-btn>
+        <v-icon icon="mdi-play" size="14" />
+        <span>Run Flow</span>
+      </button>
 
-      <v-chip size="small" :color="executionStatusColor" variant="tonal" class="ml-2 font-weight-medium">
+      <!-- Execution Status Badge -->
+      <span
+        class="exec-status-badge font-monospace"
+        :class="{
+          'exec-running': globalViewModel.executionStatus === 'Running' || globalViewModel.executionStatus === 'Starting',
+          'exec-completed': globalViewModel.executionStatus === 'Completed',
+          'exec-failed': globalViewModel.executionStatus === 'Failed'
+        }"
+      >
         {{ globalViewModel.executionStatus }}
-      </v-chip>
+      </span>
 
       <v-spacer />
 
-      <!-- Inspector Toggle Button -->
-      <v-btn
-        icon="mdi-tune-variant"
-        variant="text"
-        size="small"
-        :color="globalViewModel.isInspectorOpen ? 'primary' : 'grey-lighten-1'"
+      <!-- Right Canvas Utilities -->
+      <button
+        type="button"
+        class="tb-icon-btn"
+        :class="{ 'tb-icon-btn-active': globalViewModel.isInspectorOpen }"
         title="Toggle Right Inspector Panel"
         @click="globalViewModel.isInspectorOpen = !globalViewModel.isInspectorOpen"
-      />
+      >
+        <v-icon icon="mdi-tune-variant" size="15" />
+      </button>
 
-      <!-- Keyboard Shortcuts Help -->
-      <v-btn
-        icon="mdi-keyboard-outline"
-        variant="text"
-        size="small"
-        color="grey-lighten-1"
+      <button
+        type="button"
+        class="tb-icon-btn"
         title="Keyboard Shortcuts"
         @click="isShortcutsHelpOpen = true"
-      />
+      >
+        <v-icon icon="mdi-keyboard-outline" size="15" />
+      </button>
 
-      <v-btn
-        icon="mdi-delete-sweep-outline"
-        variant="text"
-        size="small"
-        color="grey"
+      <button
+        type="button"
+        class="tb-icon-btn"
+        title="Fit View"
+        @click="() => fitView()"
+      >
+        <v-icon icon="mdi-fit-to-screen-outline" size="15" />
+      </button>
+
+      <button
+        type="button"
+        class="tb-icon-btn tb-icon-btn-danger"
         title="Clear Canvas"
         @click="handleClearCanvas"
-      />
-
-      <v-btn
-        icon="mdi-fit-to-screen-outline"
-        variant="tonal"
-        size="x-small"
-        title="Fit View"
-        @click="fitView"
-      />
+      >
+        <v-icon icon="mdi-delete-sweep-outline" size="15" />
+      </button>
     </div>
 
     <VueFlow
@@ -780,9 +793,9 @@ const executionStatusColor = computed(() => {
       :selection-key-code="['Shift']"
       fit-view-on-init
     >
-      <Background pattern-color="#334155" :gap="16" />
+      <Background pattern-color="#1E293B" :gap="18" />
       <Controls />
-      <MiniMap :node-color="getMiniMapNodeColor" mask-color="rgba(15, 23, 42, 0.75)" />
+      <MiniMap :node-color="getMiniMapNodeColor" mask-color="rgba(9, 13, 22, 0.78)" />
 
       <template #node-agent="nodeProps">
         <AgentNode v-bind="nodeProps" @configure="openNodeConfig" @delete="handleNodeDelete" />
@@ -814,143 +827,118 @@ const executionStatusColor = computed(() => {
     </VueFlow>
 
     <!-- Keyboard Shortcuts Dialog -->
-    <v-dialog v-model="isShortcutsHelpOpen" max-width="480">
-      <v-card color="surface" rounded="lg">
-        <v-card-title class="d-flex align-center justify-space-between pa-4">
-          <div class="d-flex align-center">
-            <v-icon icon="mdi-keyboard-outline" color="primary" class="mr-2" />
-            <span class="text-subtitle-1 font-weight-bold">Canvas Keyboard Shortcuts</span>
+    <v-dialog v-model="isShortcutsHelpOpen" max-width="460">
+      <v-card class="solid-dialog-card" rounded="lg">
+        <div class="dialog-header d-flex align-center justify-space-between px-4 py-3">
+          <div class="d-flex align-center ga-2">
+            <v-icon icon="mdi-keyboard-outline" color="#60A5FA" size="18" />
+            <span class="text-subtitle-2 font-weight-bold text-white">Canvas Keyboard Shortcuts</span>
           </div>
-          <v-btn icon="mdi-close" variant="text" size="small" @click="isShortcutsHelpOpen = false" />
-        </v-card-title>
-        <v-divider />
-        <v-card-text class="pa-4">
-          <v-list density="compact" bg-color="transparent">
-            <v-list-item>
-              <template #prepend>
-                <v-chip size="x-small" label class="mr-3 font-monospace font-weight-bold">Ctrl + A</v-chip>
-              </template>
-              <v-list-item-title class="text-caption">Select all nodes on canvas</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item>
-              <template #prepend>
-                <v-chip size="x-small" label class="mr-3 font-monospace font-weight-bold">Ctrl + C</v-chip>
-              </template>
-              <v-list-item-title class="text-caption">Copy selected nodes & connections</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item>
-              <template #prepend>
-                <v-chip size="x-small" label class="mr-3 font-monospace font-weight-bold">Ctrl + X</v-chip>
-              </template>
-              <v-list-item-title class="text-caption">Cut selected nodes</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item>
-              <template #prepend>
-                <v-chip size="x-small" label class="mr-3 font-monospace font-weight-bold">Ctrl + V</v-chip>
-              </template>
-              <v-list-item-title class="text-caption">Paste nodes with offset</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item>
-              <template #prepend>
-                <v-chip size="x-small" label class="mr-3 font-monospace font-weight-bold">Del / Backspace</v-chip>
-              </template>
-              <v-list-item-title class="text-caption">Delete selected node(s)</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item>
-              <template #prepend>
-                <v-chip size="x-small" label class="mr-3 font-monospace font-weight-bold">Ctrl + Z</v-chip>
-              </template>
-              <v-list-item-title class="text-caption">Undo canvas action</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item>
-              <template #prepend>
-                <v-chip size="x-small" label class="mr-3 font-monospace font-weight-bold">Ctrl + Y / Ctrl+Shift+Z</v-chip>
-              </template>
-              <v-list-item-title class="text-caption">Redo canvas action</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item>
-              <template #prepend>
-                <v-chip size="x-small" label class="mr-3 font-monospace font-weight-bold">Arrow Keys</v-chip>
-              </template>
-              <v-list-item-title class="text-caption">Move selected node(s) by 10px</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item>
-              <template #prepend>
-                <v-chip size="x-small" label class="mr-3 font-monospace font-weight-bold">Shift + Arrows</v-chip>
-              </template>
-              <v-list-item-title class="text-caption">Move selected node(s) by 40px (fast)</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card-text>
+          <v-btn icon="mdi-close" variant="text" size="x-small" color="grey" @click="isShortcutsHelpOpen = false" />
+        </div>
+        <div class="pa-3">
+          <div class="d-flex flex-column ga-1">
+            <div
+              v-for="sc in [
+                { keys: 'Ctrl + A', desc: 'Select all nodes on canvas' },
+                { keys: 'Ctrl + C', desc: 'Copy selected nodes & connections' },
+                { keys: 'Ctrl + X', desc: 'Cut selected nodes' },
+                { keys: 'Ctrl + V', desc: 'Paste nodes with offset' },
+                { keys: 'Del / Backspace', desc: 'Delete selected node(s)' },
+                { keys: 'Ctrl + Z', desc: 'Undo canvas action' },
+                { keys: 'Ctrl + Y', desc: 'Redo canvas action' },
+                { keys: 'Arrow Keys', desc: 'Move selected node(s) by 10px' },
+                { keys: 'Shift + Arrows', desc: 'Move selected node(s) by 40px' }
+              ]"
+              :key="sc.keys"
+              class="shortcut-row d-flex align-center justify-space-between px-3 py-1.5 rounded"
+            >
+              <span class="text-caption" style="color: #CBD5E1;">{{ sc.desc }}</span>
+              <kbd class="kbd-tag font-monospace">{{ sc.keys }}</kbd>
+            </div>
+          </div>
+        </div>
       </v-card>
     </v-dialog>
 
-    <!-- Run Workflow Dialog -->
-    <v-dialog v-model="isRunDialogOpen" max-width="580">
-      <v-card color="surface" rounded="lg">
-        <v-card-title class="d-flex align-center">
-          <v-icon icon="mdi-play-circle" color="success" class="mr-2" />
-          <span>Execute Multi-Agent Workflow</span>
-        </v-card-title>
-
-        <v-card-text>
-          <p class="text-caption text-grey mb-2">
-            Wpisz własne polecenie lub kliknij jeden z gotowych, przykładowych promptów dla aktualnego przepływu (<strong>{{ globalViewModel.currentFlowId }}</strong>):
-          </p>
-
-          <div class="mb-3">
-            <div class="text-caption font-weight-bold text-grey-lighten-1 mb-1">
-              Przykładowe prompty dla tego scenariusza (kliknij, aby wstawić):
+    <!-- Run Workflow Dialog (Upgraded: No Red Alert-Style Cards) -->
+    <v-dialog v-model="isRunDialogOpen" max-width="560">
+      <v-card class="solid-dialog-card" rounded="lg">
+        <!-- Header -->
+        <div class="dialog-header d-flex align-center justify-space-between px-4 py-3">
+          <div class="d-flex align-center ga-2">
+            <div class="run-dialog-icon-box">
+              <v-icon icon="mdi-play" color="#4ADE80" size="16" />
             </div>
-            <div class="d-flex flex-column gap-1">
-              <v-card
-                v-for="(sample, idx) in currentFlowSamples"
-                :key="idx"
-                variant="tonal"
-                color="primary"
-                class="pa-2 mb-1.5 cursor-pointer sample-prompt-card"
-                @click="workflowInputPrompt = sample.prompt"
-              >
-                <div class="text-caption font-weight-bold text-primary">{{ sample.label }}</div>
-                <div class="text-caption text-grey-lighten-2 font-monospace" style="font-size: 11px;">
-                  {{ sample.prompt }}
-                </div>
-              </v-card>
-            </div>
+            <span class="text-subtitle-2 font-weight-bold text-white">Execute Multi-Agent Workflow</span>
+          </div>
+          <div class="d-flex align-center ga-2">
+            <span class="flow-tag font-monospace">{{ globalViewModel.currentFlowId || 'default-flow' }}</span>
+            <v-btn icon="mdi-close" variant="text" size="x-small" color="grey-lighten-1" @click="isRunDialogOpen = false" />
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="pa-4">
+          <div class="d-flex align-center justify-space-between mb-2">
+            <span class="section-label">Gotowe scenariusze testowe (kliknij, aby wstawić):</span>
           </div>
 
-          <v-textarea
-            v-model="workflowInputPrompt"
-            label="Prompt wejściowy ({{input}})"
-            placeholder="e.g. Plan a microservice architecture and list required tools via MCP..."
-            rows="3"
-            variant="outlined"
-            density="compact"
-            auto-grow
-          />
-        </v-card-text>
+          <div class="sample-prompts-stack mb-4">
+            <button
+              v-for="(sample, idx) in currentFlowSamples"
+              :key="idx"
+              type="button"
+              class="sample-prompt-item"
+              :class="{ 'sample-prompt-item-active': workflowInputPrompt === sample.prompt }"
+              @click="workflowInputPrompt = sample.prompt"
+            >
+              <div class="d-flex align-center justify-space-between ga-2 mb-1">
+                <div class="d-flex align-center ga-2 overflow-hidden">
+                  <v-icon
+                    :icon="workflowInputPrompt === sample.prompt ? 'mdi-check-circle' : 'mdi-terminal'"
+                    size="14"
+                    :color="workflowInputPrompt === sample.prompt ? '#60A5FA' : '#64748B'"
+                  />
+                  <span class="sample-prompt-title text-truncate">{{ sample.label }}</span>
+                </div>
+                <span class="sample-use-pill">
+                  {{ workflowInputPrompt === sample.prompt ? 'Wybrano' : 'Użyj' }}
+                </span>
+              </div>
+              <div class="sample-prompt-body font-monospace">
+                {{ sample.prompt }}
+              </div>
+            </button>
+          </div>
 
-        <v-card-actions class="px-4 pb-4">
-          <v-spacer />
-          <v-btn variant="text" size="small" @click="isRunDialogOpen = false">Cancel</v-btn>
+          <div class="as-field-group mb-0">
+            <label class="as-field-label">Prompt wejściowy (<code>&#123;&#123;input&#125;&#125;</code>):</label>
+            <textarea
+              v-model="workflowInputPrompt"
+              rows="3"
+              class="as-textarea font-monospace"
+              placeholder="Wpisz polecenie dla przepływu wieloagentowego..."
+            />
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="dialog-footer d-flex align-center justify-end ga-2 px-4 py-3">
+          <v-btn variant="text" size="small" color="grey-lighten-1" @click="isRunDialogOpen = false">
+            Cancel
+          </v-btn>
           <v-btn
             color="success"
             variant="flat"
             size="small"
             prepend-icon="mdi-play"
+            class="font-weight-bold px-4"
             @click="handleExecuteWorkflow"
           >
             Execute
           </v-btn>
-        </v-card-actions>
+        </div>
       </v-card>
     </v-dialog>
   </div>
@@ -966,91 +954,272 @@ const executionStatusColor = computed(() => {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background-color: #090D16;
 }
 
+/* Solid Dark Floating Toolbar (No Glass / No Blur) */
 .floating-toolbar {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  right: 16px;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   z-index: 10;
-  background-color: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(12px);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background-color: #111827;
+  border-radius: 8px;
+  border: 1px solid #24324B;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-.cursor-pointer {
+.tb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #E2E8F0;
+  background-color: #161F30;
+  border: 1px solid #283548;
+  border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
-.sample-prompt-card {
-  transition: transform 0.12s ease, border-color 0.12s ease;
-  border: 1px solid rgba(59, 130, 246, 0.25);
+.tb-btn:hover:not(:disabled) {
+  background-color: #1E293B;
+  border-color: #3B4D6B;
+  color: #FFFFFF;
 }
 
-.sample-prompt-card:hover {
-  transform: translateY(-1px);
-  border-color: rgba(59, 130, 246, 0.7);
+.tb-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-:deep(.vue-flow__controls) {
-  background-color: #172136 !important;
-  border: 1px solid #334155 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
-  overflow: hidden !important;
+.tb-btn-primary {
+  background-color: #1D4ED8;
+  border-color: #2563EB;
+  color: #FFFFFF;
 }
 
-:deep(.vue-flow__controls-button) {
-  background-color: #172136 !important;
-  border-bottom: 1px solid #334155 !important;
-  fill: #94A3B8 !important;
-  color: #94A3B8 !important;
-  width: 28px !important;
-  height: 28px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+.tb-btn-primary:hover:not(:disabled) {
+  background-color: #2563EB;
+  border-color: #3B82F6;
 }
 
-:deep(.vue-flow__controls-button:last-child) {
-  border-bottom: none !important;
+.tb-btn-run {
+  background-color: #15803D;
+  border-color: #16A34A;
+  color: #FFFFFF;
 }
 
-:deep(.vue-flow__controls-button:hover) {
-  background-color: #1E293B !important;
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+.tb-btn-run:hover:not(:disabled) {
+  background-color: #16A34A;
+  border-color: #22C55E;
 }
 
-:deep(.vue-flow__controls-button svg) {
-  fill: #94A3B8 !important;
-  width: 14px !important;
-  height: 14px !important;
+.tb-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #94A3B8;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
-:deep(.vue-flow__controls-button:hover svg) {
-  fill: #FFFFFF !important;
+.tb-icon-btn:hover:not(:disabled) {
+  background-color: #161F30;
+  border-color: #283548;
+  color: #F8FAFC;
 }
 
-:deep(.vue-flow__minimap) {
-  background-color: #0B1120 !important;
-  border: 1px solid #334155 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
-  overflow: hidden !important;
+.tb-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
-:deep(.vue-flow__minimap-mask) {
-  fill: rgba(15, 23, 42, 0.75) !important;
-  stroke: #E63946 !important;
-  stroke-width: 2px !important;
+.tb-icon-btn-active {
+  background-color: #17253E;
+  border-color: #2563EB;
+  color: #60A5FA;
 }
 
-:deep(.vue-flow__minimap-node) {
-  fill: #334155 !important;
-  stroke: none !important;
+.tb-icon-btn-danger:hover:not(:disabled) {
+  background-color: #2A1215;
+  border-color: #7F1D1D;
+  color: #F87171;
+}
+
+.tb-divider {
+  width: 1px;
+  height: 18px;
+  background-color: #1E293B;
+  margin: 0 2px;
+}
+
+.exec-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94A3B8;
+  background-color: #0D131F;
+  border: 1px solid #1E293B;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.exec-running {
+  background-color: #132542;
+  border-color: #1D4ED8;
+  color: #93C5FD;
+}
+
+.exec-completed {
+  background-color: #0D281E;
+  border-color: #15803D;
+  color: #4ADE80;
+}
+
+.exec-failed {
+  background-color: #2A1215;
+  border-color: #7F1D1D;
+  color: #F87171;
+}
+
+.solid-dropdown-menu {
+  background-color: #111827 !important;
+  border: 1px solid #283548 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Solid Dialogs */
+.solid-dialog-card {
+  background-color: #111827 !important;
+  border: 1px solid #283548 !important;
+}
+
+.dialog-header {
+  background-color: #0D131F;
+  border-bottom: 1px solid #1E293B;
+}
+
+.dialog-footer {
+  background-color: #0D131F;
+  border-top: 1px solid #1E293B;
+}
+
+.run-dialog-icon-box {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background-color: #0D281E;
+  border: 1px solid #14532D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flow-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94A3B8;
+  background-color: #161F30;
+  border: 1px solid #24324B;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.section-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
+.section-label code {
+  color: #93C5FD;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Clean Sample Prompt Cards (No Red Alert Look!) */
+.sample-prompts-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sample-prompt-item {
+  width: 100%;
+  text-align: left;
+  background-color: #151E2E;
+  border: 1px solid #24324B;
+  border-radius: 7px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.sample-prompt-item:hover {
+  background-color: #192438;
+  border-color: #364B6E;
+}
+
+.sample-prompt-item-active {
+  background-color: #152540 !important;
+  border-color: #2563EB !important;
+}
+
+.sample-prompt-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #F1F5F9;
+}
+
+.sample-prompt-item-active .sample-prompt-title {
+  color: #93C5FD;
+}
+
+.sample-use-pill {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94A3B8;
+  background-color: #0D131F;
+  border: 1px solid #24324B;
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.sample-prompt-item-active .sample-use-pill {
+  background-color: #1E3A5F;
+  border-color: #2563EB;
+  color: #93C5FD;
+}
+
+.sample-prompt-body {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #94A3B8;
+  padding-left: 22px;
+}
+
+/* Shortcuts List */
+.shortcut-row {
+  background-color: #141C2B;
+  border: 1px solid #1E293B;
+}
+
+.kbd-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: #E2E8F0;
+  background-color: #0D131F;
+  border: 1px solid #283548;
+  padding: 2px 7px;
+  border-radius: 4px;
 }
 </style>
