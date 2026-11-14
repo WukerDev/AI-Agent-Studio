@@ -17,10 +17,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7a132c9a-813c-4694-8489-24ad8305e937" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AgentStudio/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Application/AgentEngine.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Application/AgentEngine.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service/Infrastructure/SkillService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service/Infrastructure/SkillService.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/Infrastructure/OllamaTestHelper.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Service.Tests/IntegrationTests/SignalREventsTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/IntegrationTests/SignalREventsTests.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Service.Tests/UnitTests/AgentEngineUnitTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/UnitTests/AgentEngineUnitTests.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,14 +39,15 @@
     &quot;assignee&quot;: &quot;WukerDev&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/WukerDev/AI-Agent-Studio.git",
-    "accountId": "16c92c05-292c-41e3-ae69-6cf4a43cb2f4"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/WukerDev/AI-Agent-Studio.git&quot;,
+    &quot;accountId&quot;: &quot;16c92c05-292c-41e3-ae69-6cf4a43cb2f4&quot;
   }
-}]]></component>
+}</component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Gateway/Program.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Service.Tests/IntegrationTests/SignalREventsTests.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Service.Tests/UnitTests/AgentEngineUnitTests.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
@@ -123,38 +124,38 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    ".NET Launch Settings Profile.AgentStudio.Client: http.executor": "Run",
-    ".NET Launch Settings Profile.AgentStudio.Gateway: http.executor": "Run",
-    ".NET Launch Settings Profile.AgentStudio.Service: http.executor": "Run",
-    ".NET Project.gateway.executor": "Run",
-    ".NET Project.servicew.executor": "Run",
-    "Docker.compose.yaml.agentstudio.gateway: Compose Deployment.executor": "Run",
-    "Docker.compose.yaml.keycloak: Compose Deployment.executor": "Run",
-    "Docker.compose.yaml.postgres: Compose Deployment.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "cidr.known.project.marker": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "main",
-    "git.auto.fetch.suggestion.counter": "2",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "python.packages.toolwindow.project.migrated.to.right.top.v2": "true",
-    "rider.unittesting.toolwindow.stripe.button.shown": "true",
-    "settings.editor.selected.configurable": "com.jetbrains.rider.plugins.appender.mcpServer.bundledHooks",
-    "ts.external.directory.path": "/home/milosz/RiderProjects/AI-Agent-Studio/AgentStudio/AgentStudio.Client/node_modules/typescript/lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;.NET Launch Settings Profile.AgentStudio.Client: http.executor&quot;: &quot;Run&quot;,
+    &quot;.NET Launch Settings Profile.AgentStudio.Gateway: http.executor&quot;: &quot;Run&quot;,
+    &quot;.NET Launch Settings Profile.AgentStudio.Service: http.executor&quot;: &quot;Run&quot;,
+    &quot;.NET Project.gateway.executor&quot;: &quot;Run&quot;,
+    &quot;.NET Project.servicew.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.compose.yaml.agentstudio.gateway: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.compose.yaml.keycloak: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.compose.yaml.postgres: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git.auto.fetch.suggestion.counter&quot;: &quot;2&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;python.packages.toolwindow.project.migrated.to.right.top.v2&quot;: &quot;true&quot;,
+    &quot;rider.unittesting.toolwindow.stripe.button.shown&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.rider.plugins.appender.mcpServer.bundledHooks&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/home/milosz/RiderProjects/AI-Agent-Studio/AgentStudio/AgentStudio.Client/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunDashboard">
     <option name="configurationTypes">
       <set>
@@ -171,8 +172,10 @@
       <envs>
         <env name="ASPNETCORE_ENVIRONMENT" value="Development" />
       </envs>
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="ENV_FILE_PATHS" value="" />
       <option name="REDIRECT_INPUT_PATH" value="" />
+      <option name="PTY_MODE" value="Auto" />
       <option name="MIXED_MODE_DEBUG" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
@@ -195,8 +198,10 @@
       <envs>
         <env name="ASPNETCORE_ENVIRONMENT" value="Development" />
       </envs>
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="ENV_FILE_PATHS" value="" />
       <option name="REDIRECT_INPUT_PATH" value="" />
+      <option name="PTY_MODE" value="Auto" />
       <option name="MIXED_MODE_DEBUG" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
@@ -215,6 +220,7 @@
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AgentStudio.Client/AgentStudio.Client.csproj" />
       <option name="LAUNCH_PROFILE_TFM" value="net11.0" />
       <option name="LAUNCH_PROFILE_NAME" value="http" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
       <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
@@ -222,7 +228,6 @@
       <option name="SEND_DEBUG_REQUEST" value="1" />
       <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
-      <option name="MIXED_MODE_DEBUG" value="0" />
       <method v="2">
         <option name="Build" />
       </method>
@@ -231,6 +236,7 @@
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AgentStudio.Gateway/AgentStudio.Gateway.csproj" />
       <option name="LAUNCH_PROFILE_TFM" value="net11.0" />
       <option name="LAUNCH_PROFILE_NAME" value="http" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
       <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
@@ -238,7 +244,6 @@
       <option name="SEND_DEBUG_REQUEST" value="1" />
       <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
-      <option name="MIXED_MODE_DEBUG" value="0" />
       <method v="2">
         <option name="Build" />
       </method>
@@ -247,6 +252,7 @@
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AgentStudio.Gateway/AgentStudio.Gateway.csproj" />
       <option name="LAUNCH_PROFILE_TFM" value="net11.0" />
       <option name="LAUNCH_PROFILE_NAME" value="https" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
       <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
@@ -254,7 +260,6 @@
       <option name="SEND_DEBUG_REQUEST" value="1" />
       <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
-      <option name="MIXED_MODE_DEBUG" value="0" />
       <method v="2">
         <option name="Build" />
       </method>
@@ -263,6 +268,7 @@
       <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/AgentStudio.Service/AgentStudio.Service.csproj" />
       <option name="LAUNCH_PROFILE_TFM" value="net11.0" />
       <option name="LAUNCH_PROFILE_NAME" value="http" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
       <option name="USE_MONO" value="0" />
       <option name="RUNTIME_ARGUMENTS" value="" />
       <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
@@ -270,7 +276,6 @@
       <option name="SEND_DEBUG_REQUEST" value="1" />
       <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
       <option name="AUTO_ATTACH_CHILDREN" value="0" />
-      <option name="MIXED_MODE_DEBUG" value="0" />
       <method v="2">
         <option name="Build" />
       </method>

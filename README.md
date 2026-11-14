@@ -42,22 +42,29 @@ flowchart TD
 
 1. **Wizualny Kreator Przepływów (VueFlow):**
    * Projektowanie architektury agentów oraz ich wzajemnych relacji metodą drag-and-drop.
-   * Obsługa 4 dedykowanych węzłów wykonawczych (**Węzeł Agenta**, **Węzeł Modelu LLM**, **Węzeł Promptu Systemowego**, **Węzeł Konektora MCP**) oraz węzłów pomocniczych (**Notatka / Sticky Note**, **Etykieta / Label**).
+   * Obsługa 5 dedykowanych węzłów wykonawczych (**Węzeł Agenta**, **Węzeł Modelu LLM**, **Węzeł Promptu Systemowego**, **Węzeł Konektora MCP**, **Węzeł Umiejętności / Skill**) oraz węzłów pomocniczych (**Notatka / Sticky Note**, **Etykieta / Label**).
 2. **Elastyczne Podłączanie Modeli AI:**
-   * Wsparcie dla chmurowych dostawców (**OpenAI**: `gpt-4o`, `gpt-4o-mini`, itp.).
-   * Pełne wsparcie dla modeli lokalnych (**Ollama**: `gemma3:12b`, `llama3.2`, `mistral`, itp.) bez konieczności płacenia za API.
+   * Wsparcie dla chmurowych dostawców (**OpenAI**: `gpt-4o`, `gpt-4o-mini`, itp. oraz **Google Gemini**: `gemini-3.5-flash-lite`, `gemini-1.5-pro`).
+   * Pełne wsparcie dla modeli lokalnych (**Ollama**: `gemma3:12b`, `llama3.2`, `mistral`, `deepseek-r1`) bez konieczności ponoszenia kosztów API.
    * Wsparcie dla niestandardowych endpointów zgodnych z OpenAI API (vLLM, LM Studio, Azure OpenAI).
-3. **Integracja z MCP (Model Context Protocol):**
-   * Dynamiczne podłączanie serwerów narzędziowych MCP (HTTP / SSE / SSE Transport).
-   * Automatyczna dyskryminacja narzędzi, mapowanie ich na `AITool` w Microsoft Agents AI i udostępnianie agentom w pętli myślenia (z automatycznym fallbackiem kontekstowym dla modeli nieobsługujących natywnego function-calling, np. `gemma3:12b`).
-4. **Wysokowydajny gRPC-Web & Real-Time SignalR:**
+3. **Integracja z MCP (Model Context Protocol) i Autonomiczna Pętla ReAct:**
+   * Dynamiczne podłączanie zewnętrznych serwerów MCP (HTTP / SSE Transport).
+   * Wbudowane narzędzia MCP (`builtin://tools`): kalkulator matematyczny (`calculate_expression`), czas systemowy (`get_current_time`), diagnostyka środowiska (`get_system_info`), wyszukiwarka internetowa i pobieranie stron (`search_web`, `fetch_page`).
+   * Automatyczna pętla decyzyjna **ReAct (Reasoning + Acting)** z detekcją wywołań narzędzi `TOOL_CALL`, zabezpieczająca modele nieposiadające natywnego wsparcia dla OpenAI function-calling (np. `gemma3:12b` czy wybrane modele Gemini).
+4. **Wsparcie dla Standardu Microsoft Agent Skills (`SKILL.md`):**
+   * Integracja ze standardem Microsoft Agent Skills – możliwość definiowania modularnych umiejętności z instrukcjami domenowymi w plikach `SKILL.md`.
+   * Automatyczne mapowanie dołączonych węzłów umiejętności do agentów za pośrednictwem `AgentSkillsProvider`.
+5. **Wieloagentowa Orkiestracja i Szablony Przepływów:**
+   * Sortowanie topologiczne grafu krawędzi (`Agent 1 -> Agent 2`) z automatycznym przekazywaniem wyników i zmiennymi szablonowymi (`{{input}}`, `{{query}}`).
+   * Wbudowane szablony demonstracyjne z automatycznym seedowaniem (m.in. Multi-Agent Research, Gemini Assistant, MCP Calculator & Diagnostics).
+6. **Wysokowydajny gRPC-Web & Real-Time SignalR:**
    * Silnie typowane kontrakty Protocol Buffers (`agent_node.proto`).
    * Zapis, odczyt i usuwanie konfiguracji węzłów oraz krawędzi grafu przez gRPC-Web.
    * Asynchroniczne strumieniowanie logów egzekucji agenta krok po kroku oraz odpowiedzi AI na żywo do panelu konsoli frontendu.
-5. **Centralna Bramka YARP (Frontend Gateway):**
+7. **Centralna Bramka YARP (Frontend Gateway):**
    * Jeden port wejściowy `:5000` obsługujący gRPC-Web, SignalR (WebSockets), Keycloak, metryki OpenTelemetry (`/metrics`, `/api/telemetry`) i pliki SPA.
    * Całkowita eliminacja problemów z CORS i zróżnicowanymi portami.
-6. **Pełne Bezpieczeństwo, Tożsamość (IAM) i Telemetria:**
+8. **Pełne Bezpieczeństwo, Tożsamość (IAM) i Telemetria:**
    * Centralne zarządzanie tożsamością z użyciem Keycloak (realm `agent-studio`, klient OIDC `portal`).
    * Wbudowana telemetria OpenTelemetry (`AgentStudioTelemetry`) eksportująca metryki w formacie Prometheus (`/metrics`) i JSON (`/api/telemetry`) wraz z automatycznie prowizjonowanym dashboardem w Grafanie (`Deploy/grafana/dashboards/agent-studio-telemetry.json`).
 
@@ -96,11 +103,12 @@ flowchart TD
 ## 🧠 Jak działa Kreator Agentów i jak podłączyć Model AI?
 
 ### 1. Elementy Składowe Przepływu (Węzły na Kanwie)
-Kanwa kreatora pozwala łączyć 4 rodzaje węzłów:
+Kanwa kreatora pozwala łączyć 5 rodzajów węzłów:
 * 🤖 **AI Agent (Czerwony):** Główny węzeł decyzyjny reprezentujący autonomicznego agenta `ChatClientAgent`.
-* 🧠 **LLM Model (Niebieski):** Węzeł definiujący model językowy (OpenAI, Ollama, Custom API), temperaturę oraz adres API.
+* 🧠 **LLM Model (Niebieski):** Węzeł definiujący model językowy (OpenAI, Ollama, Gemini, Custom API), temperaturę oraz adres API.
 * 📝 **System Prompt (Pomarańczowy):** Węzeł wstrzykujący instrukcje bazowe, rolę i zasady postępowania agenta (obsługuje również zmienne szablonowe `{{input}}` i `{{query}}`).
-* 🔌 **MCP Connector (Zielony):** Węzeł łączący agenta z zewnętrznym serwerem narzędziowym Model Context Protocol (np. wyszukiwarka internetowa, baza danych, system plików).
+* 🔌 **MCP Connector (Zielony):** Węzeł łączący agenta z serwerem narzędziowym Model Context Protocol (np. wyszukiwarka internetowa, kalkulator, system plików lub wbudowane narzędzia `builtin://tools`).
+* 🧩 **Skill Node (Fioletowy):** Węzeł dołączający ustrukturyzowane umiejętności domenowe w standardzie Microsoft Agent Skills (`SKILL.md`).
 
 ---
 
@@ -109,8 +117,8 @@ Kanwa kreatora pozwala łączyć 4 rodzaje węzłów:
 2. Kliknij **Add Node -> AI Agent** i umieść go obok modelu.
 3. Przeciągnij krawędź z prawego punktu węzła **LLM Model** (uchwyt wyjściowy) do lewego punktu węzła **AI Agent** (uchwyt wejściowy). Możesz też łączyć wielu agentów szeregowo (`Agent 1 -> Agent 2`) w celu przekazywania wyników między agentami.
 4. Kliknij węzeł modelu (lub ikonę zębatki ⚙️), aby otworzyć panel inspektora konfiguracji:
-   * Wybierz **Provider**: `OpenAI`, `Ollama` lub `Custom`.
-   * Wpisz **Model Name**: np. `gemma3:12b`, `gpt-4o` lub `llama3.2`.
+   * Wybierz **Provider**: `OpenAI`, `Ollama`, `Gemini` lub `Custom`.
+   * Wpisz **Model Name**: np. `gemma3:12b`, `gpt-4o`, `gemini-3.5-flash-lite` lub `llama3.2`.
    * Ustaw **Temperature**: np. `0.7`.
 5. Kliknij **Save Changes**. Konfiguracja zostanie natychmiast utrwalona w bazie danych przez gRPC.
 
@@ -138,7 +146,13 @@ Każdy węzeł **AI Agent** posiada wbudowaną konfigurację awaryjną:
 * **Model Name:** `gemma3:12b`, `llama3.2`, `mistral`, `deepseek-r1`
 * **Custom API Endpoint:** `http://localhost:11434` (lub `http://host.docker.internal:11434` w kontenerze).
 
-#### C. Custom API / vLLM / LM Studio / Azure OpenAI
+#### C. Google Gemini (Chmura)
+* **Provider:** `Gemini`
+* **Model Name:** `gemini-3.5-flash-lite`, `gemini-1.5-pro`
+* **Klucz API:** Wprowadź w prawym panelu Inspector dla węzła Modelu (pole *API Key*) lub ustaw zmienną środowiskową `GEMINI_API_KEY` / `GOOGLE_API_KEY`.
+* **Endpoint:** (Domyślnie `https://generativelanguage.googleapis.com/v1beta/openai/`)
+
+#### D. Custom API / vLLM / LM Studio / Azure OpenAI
 * **Provider:** `Custom`
 * **Model Name:** np. `local-model`
 * **Custom API Endpoint:** np. `http://localhost:1234/v1`
@@ -170,37 +184,54 @@ Każdy węzeł **AI Agent** posiada wbudowaną konfigurację awaryjną:
 
 ## 🗺️ Plan Projektu (Roadmapa)
 
-### Faza 1: Architektura i Infrastruktura Bazowa (do 24.10)
+### Faza 1: Architektura i Infrastruktura Bazowa (Zrealizowane ✅)
 - [x] Przygotowanie środowiska uruchomieniowego `docker-compose` (PostgreSQL, Keycloak, Grafana, Gateway).
-- [x] Konfiguracja Realmów i klientów OIDC w Keycloak.
-- [x] Definicja CI/CD budowania serwisów i uruchamiania testów w GitHub Actions.
-- [x] Implementacja gRPC-Web i Keycloak po stronie frontendu.
-- [x] Dodanie magistrali eventów SignalR (`/events`).
+- [x] Konfiguracja Realmów i klientów OIDC w Keycloak (realm `agent-studio`, klient `portal`).
+- [x] Definicja potoków CI/CD budowania serwisów i uruchamiania testów w GitHub Actions (`.github/workflows/ci.yml`).
+- [x] Implementacja klienta gRPC-Web oraz integracji logowania Keycloak po stronie frontendu.
+- [x] Dodanie magistrali eventów SignalR (`/events`) do asynchronicznego rozgłaszania stanu systemu.
 - [x] Inicjalizacja szablonów mikroserwisów w .NET 11 oraz projektu bazowego Vue 3 + Vuetify + Pinia.
-- [x] Zdefiniowanie wspólnego repozytorium kontraktów **Protocol Buffers (`.proto`)** oraz generatorów kodu dla C# i TypeScript.
+- [x] Zdefiniowanie wspólnego repozytorium kontraktów **Protocol Buffers (`agent_node.proto`)** oraz generatorów kodu dla C# i TypeScript.
 
-### Faza 2: Rdzeń Backendowy i Silnik Agentów (Microsoft Agents AI + MCP) (do 7.11)
-- [x] Implementacja warstwy danych w PostgreSQL (encje węzłów, krawędzi workflow, historii uruchomień).
+### Faza 2: Rdzeń Backendowy, Microsoft Agents AI, ReAct MCP i Wieloagentowość (Zrealizowane ✅)
+- [x] Implementacja warstwy danych w PostgreSQL z Entity Framework Core (encje węzłów, krawędzi workflow, historii uruchomień).
 - [x] Stworzenie mikroserwisu orkiestracji opartego o **Microsoft Agents AI** (`AgentEngine.cs`).
-- [x] Implementacja dynamicznego konektora **MCP** (`McpClientService.cs`), pozwalającego na dynamiczne podpinanie narzędzi.
-- [x] Obsługa wyboru modeli (OpenAI, Ollama, API niestandardowe), nadpisywania endpointów oraz wstrzykiwania promptów w czasie rzeczywistym.
+- [x] Implementacja dynamicznego konektora **MCP** (`McpClientService.cs`), pozwalającego na podpinanie narzędzi przez SSE i HTTP.
+- [x] Wbudowane narzędzia MCP (`builtin://tools`): kalkulator matematyczny (`calculate_expression`), czas systemowy (`get_current_time`), diagnostyka środowiska (`get_system_info`), wyszukiwarka internetowa i pobieranie stron (`search_web`, `fetch_page`).
+- [x] Autonomiczna pętla wnioskowania **ReAct (Reasoning + Acting)** z automatycznym protokołem `TOOL_CALL`, zabezpieczająca modele nieobsługujące natywnego function-calling (np. lokalne modele Ollama `gemma3:12b` czy wybrane modele Gemini).
+- [x] Wieloagentowa orkiestracja sekwencyjna (Multi-Agent Chaining) z sortowaniem topologicznym grafu (`Agent 1 -> Agent 2`), przekazywaniem kontekstu między agentami oraz zmiennymi szablonowymi w promptach (`{{input}}`, `{{query}}`, `{{agent_name}}`, `{{flow_id}}`).
+- [x] Wsparcie dla chmurowych modeli **Google Gemini** (`gemini-3.5-flash-lite`, `gemini-1.5-pro`) przez endpoint OpenAI-compatible z walidacją kluczy API.
+- [x] Automatyczne seedowanie 5 predefiniowanych szablonów przepływów demonstracyjnych w PostgreSQL i InMemory (`WorkflowSeeder.cs`).
 
-### Faza 3: Warstwa Wizualna i Kreator VueFlow (do 21.11)
-- [x] Stworzenie architektury Store'ów (Pinia) oraz ViewModeli zarządzających stanem kreatora i wywołaniami **gRPC-Web**.
+### Faza 3: Warstwa Wizualna VueFlow, Standard Microsoft Agent Skills i UI Inspektora (Zrealizowane ✅)
+- [x] Stworzenie architektury Store'ów (Pinia) oraz ViewModeli (`GlobalViewModel.ts`) zarządzających stanem kreatora i wywołaniami **gRPC-Web**.
 - [x] Centralny moduł klienta gRPC (`src/clients/grpc.ts`) ze wsparciem tokenów Bearer.
-- [x] Implementacja kanwy **VueFlow** wraz z niestandardowymi węzłami (Węzeł Agenta, Modelu, Promptu, Konektora MCP).
-- [x] Budowa paneli konfiguracyjnych w Vuetify (`NodeConfigDialog.vue`) dla poszczególnych węzłów.
+- [x] Implementacja kanwy **VueFlow** wraz z niestandardowymi węzłami (Węzeł Agenta, Modelu, Promptu, Konektora MCP, Notatek i Etykiet).
+- [x] Wdrożenie węzła **Skill Node** na kanwie VueFlow (`NodeType.Skill`) opartego na oficjalnej specyfikacji **Microsoft Agent Skills** (`SKILL.md`).
+- [x] Serwis zarządzania umiejętnościami (`SkillService.cs`) z dedykowanymi endpointami gRPC (`GetSkills`, `SaveSkill`, `DeleteSkill`) i integracją z `AgentSkillsProvider`.
+- [x] Nowoczesny prawy panel Inspektora (`AppInspectorDrawer.vue`) umożliwiający konfigurację parametrów modeli, promptów, testowania URL serwerów MCP i przypisywania umiejętności.
+- [x] Dolny panel konsoli (`AppBottomPanel.vue`) z podziałem na zakładki: logi zdarzeń na żywo, ostateczny wynik egzekucji oraz historię uruchomień.
 - [x] System powiadomień Snackbar/Toasts (`notifications.ts`, `AppNotificationSnackbar.vue`).
 - [x] Pełna integracja systemu tłumaczeń (i18n: `pl.json`, `en.json`) oraz formatowania stref czasowych i logów (Luxon).
 
-### Faza 4: Integracja, Bramka YARP, Telemetria i Testy (do 05.12)
+### Faza 4: Integracja, Bramka YARP, Telemetria, Testy i Odporność CI/CD (Zrealizowane ✅)
 - [x] Zbudowanie i skonfigurowanie bramki **Frontend Gateway (YARP Reverse Proxy)** na porcie `:5000`.
 - [x] Spinanie warstwy frontendowej z mikroserwisami za pomocą **gRPC-Web** (wywołania unarne zapisu/odczytu oraz strumieniowanie odpowiedzi agentów przez SignalR).
 - [x] Utworzenie dedykowanego projektu testowego **`AgentStudio.Service.Tests`** z testami integracyjnymi gRPC, nasłuchiwaniem na magistrali SignalR oraz wsparciem **Testcontainers (PostgreSQL)**.
-- [x] Utworzenie testów jednostkowych silnika agentów `AgentEngineUnitTests`.
+- [x] Kompletny zestaw **22 testów backendowych** pokrywających API gRPC, walidację FluentValidation, SignalR, telemetrię OpenTelemetry, standard `SKILL.md` i silnik AgentEngine.
+- [x] Odporność testów CI/CD na brak lokalnej instancji Ollama (`OllamaTestHelper.cs`): testy wymagające aktywnego modelu Gemma3 w środowisku GitHub Actions przechodzą z informacyjnym ostrzeżeniem (`[WARN]`), eliminując fałszywe błędy pipeline'u.
 - [x] Wdrożenie testów frontendowych **Vitest + JSDOM** (`WorkflowE2E.spec.ts`, `NodeConfigDialog.spec.ts`, `grpc.spec.ts`, `notifications.spec.ts`).
 - [x] Zintegrowanie automatycznych testów w GitHub Actions workflow.
-- [x] Dalsza rozbudowa dashboardów diagnostycznych w **Grafanie** w oparciu o metryki OpenTelemetry.
+- [x] Rozbudowa dashboardów diagnostycznych w **Grafanie** w oparciu o metryki OpenTelemetry.
+
+### Faza 5: Zaawansowana Orkiestracja, Narzędzia i Rozwój Produkcyjny (W trakcie / Backlog 📋)
+- [ ] **Eksport i Import Przepływów:** Możliwość eksportu grafu do plików JSON/YAML oraz importu gotowych szablonów społeczności.
+- [ ] **Węzły Warunkowe i Rozgałęzienia (Router & Conditional Node):** Dynamiczne rozgałęzianie ścieżek wykonania na podstawie klasyfikacji intencji lub reguł logicznych (If/Else).
+- [ ] **Pamięć Długoterminowa i RAG (Vector Store Node):** Integracja z bazą wektorową (pgvector / Qdrant) i węzłem bazy wiedzy do odpytywania dokumentów (PDF/TXT/Markdown).
+- [ ] **Strumieniowanie Odpowiedzi Token-po-Tokenie (Live Token Streaming):** Real-time streaming generowanego tekstu z modeli LLM bezpośrednio na kanwę i do konsoli za pośrednictwem SignalR/SSE.
+- [ ] **Zarządzanie Poświadczeniami Zewnętrznych MCP:** Bezpieczny magazyn kluczy (Vault / Secret Store) dla zewnętrznych serwerów MCP (GitHub, Slack, Jira, Confluence) z autoryzacją OAuth2.
+- [ ] **Human-in-the-Loop (Approval Node):** Węzeł zatwierdzania akcji krytycznych przez człowieka przed wykonaniem wrażliwych narzędzi MCP.
+- [ ] **Analityka i Optymalizacja Kosztów (Cost & Token Tracker):** Panel monitorowania zużycia tokenów oraz szacunkowych kosztów wywołań komercyjnych modeli AI (OpenAI, Gemini) w Grafanie.
 
 ---
 
@@ -262,13 +293,18 @@ Po uruchomieniu aplikacja dostępna jest pod adresami:
 
 ### Uruchamianie Testów
 
-* **Testy integracyjne i jednostkowe backendu (.NET 11 + Testcontainers + Ollama `gemma3:12b`):**
+* **Testy integracyjne i jednostkowe backendu (.NET 11 + Testcontainers + SignalR + Ollama):**
   ```bash
-  dotnet test AgentStudio/AgentStudio.Service.Tests/AgentStudio.Service.Tests.csproj
+  dotnet test AgentStudio/AgentStudio.Service.Tests/AgentStudio.Service.Tests.csproj -c Release --no-build --verbosity normal
   ```
-  *(Automatycznie uruchamia 15 testów pokrywających API gRPC, walidację FluentValidation, subskrypcje zdarzeń SignalR, telemetrię OpenTelemetry oraz wieloagentową orkiestrację silnika AgentEngine z modelem Ollama `gemma3:12b`)*
+  *(Automatycznie uruchamia 22 testy pokrywające API gRPC, walidację FluentValidation, subskrypcje zdarzeń SignalR, telemetrię OpenTelemetry, standard Microsoft Agent Skills `SKILL.md` oraz wieloagentową orkiestrację silnika AgentEngine. W środowisku GitHub Actions, gdzie lokalny serwer Ollama nie jest uruchomiony, testy wymagające aktywnego modelu Gemma3 przechodzą bezpiecznie z czytelnym ostrzeżeniem `[WARN]`, weryfikując architekturę bez przerywania pipeline'u)*
 
 * **Testy komponentów i E2E frontendu (Vitest + JSDOM):**
+  ```bash
+  cd AgentStudio/AgentStudio.Client
+  npm test
+  ```
+  *(Automatycznie uruchamia 25 testów weryfikujących tworzenie węzłów, usuwanie powiązań, formularze konfiguracji modeli AI i powiadomienia)*
   ```bash
   cd AgentStudio/AgentStudio.Client
   npm test
