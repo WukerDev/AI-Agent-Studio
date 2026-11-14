@@ -24,6 +24,18 @@ var app = builder.Build();
 
 app.UseCors("GatewayCorsPolicy");
 
+app.Use(async (context, next) =>
+{
+    if ((HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsHead(context.Request.Method)) &&
+        string.Equals(context.Request.Path.Value, "/portal", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.Redirect("/portal/");
+        return;
+    }
+
+    await next();
+});
+
 app.MapHealthChecks("/health");
 app.MapGet("/alive", () => Results.Ok(new
 {
