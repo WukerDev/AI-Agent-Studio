@@ -45,6 +45,8 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ./skills:/app/skills
     depends_on:
       - postgres
       - keycloak

@@ -34,6 +34,9 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         this.logger = logger;
     }
 
+    private static bool IsSharedSampleFlow(string flowId) =>
+        WorkflowSeeder.SampleFlowIds.Contains(flowId);
+
     public override async Task<SaveAgentNodeResponse> SaveAgentNode(SaveAgentNodeRequest request, ServerCallContext context)
     {
         var userId = this.userContext.UserId;
@@ -41,11 +44,12 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         var flowId = !string.IsNullOrEmpty(request.FlowId)
             ? request.FlowId
             : (!string.IsNullOrEmpty(request.Node.FlowId) ? request.Node.FlowId : "default-flow");
+        var isSharedSample = IsSharedSampleFlow(flowId);
 
         var workflow = await this.dbContext.Workflows.FirstOrDefaultAsync(w => w.Id == flowId);
         if (workflow == null)
         {
-            this.dbContext.Workflows.Add(new WorkflowEntity
+            workflow = new WorkflowEntity
             {
                 Id = flowId,
                 OwnerId = userId,
@@ -53,12 +57,15 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
                 Description = "Workflow " + flowId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            });
+            };
+            this.dbContext.Workflows.Add(workflow);
         }
         else
         {
             workflow.UpdatedAt = DateTime.UtcNow;
         }
+
+        var effectiveOwnerId = isSharedSample ? workflow.OwnerId : userId;
 
         var entity = await this.dbContext.AgentNodes.FirstOrDefaultAsync(n => n.Id == nodeId);
 
@@ -67,7 +74,7 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
             entity = new AgentNodeEntity
             {
                 Id = nodeId,
-                OwnerId = userId,
+                OwnerId = effectiveOwnerId,
                 FlowId = flowId
             };
             this.dbContext.AgentNodes.Add(entity);
@@ -75,7 +82,7 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         else
         {
             entity.FlowId = flowId;
-            entity.OwnerId = userId;
+            entity.OwnerId = effectiveOwnerId;
         }
 
         entity.Name = request.Node.Name ?? string.Empty;
@@ -119,15 +126,25 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         var userId = this.userContext.UserId;
         var flowId = string.IsNullOrEmpty(request.FlowId) ? "default-flow" : request.FlowId;
 
-        var entities = await this.dbContext.AgentNodes
-            .Where(n => n.OwnerId == userId && n.FlowId == flowId)
-            .ToListAsync();
-
-        if (entities.Count == 0 && (userId != "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+        List<AgentNodeEntity> entities;
+        if (IsSharedSampleFlow(flowId))
         {
             entities = await this.dbContext.AgentNodes
-                .Where(n => n.FlowId == flowId && (n.OwnerId == "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+                .Where(n => n.FlowId == flowId)
                 .ToListAsync();
+        }
+        else
+        {
+            entities = await this.dbContext.AgentNodes
+                .Where(n => n.OwnerId == userId && n.FlowId == flowId)
+                .ToListAsync();
+
+            if (entities.Count == 0 && userId != "guest-user")
+            {
+                entities = await this.dbContext.AgentNodes
+                    .Where(n => n.FlowId == flowId && n.OwnerId == "guest-user")
+                    .ToListAsync();
+            }
         }
 
         var response = new GetAgentNodesResponse
@@ -208,7 +225,7 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         if (!string.IsNullOrEmpty(request.Id))
         {
             var node = await this.dbContext.AgentNodes
-                .FirstOrDefaultAsync(n => n.Id == request.Id && (n.OwnerId == userId || n.OwnerId == "guest-user"));
+                .FirstOrDefaultAsync(n => n.Id == request.Id && (n.OwnerId == userId || n.OwnerId == "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(n.FlowId)));
 
             if (node != null)
             {
@@ -217,7 +234,8 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
             }
 
             var connectedEdges = await this.dbContext.WorkflowEdges
-                .Where(e => (e.OwnerId == userId || e.OwnerId == "guest-user") && (e.SourceNodeId == request.Id || e.TargetNodeId == request.Id))
+                .Where(e => (e.SourceNodeId == request.Id || e.TargetNodeId == request.Id) &&
+                            (e.OwnerId == userId || e.OwnerId == "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(e.FlowId)))
                 .ToListAsync();
 
             if (connectedEdges.Count > 0)
@@ -239,11 +257,12 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
     {
         var userId = this.userContext.UserId;
         var flowId = string.IsNullOrEmpty(request.FlowId) ? "default-flow" : request.FlowId;
+        var isSharedSample = IsSharedSampleFlow(flowId);
 
         var workflow = await this.dbContext.Workflows.FirstOrDefaultAsync(w => w.Id == flowId);
         if (workflow == null)
         {
-            this.dbContext.Workflows.Add(new WorkflowEntity
+            workflow = new WorkflowEntity
             {
                 Id = flowId,
                 OwnerId = userId,
@@ -251,32 +270,61 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
                 Description = "Workflow " + flowId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-            });
+            };
+            this.dbContext.Workflows.Add(workflow);
         }
         else
         {
             workflow.UpdatedAt = DateTime.UtcNow;
         }
 
-        var existingEdges = await this.dbContext.WorkflowEdges
-            .Where(e => e.FlowId == flowId && (e.OwnerId == userId || e.OwnerId == "guest-user"))
-            .ToListAsync();
+        var effectiveOwnerId = isSharedSample ? workflow.OwnerId : userId;
 
-        this.dbContext.WorkflowEdges.RemoveRange(existingEdges);
+        var existingEdges = isSharedSample
+            ? await this.dbContext.WorkflowEdges.Where(e => e.FlowId == flowId).ToListAsync()
+            : await this.dbContext.WorkflowEdges
+                .Where(e => e.FlowId == flowId && (e.OwnerId == userId || e.OwnerId == "guest-user"))
+                .ToListAsync();
+
+        var existingById = existingEdges.ToDictionary(e => e.Id);
+        var incomingIds = new HashSet<string>();
 
         foreach (var edge in request.Edges)
         {
             var edgeId = string.IsNullOrEmpty(edge.Id) ? Guid.NewGuid().ToString() : edge.Id;
-            this.dbContext.WorkflowEdges.Add(new WorkflowEdgeEntity
+            if (!incomingIds.Add(edgeId))
             {
-                Id = edgeId,
-                FlowId = flowId,
-                OwnerId = userId,
-                SourceNodeId = edge.SourceNodeId ?? string.Empty,
-                SourceHandle = edge.SourceHandle ?? string.Empty,
-                TargetNodeId = edge.TargetNodeId ?? string.Empty,
-                TargetHandle = edge.TargetHandle ?? string.Empty
-            });
+                continue;
+            }
+
+            if (existingById.TryGetValue(edgeId, out var existing))
+            {
+                existing.FlowId = flowId;
+                existing.OwnerId = effectiveOwnerId;
+                existing.SourceNodeId = edge.SourceNodeId ?? string.Empty;
+                existing.SourceHandle = edge.SourceHandle ?? string.Empty;
+                existing.TargetNodeId = edge.TargetNodeId ?? string.Empty;
+                existing.TargetHandle = edge.TargetHandle ?? string.Empty;
+            }
+            else
+            {
+                this.dbContext.WorkflowEdges.Add(new WorkflowEdgeEntity
+                {
+                    Id = edgeId,
+                    FlowId = flowId,
+                    OwnerId = effectiveOwnerId,
+                    SourceNodeId = edge.SourceNodeId ?? string.Empty,
+                    SourceHandle = edge.SourceHandle ?? string.Empty,
+                    TargetNodeId = edge.TargetNodeId ?? string.Empty,
+                    TargetHandle = edge.TargetHandle ?? string.Empty
+                });
+            }
+        }
+
+        var edgesToRemove = existingEdges.Where(e => !incomingIds.Contains(e.Id)).ToList();
+        if (edgesToRemove.Count > 0)
+        {
+            this.dbContext.WorkflowEdges.RemoveRange(edgesToRemove);
         }
 
         await this.dbContext.SaveChangesAsync();
@@ -293,15 +341,25 @@ public class AgentFlowServiceImplementation : AgentFlowService.AgentFlowServiceB
         var userId = this.userContext.UserId;
         var flowId = string.IsNullOrEmpty(request.FlowId) ? "default-flow" : request.FlowId;
 
-        var entities = await this.dbContext.WorkflowEdges
-            .Where(e => e.FlowId == flowId && e.OwnerId == userId)
-            .ToListAsync();
-
-        if (entities.Count == 0 && (userId != "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+        List<WorkflowEdgeEntity> entities;
+        if (IsSharedSampleFlow(flowId))
         {
             entities = await this.dbContext.WorkflowEdges
-                .Where(e => e.FlowId == flowId && (e.OwnerId == "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+                .Where(e => e.FlowId == flowId)
                 .ToListAsync();
+        }
+        else
+        {
+            entities = await this.dbContext.WorkflowEdges
+                .Where(e => e.FlowId == flowId && e.OwnerId == userId)
+                .ToListAsync();
+
+            if (entities.Count == 0 && userId != "guest-user")
+            {
+                entities = await this.dbContext.WorkflowEdges
+                    .Where(e => e.FlowId == flowId && e.OwnerId == "guest-user")
+                    .ToListAsync();
+            }
         }
 
         var response = new GetWorkflowEdgesResponse { Success = true };

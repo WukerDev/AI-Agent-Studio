@@ -185,6 +185,24 @@ export class GlobalViewModel {
         await this.globalStore.saveWorkflowEdges({ flowId: targetFlowId, edges })
     }
 
+    public async deleteEdges(edgeIds: string[]): Promise<number> {
+        if (!edgeIds || edgeIds.length === 0) return 0
+        const idSet = new Set(edgeIds)
+        const currentEdges = this.globalStore.edges
+        const remainingEdges = currentEdges.filter(e => {
+            const effectiveId = e.id || `e_${e.sourceNodeId}_${e.targetNodeId}`
+            const reversedId = `e_${e.targetNodeId}_${e.sourceNodeId}`
+            return !idSet.has(e.id) && !idSet.has(effectiveId) && !idSet.has(reversedId)
+        })
+
+        const removedCount = currentEdges.length - remainingEdges.length
+        if (removedCount === 0) return 0
+
+        this.pushHistorySnapshot()
+        await this.saveEdges(remainingEdges)
+        return removedCount
+    }
+
     public async loadEdges(flowId: string): Promise<void> {
         await this.globalStore.getWorkflowEdges({ flowId })
     }

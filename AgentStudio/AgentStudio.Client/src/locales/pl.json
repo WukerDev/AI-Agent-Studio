@@ -2,7 +2,10 @@
   "layout": {
     "header": {
       "title": "AgentStudio",
-      "logout": "Wyloguj"
+      "login": "Zaloguj",
+      "logout": "Wyloguj",
+      "guest": "Gość",
+      "guestMode": "Tryb gościa (Offline)"
     },
     "sidebar": {
       "files": "Pliki",

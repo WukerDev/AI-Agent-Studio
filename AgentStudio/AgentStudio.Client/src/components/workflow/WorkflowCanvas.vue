@@ -21,18 +21,23 @@ import McpNode from './nodes/McpNode.vue'
 import NoteNode from './nodes/NoteNode.vue'
 import LabelNode from './nodes/LabelNode.vue'
 import SkillNode from './nodes/SkillNode.vue'
+import DeletableEdge from './edges/DeletableEdge.vue'
 import { useNotificationStore } from '../../notifications'
 
 const {
   onPaneReady,
+  onPaneClick,
   onNodeDragStart,
   onNodeDragStop,
   onConnect,
   onNodeClick,
+  onEdgeClick,
+  onEdgeDoubleClick,
   fitView,
   screenToFlowCoordinate,
   project,
   getSelectedNodes,
+  getSelectedEdges,
   getNodes
 } = useVueFlow()
 
@@ -40,9 +45,11 @@ const globalViewModel = new GlobalViewModel()
 const notifStore = useNotificationStore()
 
 type CanvasNode = Node & { selected?: boolean }
+type CanvasEdge = Edge & { selected?: boolean }
 
 const nodes = shallowRef<CanvasNode[]>([])
-const edges = shallowRef<Edge[]>([])
+const edges = shallowRef<CanvasEdge[]>([])
+const selectedEdgeIds = ref<string[]>([])
 
 const isRunDialogOpen = ref(false)
 const isShortcutsHelpOpen = ref(false)
@@ -214,21 +221,33 @@ watch(() => globalViewModel.nodes, (newNodes) => {
 }, { immediate: true, deep: true })
 
 watch([() => globalViewModel.edges, () => globalViewModel.nodes], ([newEdges]) => {
+  const currentSelected = new Set([
+    ...edges.value.filter(e => e.selected).map(e => e.id),
+    ...selectedEdgeIds.value
+  ])
   edges.value = newEdges.map(edge => {
     const resolved = resolveEdgeHandlesAndColor(edge)
+    const id = edge.id || `e_${resolved.sourceId}_${resolved.targetId}`
     return {
-      id: edge.id || `e_${resolved.sourceId}_${resolved.targetId}`,
+      id,
+      type: 'deletable',
       source: resolved.sourceId,
       target: resolved.targetId,
       sourceHandle: resolved.sourceHandle,
       targetHandle: resolved.targetHandle,
+      selected: currentSelected.has(id),
+      selectable: true,
+      focusable: true,
       animated: true,
       style: { stroke: resolved.strokeColor, strokeWidth: 2 }
     }
   })
+  const validEdgeIds = new Set(edges.value.map(e => e.id))
+  selectedEdgeIds.value = selectedEdgeIds.value.filter(id => validEdgeIds.has(id))
 }, { immediate: true, deep: true })
 
 watch(() => globalViewModel.currentFlowId, (newFlowId) => {
+  selectedEdgeIds.value = []
   const samples = flowSamplePrompts[newFlowId || 'default-flow'] || flowSamplePrompts['default-flow']
   if (samples && samples.length > 0) {
     workflowInputPrompt.value = samples[0]!.prompt
@@ -239,8 +258,35 @@ watch(() => globalViewModel.currentFlowId, (newFlowId) => {
 }, { immediate: true })
 
 onNodeClick((event) => {
+  selectedEdgeIds.value = []
   if (event.node?.id) {
     globalViewModel.openInspector(event.node.id)
+  }
+})
+
+onPaneClick(() => {
+  selectedEdgeIds.value = []
+})
+
+onEdgeClick((event) => {
+  const clickedId = event.edge?.id
+  if (!clickedId) return
+  const mouseEvent = event.event as MouseEvent | undefined
+  const isMulti = Boolean(mouseEvent && (mouseEvent.ctrlKey || mouseEvent.metaKey || mouseEvent.shiftKey))
+  if (isMulti) {
+    if (selectedEdgeIds.value.includes(clickedId)) {
+      selectedEdgeIds.value = selectedEdgeIds.value.filter(id => id !== clickedId)
+    } else {
+      selectedEdgeIds.value = [...selectedEdgeIds.value, clickedId]
+    }
+  } else {
+    selectedEdgeIds.value = [clickedId]
+  }
+})
+
+onEdgeDoubleClick((event) => {
+  if (event.edge?.id) {
+    handleEdgeDelete(event.edge.id)
   }
 })
 
@@ -314,6 +360,14 @@ function handleNodeDelete(nodeId: string) {
   notifStore.info(`Node ${nodeId} deleted`)
 }
 
+async function handleEdgeDelete(edgeId: string) {
+  const removed = await globalViewModel.deleteEdges([edgeId])
+  selectedEdgeIds.value = selectedEdgeIds.value.filter(id => id !== edgeId)
+  if (removed > 0) {
+    notifStore.info('Connection removed')
+  }
+}
+
 function handleAddNode(type: NodeType) {
   const count = nodes.value.length
   globalViewModel.addNode(type, {
@@ -385,6 +439,12 @@ function getCurrentlySelectedNodeIds(): string[] {
   return nodes.value.filter(n => n.selected).map(n => n.id)
 }
 
+function getCurrentlySelectedEdgeIds(): string[] {
+  const fromVueFlow = (getSelectedEdges?.value || []).map((e: any) => e.id)
+  const fromLocal = edges.value.filter(e => e.selected).map(e => e.id)
+  return Array.from(new Set([...fromVueFlow, ...fromLocal, ...selectedEdgeIds.value]))
+}
+
 function selectAllNodes() {
   const allNodes = getNodes?.value || nodes.value
   for (const n of allNodes as any[]) {
@@ -421,10 +481,22 @@ async function handlePaste() {
 }
 
 async function handleDeleteSelected() {
-  const selectedIds = getCurrentlySelectedNodeIds()
-  if (selectedIds.length === 0) return
-  const count = await globalViewModel.deleteSelected(selectedIds)
-  notifStore.info(`Deleted ${count} node(s)`)
+  const selectedNodeIds = getCurrentlySelectedNodeIds()
+  const selectedEdges = getCurrentlySelectedEdgeIds()
+  if (selectedNodeIds.length === 0 && selectedEdges.length === 0) return
+
+  if (selectedNodeIds.length > 0) {
+    const nodeCount = await globalViewModel.deleteSelected(selectedNodeIds)
+    notifStore.info(`Deleted ${nodeCount} node(s)`)
+  }
+
+  if (selectedEdges.length > 0) {
+    const edgeCount = await globalViewModel.deleteEdges(selectedEdges)
+    selectedEdgeIds.value = []
+    if (edgeCount > 0) {
+      notifStore.info(`Deleted ${edgeCount} connection(s)`)
+    }
+  }
 }
 
 async function handleArrowMove(key: string, isShift: boolean) {
@@ -514,8 +586,9 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 
   if (event.key === 'Delete' || event.key === 'Backspace') {
-    const selectedIds = getCurrentlySelectedNodeIds()
-    if (selectedIds.length > 0) {
+    const selectedNodeIds = getCurrentlySelectedNodeIds()
+    const selectedEdges = getCurrentlySelectedEdgeIds()
+    if (selectedNodeIds.length > 0 || selectedEdges.length > 0) {
       event.preventDefault()
       handleDeleteSelected()
       return
@@ -789,6 +862,7 @@ function onDrop(event: DragEvent) {
       :default-viewport="{ zoom: 1 }"
       :min-zoom="0.2"
       :max-zoom="4"
+      :delete-key-code="null"
       :multi-selection-key-code="['Control', 'Meta', 'Shift']"
       :selection-key-code="['Shift']"
       fit-view-on-init
@@ -796,6 +870,10 @@ function onDrop(event: DragEvent) {
       <Background pattern-color="#1E293B" :gap="18" />
       <Controls />
       <MiniMap :node-color="getMiniMapNodeColor" mask-color="rgba(9, 13, 22, 0.78)" />
+
+      <template #edge-deletable="edgeProps">
+        <DeletableEdge v-bind="edgeProps" @delete="handleEdgeDelete" />
+      </template>
 
       <template #node-agent="nodeProps">
         <AgentNode v-bind="nodeProps" @configure="openNodeConfig" @delete="handleNodeDelete" />
@@ -844,7 +922,8 @@ function onDrop(event: DragEvent) {
                 { keys: 'Ctrl + C', desc: 'Copy selected nodes & connections' },
                 { keys: 'Ctrl + X', desc: 'Cut selected nodes' },
                 { keys: 'Ctrl + V', desc: 'Paste nodes with offset' },
-                { keys: 'Del / Backspace', desc: 'Delete selected node(s)' },
+                { keys: 'Del / Backspace', desc: 'Delete selected node(s) or connection(s)' },
+                { keys: 'Edge × / Dbl-Click', desc: 'Disconnect / delete connection' },
                 { keys: 'Ctrl + Z', desc: 'Undo canvas action' },
                 { keys: 'Ctrl + Y', desc: 'Redo canvas action' },
                 { keys: 'Arrow Keys', desc: 'Move selected node(s) by 10px' },

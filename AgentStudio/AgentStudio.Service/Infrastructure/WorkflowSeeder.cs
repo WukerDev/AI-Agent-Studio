@@ -714,6 +714,25 @@ public static class WorkflowSeeder
                 }
             }
         }
+        else if (workflow != null)
+        {
+            var canonicalOwnerId = workflow.OwnerId;
+            var mismatchedNodes = await db.AgentNodes
+                .Where(n => n.FlowId == flowId && n.OwnerId != canonicalOwnerId)
+                .ToListAsync(cancellationToken);
+            foreach (var node in mismatchedNodes)
+            {
+                node.OwnerId = canonicalOwnerId;
+            }
+
+            var mismatchedEdges = await db.WorkflowEdges
+                .Where(e => e.FlowId == flowId && e.OwnerId != canonicalOwnerId)
+                .ToListAsync(cancellationToken);
+            foreach (var edge in mismatchedEdges)
+            {
+                edge.OwnerId = canonicalOwnerId;
+            }
+        }
 
         await db.SaveChangesAsync(cancellationToken);
     }

@@ -96,23 +96,39 @@ public class AgentEngine : IAgentEngine
         {
             await LogEvent("info", $"Starting workflow execution {resolvedExecutionId} for flow '{flowId}'");
 
-            var nodes = await this.dbContext.AgentNodes
-                .Where(n => n.FlowId == flowId && n.OwnerId == userId)
-                .ToListAsync(cancellationToken);
+            List<AgentNodeEntity> nodes;
+            List<WorkflowEdgeEntity> edges;
 
-            var edges = await this.dbContext.WorkflowEdges
-                .Where(e => e.FlowId == flowId && e.OwnerId == userId)
-                .ToListAsync(cancellationToken);
-
-            if (nodes.Count == 0 && (userId != "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+            if (WorkflowSeeder.SampleFlowIds.Contains(flowId))
             {
                 nodes = await this.dbContext.AgentNodes
-                    .Where(n => n.FlowId == flowId && (n.OwnerId == "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+                    .Where(n => n.FlowId == flowId)
                     .ToListAsync(cancellationToken);
 
                 edges = await this.dbContext.WorkflowEdges
-                    .Where(e => e.FlowId == flowId && (e.OwnerId == "guest-user" || WorkflowSeeder.SampleFlowIds.Contains(flowId)))
+                    .Where(e => e.FlowId == flowId)
                     .ToListAsync(cancellationToken);
+            }
+            else
+            {
+                nodes = await this.dbContext.AgentNodes
+                    .Where(n => n.FlowId == flowId && n.OwnerId == userId)
+                    .ToListAsync(cancellationToken);
+
+                edges = await this.dbContext.WorkflowEdges
+                    .Where(e => e.FlowId == flowId && e.OwnerId == userId)
+                    .ToListAsync(cancellationToken);
+
+                if (nodes.Count == 0 && userId != "guest-user")
+                {
+                    nodes = await this.dbContext.AgentNodes
+                        .Where(n => n.FlowId == flowId && n.OwnerId == "guest-user")
+                        .ToListAsync(cancellationToken);
+
+                    edges = await this.dbContext.WorkflowEdges
+                        .Where(e => e.FlowId == flowId && e.OwnerId == "guest-user")
+                        .ToListAsync(cancellationToken);
+                }
             }
 
             if (nodes.Count == 0)
@@ -149,13 +165,13 @@ public class AgentEngine : IAgentEngine
 
                 var modelNode = ResolveConnectedSingle(currentAgentNode, modelNodes, nodes, edges) ?? modelNodes.FirstOrDefault();
                 var connectedPrompts = ResolveConnectedMany(currentAgentNode, promptNodes, nodes, edges);
-                if (connectedPrompts.Count == 0 && promptNodes.Count > 0)
+                if (connectedPrompts.Count == 0 && promptNodes.Count > 0 && orderedAgents.Count <= 1)
                 {
                     connectedPrompts = promptNodes;
                 }
 
                 var connectedMcps = ResolveConnectedMany(currentAgentNode, mcpNodes, nodes, edges);
-                if (connectedMcps.Count == 0 && mcpNodes.Count > 0)
+                if (connectedMcps.Count == 0 && mcpNodes.Count > 0 && orderedAgents.Count <= 1)
                 {
                     connectedMcps = mcpNodes;
                 }
@@ -237,26 +253,33 @@ public class AgentEngine : IAgentEngine
                     }
                 }
 
+                var basePromptText = promptParts.Count > 0
+                    ? string.Join("\n\n", promptParts)
+                    : "You are an autonomous AI Agent built in AI Agent Studio.";
+
+                string systemPrompt;
                 if (attachedSkillItems.Count > 0)
                 {
                     var skillNamesList = string.Join(", ", attachedSkillItems.Select(s => $"{s.Name} ({s.Path})"));
                     await LogEvent("info", $"Attached Microsoft Agent Skill(s) via SKILL.md: [{skillNamesList}]");
 
                     var skillsSb = new StringBuilder();
-                    skillsSb.AppendLine("### MICROSOFT AGENT SKILLS (SKILL.md)");
+                    skillsSb.AppendLine("### PRIMARY AGENT SKILLS (HIGHEST SYSTEM PRIORITY — SKILL.md)");
+                    skillsSb.AppendLine("The following Agent Skill(s) are explicitly enabled on this agent. You MUST strictly follow every rule below (including output language, style, and format). Whenever a skill rule conflicts with the base prompt below, follow the Agent Skill rule.");
                     foreach (var skill in attachedSkillItems)
                     {
                         skillsSb.AppendLine($"#### Skill: {skill.Name}");
-                        skillsSb.AppendLine($"Description: {skill.Description}");
-                        skillsSb.AppendLine(skill.Content);
+                        skillsSb.AppendLine(skill.Content.Trim());
                         skillsSb.AppendLine();
                     }
-                    promptParts.Add(skillsSb.ToString().Trim());
+                    skillsSb.AppendLine("### BASE ROLE & TASK INSTRUCTIONS (apply except where superseded by Primary Agent Skills above)");
+                    skillsSb.AppendLine(basePromptText);
+                    systemPrompt = skillsSb.ToString().Trim();
                 }
-
-                var systemPrompt = promptParts.Count > 0
-                    ? string.Join("\n\n", promptParts)
-                    : "You are an autonomous AI Agent built in AI Agent Studio.";
+                else
+                {
+                    systemPrompt = basePromptText;
+                }
 
                 systemPrompt = ApplyPromptTemplateVariables(systemPrompt, baseInput, currentInput, agentName, flowId);
 
@@ -336,6 +359,8 @@ public class AgentEngine : IAgentEngine
 
                 await LogEvent("info", $"Executing agent reasoning loop ({agentName})...", new { Prompt = currentInput });
 
+                var effectiveInput = currentInput;
+
                 string responseText;
                 if (tools.Count > 0)
                 {
@@ -349,7 +374,7 @@ public class AgentEngine : IAgentEngine
                             chatClient,
                             agentName,
                             systemPrompt,
-                            currentInput,
+                            effectiveInput,
                             tools,
                             LogEvent,
                             cancellationToken);
@@ -369,7 +394,7 @@ public class AgentEngine : IAgentEngine
                                 AIContextProviders = skillsProvider != null ? [skillsProvider] : null
                             };
                             var agentWithTools = chatClient.AsAIAgent(agentOptions);
-                            var response = await agentWithTools.RunAsync(currentInput, cancellationToken: cancellationToken);
+                            var response = await agentWithTools.RunAsync(effectiveInput, cancellationToken: cancellationToken);
                             responseText = response.Text ?? string.Empty;
                         }
                         catch (Exception toolEx) when (
@@ -386,7 +411,7 @@ public class AgentEngine : IAgentEngine
                                 chatClient,
                                 agentName,
                                 systemPrompt,
-                                currentInput,
+                                effectiveInput,
                                 tools,
                                 LogEvent,
                                 cancellationToken);
@@ -407,7 +432,7 @@ public class AgentEngine : IAgentEngine
                             AIContextProviders = skillsProvider != null ? [skillsProvider] : null
                         };
                         var agent = chatClient.AsAIAgent(agentOptions);
-                        var response = await agent.RunAsync(currentInput, cancellationToken: cancellationToken);
+                        var response = await agent.RunAsync(effectiveInput, cancellationToken: cancellationToken);
                         responseText = response.Text ?? string.Empty;
                     }
                     catch (Exception skillToolEx) when (
@@ -417,7 +442,7 @@ public class AgentEngine : IAgentEngine
                          skillToolEx.Message.Contains("Bad Request", StringComparison.OrdinalIgnoreCase)))
                     {
                         var agent = chatClient.AsAIAgent(instructions: systemPrompt, name: agentName);
-                        var response = await agent.RunAsync(currentInput, cancellationToken: cancellationToken);
+                        var response = await agent.RunAsync(effectiveInput, cancellationToken: cancellationToken);
                         responseText = response.Text ?? string.Empty;
                     }
                 }
@@ -522,15 +547,14 @@ public class AgentEngine : IAgentEngine
         reactSystemInstructions.AppendLine("CRITICAL: You ARE connected to executable tools via Model Context Protocol (MCP). You may ONLY invoke tools explicitly listed under 'Available executable MCP tools' below.");
         reactSystemInstructions.AppendLine("Available executable MCP tools:");
         reactSystemInstructions.AppendLine(toolCatalog);
-        reactSystemInstructions.AppendLine("When the user's request requires one of the available executable MCP tools listed above, respond ONLY with a single line starting with TOOL_CALL: followed by a valid JSON object:");
-        reactSystemInstructions.AppendLine("TOOL_CALL: {\"name\": \"<tool_name>\", \"arguments\": {\"<param_name>\": \"<value>\"}}");
+        reactSystemInstructions.AppendLine("When the user's request requires one of the available executable MCP tools listed above, respond ONLY with a single line starting with TOOL_CALL: followed by a valid JSON object using one of the EXACT tool names from the list above.");
         if (!string.IsNullOrWhiteSpace(toolExamples))
         {
-            reactSystemInstructions.AppendLine("Examples (using your currently attached tools):");
+            reactSystemInstructions.AppendLine("Valid TOOL_CALL format examples (using your currently attached tools):");
             reactSystemInstructions.Append(toolExamples);
         }
-        reactSystemInstructions.AppendLine("NEVER emit TOOL_CALL for any tool that is NOT listed under 'Available executable MCP tools' above. If the user asks for an unattached tool, do NOT emit TOOL_CALL — explain clearly which tools are currently enabled and answer directly if possible.");
-        reactSystemInstructions.AppendLine("If the user's request is a simple greeting or general question that does not use any attached MCP tool, answer directly without emitting TOOL_CALL.");
+        reactSystemInstructions.AppendLine("NEVER emit placeholder names or TOOL_CALL for any tool that is NOT listed under 'Available executable MCP tools' above. If the user asks for an unattached tool, do NOT emit TOOL_CALL — explain clearly which tools are currently enabled and answer directly if possible.");
+        reactSystemInstructions.AppendLine("If the user's request is a general question or does not need an attached MCP tool, answer directly without emitting TOOL_CALL and strictly follow the System Prompt and any attached Agent Skills (including output language).");
 
         var currentPrompt = userInput;
         var maxIterations = 4;
@@ -564,7 +588,7 @@ public class AgentEngine : IAgentEngine
                     synthSb.AppendLine("If the user's request ALSO requires one of the additional tools listed above that has NOT been executed yet, respond ONLY with: TOOL_CALL: {\"name\": \"<tool_name>\", \"arguments\": {...}}");
                     synthSb.AppendLine("NEVER emit TOOL_CALL for any tool not listed above.");
                 }
-                synthSb.AppendLine("Otherwise, provide a direct, confident, and complete final answer to the user's request using the EXACT numbers, versions, dates, and facts from VERIFIED MCP TOOL RESULTS above combined with your own knowledge. NEVER output raw TOOL_CALL lines in your final answer.");
+                synthSb.AppendLine("Otherwise, provide a direct, confident, and complete final answer to the user's request using the EXACT numbers, versions, dates, and facts from VERIFIED MCP TOOL RESULTS above combined with your own knowledge. Strictly follow the output language and formatting rules from the System Prompt and any attached Agent Skills. NEVER output raw TOOL_CALL lines in your final answer.");
                 activeInstructions = synthSb.ToString();
             }
 

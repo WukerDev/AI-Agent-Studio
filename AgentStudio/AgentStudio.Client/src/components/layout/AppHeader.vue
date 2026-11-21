@@ -12,12 +12,25 @@ function toggleLocale() {
   locale.value = locale.value === 'pl' ? 'en' : 'pl'
 }
 
+function handleLogin() {
+  authViewModel.login()
+}
+
 function handleLogout() {
   authViewModel.logout()
 }
 
+const isAuthenticated = computed(() => authViewModel.isAuthenticated)
+
 const userDisplay = computed(() => {
-  return authViewModel.username || 'Admin'
+  if (authViewModel.username) {
+    return authViewModel.username
+  }
+  return isAuthenticated.value ? 'User' : t('layout.header.guest')
+})
+
+const authSubtitle = computed(() => {
+  return isAuthenticated.value ? 'Keycloak IAM' : t('layout.header.guestMode')
 })
 
 const userInitials = computed(() => {
@@ -103,17 +116,26 @@ const userInitials = computed(() => {
                 <v-icon icon="mdi-account-circle-outline" class="mr-2" size="18" color="#94A3B8" />
               </template>
               <v-list-item-title class="text-caption font-weight-bold text-white">{{ userDisplay }}</v-list-item-title>
-              <v-list-item-subtitle class="text-caption" style="color: #64748B;">Keycloak IAM</v-list-item-subtitle>
+              <v-list-item-subtitle class="text-caption" style="color: #64748B;">{{ authSubtitle }}</v-list-item-subtitle>
             </v-list-item>
 
             <v-divider class="my-1" />
 
-            <v-list-item class="rounded" @click="handleLogout">
+            <v-list-item v-if="isAuthenticated" class="rounded" @click="handleLogout">
               <template v-slot:prepend>
                 <v-icon icon="mdi-logout" class="mr-2" size="16" color="error" />
               </template>
               <v-list-item-title class="text-caption font-weight-medium text-error">
                 {{ t('layout.header.logout') }}
+              </v-list-item-title>
+            </v-list-item>
+
+            <v-list-item v-else class="rounded" @click="handleLogin">
+              <template v-slot:prepend>
+                <v-icon icon="mdi-login" class="mr-2" size="16" color="info" />
+              </template>
+              <v-list-item-title class="text-caption font-weight-medium text-info">
+                {{ t('layout.header.login') }}
               </v-list-item-title>
             </v-list-item>
           </v-list>

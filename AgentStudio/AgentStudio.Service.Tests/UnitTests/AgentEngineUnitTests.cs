@@ -988,4 +988,213 @@ public class AgentEngineUnitTests
         result.Output.Should().NotBeNullOrWhiteSpace();
         result.Output.Should().NotContain("TOOL_CALL:");
     }
+
+    private class MutableUserContext(string userId) : IUserContext
+    {
+        public string UserId { get; set; } = userId;
+        public string Username => UserId;
+    }
+
+    [Fact]
+    public async Task SharedSampleFlow_WhenEditedBySecondUser_ShouldRemainCompleteForBothUsers()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: $"SharedSampleFlowMultiUser_{Guid.NewGuid()}")
+            .Options;
+
+        using var db = new ApplicationDbContext(options);
+        const string userA = "user-a-guid";
+        const string userB = "user-b-guid";
+
+        await WorkflowSeeder.SeedSampleWorkflowsAsync(db, ownerId: userA);
+
+        var userContext = new MutableUserContext(userB);
+        var fakeHub = new FakeHubContext();
+        var skillConfig = new ConfigurationBuilder().Build();
+        var skillService = new SkillService(skillConfig, NullLogger<SkillService>.Instance);
+
+        var service = new AgentFlowServiceImplementation(
+            db,
+            userContext,
+            fakeHub,
+            serviceScopeFactory: null!,
+            skillService,
+            NullLogger<AgentFlowServiceImplementation>.Instance);
+
+        // User B moves/saves the seeded agent node on default-flow
+        var saveRes = await service.SaveAgentNode(new SaveAgentNodeRequest
+        {
+            FlowId = "default-flow",
+            Node = new AgentNode
+            {
+                Id = "seed-def-agent",
+                Name = "Główny Agent AI",
+                Type = NodeType.Agent,
+                Position = new Position { X = 420, Y = 150 }
+            }
+        }, context: null!);
+
+        saveRes.Success.Should().BeTrue();
+
+        // Both User A and User B must still see ALL nodes and edges of default-flow
+        userContext.UserId = userA;
+        var userANodes = await service.GetAgentNodes(new GetAgentNodesRequest { FlowId = "default-flow" }, context: null!);
+        var userAEdges = await service.GetWorkflowEdges(new GetWorkflowEdgesRequest { FlowId = "default-flow" }, context: null!);
+
+        userANodes.Nodes.Should().Contain(n => n.Id == "seed-def-agent");
+        userANodes.Nodes.Should().Contain(n => n.Id == "seed-def-model");
+        userANodes.Nodes.Should().Contain(n => n.Id == "seed-def-prompt");
+        userANodes.Nodes.Should().Contain(n => n.Id == "seed-def-mcp");
+        userAEdges.Edges.Should().HaveCountGreaterThanOrEqualTo(3);
+
+        userContext.UserId = userB;
+        var userBNodes = await service.GetAgentNodes(new GetAgentNodesRequest { FlowId = "default-flow" }, context: null!);
+        var userBEdges = await service.GetWorkflowEdges(new GetWorkflowEdgesRequest { FlowId = "default-flow" }, context: null!);
+
+        userBNodes.Nodes.Should().HaveCount(userANodes.Nodes.Count);
+        userBEdges.Edges.Should().HaveCount(userAEdges.Edges.Count);
+    }
+
+    [Fact]
+    public async Task ExecuteFlowAsync_MultiAgentPipeline_ShouldNotLeakMcpToSecondAgent_AndShouldApplySecondAgentSkillOverride_WithGemma3_12b()
+    {
+        if (!await OllamaTestHelper.IsOllamaGemmaAvailableAsync())
+        {
+            WarnOllamaUnavailable(nameof(ExecuteFlowAsync_MultiAgentPipeline_ShouldNotLeakMcpToSecondAgent_AndShouldApplySecondAgentSkillOverride_WithGemma3_12b));
+            return;
+        }
+
+        var tempSkillsRoot = Path.Combine(Path.GetTempPath(), $"AgentStudio_MultiAgentSkillTest_{Guid.NewGuid():N}");
+        try
+        {
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Skills:RootPath"] = tempSkillsRoot,
+                    ["AiProviders:DefaultProvider"] = "Ollama",
+                    ["AiProviders:Ollama:Endpoint"] = "http://localhost:11434",
+                    ["AiProviders:Ollama:DefaultModel"] = "gemma3:12b"
+                })
+                .Build();
+
+            var skillService = new SkillService(config, NullLogger<SkillService>.Instance);
+            await skillService.SaveSkillAsync(
+                "hiszpan",
+                "Użyj tego skilla, gdy agent potrzebuje specjalistycznej wiedzy domenowej.",
+                "# My Domain Skill\n\nrespond i spanish language");
+
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: $"MultiAgentSkillOverride_{Guid.NewGuid()}")
+                .Options;
+
+            using var db = new ApplicationDbContext(options);
+            const string flowId = "test-multi-agent-spanish-skill";
+            const string userId = "user-1";
+
+            db.AgentNodes.AddRange(
+                new AgentNodeEntity
+                {
+                    Id = "model-1",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Ollama Gemma3 12B",
+                    Type = (int)NodeType.Model,
+                    ModelProvider = "Ollama",
+                    ModelName = "gemma3:12b",
+                    Temperature = 0.2f,
+                    Endpoint = "http://localhost:11434"
+                },
+                new AgentNodeEntity
+                {
+                    Id = "agent-1",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Agent 1: Badacz",
+                    Type = (int)NodeType.Agent
+                },
+                new AgentNodeEntity
+                {
+                    Id = "agent-2",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Agent 2: Redaktor",
+                    Type = (int)NodeType.Agent
+                },
+                new AgentNodeEntity
+                {
+                    Id = "prompt-1",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Prompt: Badacz",
+                    Type = (int)NodeType.Prompt,
+                    SystemPrompt = "Podaj w 2 krótkich zdaniach po polsku czym jest gRPC: {{input}}"
+                },
+                new AgentNodeEntity
+                {
+                    Id = "prompt-2",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Prompt: Redaktor",
+                    Type = (int)NodeType.Prompt,
+                    SystemPrompt = "Jesteś redaktorem naczelnym (Summarizer). Na podstawie danych od pierwszego agenta przygotuj zwięzłe podsumowanie w punktach po polsku."
+                },
+                new AgentNodeEntity
+                {
+                    Id = "mcp-1",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Web & Knowledge MCP",
+                    Type = (int)NodeType.McpConnector,
+                    McpServerUrl = "builtin://tools",
+                    McpEnabledTools = ["search_web", "execute_query"]
+                },
+                new AgentNodeEntity
+                {
+                    Id = "skill-hiszpan",
+                    FlowId = flowId,
+                    OwnerId = userId,
+                    Name = "Skill: hiszpan",
+                    Type = (int)NodeType.Skill,
+                    Endpoint = "hiszpan"
+                });
+
+            db.WorkflowEdges.AddRange(
+                new WorkflowEdgeEntity { Id = "e1", FlowId = flowId, OwnerId = userId, SourceNodeId = "model-1", TargetNodeId = "agent-1" },
+                new WorkflowEdgeEntity { Id = "e2", FlowId = flowId, OwnerId = userId, SourceNodeId = "model-1", TargetNodeId = "agent-2" },
+                new WorkflowEdgeEntity { Id = "e3", FlowId = flowId, OwnerId = userId, SourceNodeId = "agent-1", TargetNodeId = "agent-2" },
+                new WorkflowEdgeEntity { Id = "e4", FlowId = flowId, OwnerId = userId, SourceNodeId = "prompt-1", TargetNodeId = "agent-1" },
+                new WorkflowEdgeEntity { Id = "e5", FlowId = flowId, OwnerId = userId, SourceNodeId = "mcp-1", TargetNodeId = "agent-1" },
+                new WorkflowEdgeEntity { Id = "e6", FlowId = flowId, OwnerId = userId, SourceNodeId = "prompt-2", TargetNodeId = "agent-2" },
+                new WorkflowEdgeEntity { Id = "e7", FlowId = flowId, OwnerId = userId, SourceNodeId = "skill-hiszpan", TargetNodeId = "agent-2" });
+
+            await db.SaveChangesAsync();
+
+            var realMcp = new McpClientService(NullLogger<McpClientService>.Instance);
+            var fakeHub = new FakeHubContext();
+            var engine = new AgentEngine(db, realMcp, fakeHub, config, NullLogger<AgentEngine>.Instance, skillService);
+
+            var result = await engine.ExecuteFlowAsync(flowId, userId, "Wyjaśnij krótko czym jest gRPC.");
+
+            result.Success.Should().BeTrue(because: $"Error: {result.ErrorMessage}");
+            var exec = await db.WorkflowExecutions.FirstAsync();
+            // Agent 2 has no MCP connector, so Web & Knowledge MCP should be attached only ONCE (for Agent 1)
+            System.Text.RegularExpressions.Regex.Matches(exec.LogsJson ?? string.Empty, "Connecting to MCP Node").Count.Should().Be(1);
+
+            var parts = result.Output.Split("[Agent 2: Redaktor]");
+            parts.Length.Should().Be(2);
+            var agent2Output = parts[1].ToLowerInvariant();
+            this.output.WriteLine("AGENT 2 OUTPUT:\n" + parts[1]);
+
+            // Verify Agent 2 followed Skill: hiszpan and responded in Spanish (common Spanish words)
+            var spanishMarkers = new[] { " el ", " la ", " los ", " las ", " de ", " es ", " un ", " una ", " para ", " con ", " que ", " en ", "resumen", "comunicación", "protocolo" };
+            spanishMarkers.Count(m => agent2Output.Contains(m)).Should().BeGreaterThanOrEqualTo(3, because: $"Agent 2 output should be in Spanish, got:\n{parts[1]}");
+        }
+        finally
+        {
+            if (Directory.Exists(tempSkillsRoot))
+            {
+                Directory.Delete(tempSkillsRoot, recursive: true);
+            }
+        }
+    }
 }

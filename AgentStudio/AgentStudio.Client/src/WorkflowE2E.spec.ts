@@ -477,4 +477,32 @@ describe('End-to-End Frontend Workflow & Canvas State', () => {
         expect(vm.edges[0].targetHandle).toBe('skill')
         expect(vm.edges[0].sourceHandle).toBe('skill-out')
     })
+
+    it('E2E Flow 16: Should delete individual edges, persist removal, and restore via Undo', async () => {
+        await vm.addNode(NodeType.MODEL, { x: 100, y: 200 }, 'Ollama Model')
+        await vm.addNode(NodeType.AGENT, { x: 300, y: 100 }, 'Main Agent')
+        const model = vm.nodes.find(n => n.type === NodeType.MODEL)!
+        const agent = vm.nodes.find(n => n.type === NodeType.AGENT)!
+
+        const edgeId = `e_${model.id}_${agent.id}`
+        await vm.saveEdges([
+            {
+                id: edgeId,
+                flowId: 'default-flow',
+                sourceNodeId: model.id,
+                sourceHandle: 'model-out',
+                targetNodeId: agent.id,
+                targetHandle: 'model'
+            }
+        ])
+        expect(vm.edges).toHaveLength(1)
+
+        const removed = await vm.deleteEdges([edgeId])
+        expect(removed).toBe(1)
+        expect(vm.edges).toHaveLength(0)
+
+        await vm.undo()
+        expect(vm.edges).toHaveLength(1)
+        expect(vm.edges[0].id).toBe(edgeId)
+    })
 })
