@@ -33,6 +33,7 @@ export const useAuth = createSharedComposable(() => {
         try {
             const authenticated = await keycloakInstance.init({
                 onLoad: 'login-required',
+                checkLoginIframe: false
             });
 
             isAuthenticated.value = authenticated;
