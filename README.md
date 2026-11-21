@@ -224,15 +224,6 @@ Każdy węzeł **AI Agent** posiada wbudowaną konfigurację awaryjną:
 - [x] Zintegrowanie automatycznych testów w GitHub Actions workflow.
 - [x] Rozbudowa dashboardów diagnostycznych w **Grafanie** w oparciu o metryki OpenTelemetry.
 
-### Faza 5: Zaawansowana Orkiestracja, Narzędzia i Rozwój Produkcyjny (W trakcie / Backlog 📋)
-- [ ] **Eksport i Import Przepływów:** Możliwość eksportu grafu do plików JSON/YAML oraz importu gotowych szablonów społeczności.
-- [ ] **Węzły Warunkowe i Rozgałęzienia (Router & Conditional Node):** Dynamiczne rozgałęzianie ścieżek wykonania na podstawie klasyfikacji intencji lub reguł logicznych (If/Else).
-- [ ] **Pamięć Długoterminowa i RAG (Vector Store Node):** Integracja z bazą wektorową (pgvector / Qdrant) i węzłem bazy wiedzy do odpytywania dokumentów (PDF/TXT/Markdown).
-- [ ] **Strumieniowanie Odpowiedzi Token-po-Tokenie (Live Token Streaming):** Real-time streaming generowanego tekstu z modeli LLM bezpośrednio na kanwę i do konsoli za pośrednictwem SignalR/SSE.
-- [ ] **Zarządzanie Poświadczeniami Zewnętrznych MCP:** Bezpieczny magazyn kluczy (Vault / Secret Store) dla zewnętrznych serwerów MCP (GitHub, Slack, Jira, Confluence) z autoryzacją OAuth2.
-- [ ] **Human-in-the-Loop (Approval Node):** Węzeł zatwierdzania akcji krytycznych przez człowieka przed wykonaniem wrażliwych narzędzi MCP.
-- [ ] **Analityka i Optymalizacja Kosztów (Cost & Token Tracker):** Panel monitorowania zużycia tokenów oraz szacunkowych kosztów wywołań komercyjnych modeli AI (OpenAI, Gemini) w Grafanie.
-
 ---
 
 ## ⚙️ Uruchomienie Środowiska Deweloperskiego
