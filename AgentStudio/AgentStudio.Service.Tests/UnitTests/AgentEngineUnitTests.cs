@@ -853,4 +853,23 @@ public class AgentEngineUnitTests
             }
         }
     }
+
+    [Theory]
+    [InlineData("http://localhost:11434", "http://host.docker.internal:11434", true, "http://host.docker.internal:11434")]
+    [InlineData("http://127.0.0.1:11434", "http://host.docker.internal:11434", true, "http://host.docker.internal:11434")]
+    [InlineData("http://localhost:11434/v1", "http://host.docker.internal:11434", true, "http://host.docker.internal:11434")]
+    [InlineData("http://localhost:11435", "http://host.docker.internal:11434", true, "http://host.docker.internal:11435")]
+    [InlineData("http://localhost:11434", "http://localhost:11434", true, "http://host.docker.internal:11434")]
+    [InlineData("http://192.168.1.50:11434", "http://host.docker.internal:11434", true, "http://192.168.1.50:11434")]
+    [InlineData("http://localhost:11434", "http://host.docker.internal:11434", false, "http://localhost:11434")]
+    [InlineData(null, "http://host.docker.internal:11434", false, "http://host.docker.internal:11434")]
+    public void ResolveOllamaEndpoint_ShouldRouteLoopbackToContainerHost_OnlyWhenRunningInContainer(
+        string? customEndpoint,
+        string? configuredEndpoint,
+        bool isRunningInContainer,
+        string expected)
+    {
+        var resolved = AgentEngine.ResolveOllamaEndpoint(customEndpoint, configuredEndpoint, isRunningInContainer);
+        resolved.Should().Be(expected);
+    }
 }

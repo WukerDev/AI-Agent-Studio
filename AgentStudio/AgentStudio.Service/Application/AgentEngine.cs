@@ -1090,10 +1090,19 @@ public class AgentEngine : IAgentEngine
 
         if (provider.Equals("Ollama", StringComparison.OrdinalIgnoreCase))
         {
-            var ollamaEndpoint = FirstNonEmpty(
+            var ollamaEndpoint = ResolveOllamaEndpoint(
                 customEndpoint,
                 this.configuration["AiProviders:Ollama:Endpoint"],
-                "http://localhost:11434");
+                IsRunningInContainer());
+
+            if (!string.IsNullOrWhiteSpace(customEndpoint) &&
+                !string.Equals(customEndpoint.Trim().TrimEnd('/'), ollamaEndpoint.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+            {
+                this.logger.LogInformation(
+                    "Container environment detected: routing Ollama endpoint from {OriginalEndpoint} to {ResolvedEndpoint}",
+                    customEndpoint,
+                    ollamaEndpoint);
+            }
 
             var trimmed = ollamaEndpoint.TrimEnd('/');
             if (!trimmed.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
@@ -1125,7 +1134,8 @@ public class AgentEngine : IAgentEngine
                 this.configuration["AiProviders:Gemini:Endpoint"],
                 "https://generativelanguage.googleapis.com/v1beta/openai/");
 
-            if (geminiEndpoint.Contains("localhost:11434", StringComparison.OrdinalIgnoreCase))
+            if (geminiEndpoint.Contains("localhost:11434", StringComparison.OrdinalIgnoreCase) ||
+                geminiEndpoint.Contains("host.docker.internal:11434", StringComparison.OrdinalIgnoreCase))
             {
                 geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/";
             }
@@ -1177,6 +1187,64 @@ public class AgentEngine : IAgentEngine
         }
 
         return baseClient;
+    }
+
+    public static string ResolveOllamaEndpoint(
+        string? customEndpoint,
+        string? configuredEndpoint,
+        bool isRunningInContainer)
+    {
+        var candidate = FirstNonEmpty(
+            customEndpoint,
+            configuredEndpoint,
+            "http://localhost:11434");
+
+        if (!isRunningInContainer || !Uri.TryCreate(candidate, UriKind.Absolute, out var candidateUri))
+        {
+            return candidate;
+        }
+
+        if (!IsLoopbackOrLocalHost(candidateUri))
+        {
+            return candidate;
+        }
+
+        if (!string.IsNullOrWhiteSpace(configuredEndpoint) &&
+            Uri.TryCreate(configuredEndpoint.Trim(), UriKind.Absolute, out var configuredUri) &&
+            !IsLoopbackOrLocalHost(configuredUri))
+        {
+            if (candidateUri.Port == 11434 || candidateUri.Port == configuredUri.Port)
+            {
+                return configuredEndpoint.Trim();
+            }
+
+            var customPortBuilder = new UriBuilder(candidateUri)
+            {
+                Scheme = configuredUri.Scheme,
+                Host = configuredUri.Host
+            };
+            return customPortBuilder.Uri.ToString().TrimEnd('/');
+        }
+
+        var dockerHostBuilder = new UriBuilder(candidateUri)
+        {
+            Host = "host.docker.internal"
+        };
+        return dockerHostBuilder.Uri.ToString().TrimEnd('/');
+    }
+
+    private static bool IsRunningInContainer()
+    {
+        var envVal = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER");
+        return string.Equals(envVal, "true", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(envVal, "1", StringComparison.OrdinalIgnoreCase) ||
+               File.Exists("/.dockerenv");
+    }
+
+    private static bool IsLoopbackOrLocalHost(Uri uri)
+    {
+        return uri.IsLoopback ||
+               string.Equals(uri.Host, "0.0.0.0", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string FirstNonEmpty(params string?[] values)
