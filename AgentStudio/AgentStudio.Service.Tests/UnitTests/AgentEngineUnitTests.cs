@@ -872,4 +872,120 @@ public class AgentEngineUnitTests
         var resolved = AgentEngine.ResolveOllamaEndpoint(customEndpoint, configuredEndpoint, isRunningInContainer);
         resolved.Should().Be(expected);
     }
+
+    [Fact]
+    public void TryExtractUnavailableToolCall_ShouldDetectUnattachedTool_AndIgnoreAvailableOrPlainText()
+    {
+        var attachedTools = new List<AITool>
+        {
+            AIFunctionFactory.Create((string query) => query, "search_web", "Searches web"),
+            AIFunctionFactory.Create((string url) => url, "fetch_page", "Fetches page")
+        };
+
+        var detectedUnavailable = AgentEngine.TryExtractUnavailableToolCall(
+            "TOOL_CALL: {\"name\": \"calculate_expression\", \"arguments\": {\"expression\": \"(145 * 28) + 350\"}}",
+            attachedTools,
+            out var unavailableName);
+        detectedUnavailable.Should().BeTrue();
+        unavailableName.Should().Be("calculate_expression");
+
+        var detectedAvailable = AgentEngine.TryExtractUnavailableToolCall(
+            "TOOL_CALL: {\"name\": \"search_web\", \"arguments\": {\"query\": \"test\"}}",
+            attachedTools,
+            out _);
+        detectedAvailable.Should().BeFalse();
+
+        var detectedPlainText = AgentEngine.TryExtractUnavailableToolCall(
+            "Wynik obliczenia to 4410.",
+            attachedTools,
+            out _);
+        detectedPlainText.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SanitizeFinalToolOutput_ShouldStripTrailingToolCallLines()
+    {
+        var raw = "Niestety, narzędzie get_system_info nie jest włączone.\n\nTOOL_CALL: {\"name\": \"get_system_info\", \"arguments\": {}}";
+        var sanitized = AgentEngine.SanitizeFinalToolOutput(raw);
+        sanitized.Should().Be("Niestety, narzędzie get_system_info nie jest włączone.");
+    }
+
+    [Fact]
+    public async Task ExecuteFlowAsync_WhenRequestedToolIsNotEnabledOnMcpNode_ShouldNotLeakRawToolCall_WithGemma3_12b()
+    {
+        if (!await OllamaTestHelper.IsOllamaGemmaAvailableAsync())
+        {
+            WarnOllamaUnavailable(nameof(ExecuteFlowAsync_WhenRequestedToolIsNotEnabledOnMcpNode_ShouldNotLeakRawToolCall_WithGemma3_12b));
+            return;
+        }
+
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: $"AgentEngineUnavailableToolTest_{Guid.NewGuid()}")
+            .Options;
+
+        using var db = new ApplicationDbContext(options);
+        var flowId = "test-unavailable-tool-flow";
+        var userId = "user-react";
+
+        db.AgentNodes.AddRange(
+            new AgentNodeEntity
+            {
+                Id = "model-gemma",
+                FlowId = flowId,
+                OwnerId = userId,
+                Name = "Ollama Gemma3 12B",
+                Type = (int)NodeType.Model,
+                ModelProvider = "Ollama",
+                ModelName = "gemma3:12b",
+                Temperature = 0.0f,
+                Endpoint = "http://localhost:11434"
+            },
+            new AgentNodeEntity
+            {
+                Id = "mcp-web-only",
+                FlowId = flowId,
+                OwnerId = userId,
+                Name = "Web Search Tools MCP",
+                Type = (int)NodeType.McpConnector,
+                McpServerUrl = "builtin://tools",
+                McpEnabledTools = new List<string> { "search_web", "fetch_page" }
+            },
+            new AgentNodeEntity
+            {
+                Id = "agent-1",
+                FlowId = flowId,
+                OwnerId = userId,
+                Name = "Główny Agent AI",
+                Type = (int)NodeType.Agent,
+                SystemPrompt = "Odpowiadasz precyzyjnie po polsku."
+            });
+
+        db.WorkflowEdges.AddRange(
+            new WorkflowEdgeEntity { Id = "e1", FlowId = flowId, OwnerId = userId, SourceNodeId = "model-gemma", TargetNodeId = "agent-1" },
+            new WorkflowEdgeEntity { Id = "e2", FlowId = flowId, OwnerId = userId, SourceNodeId = "mcp-web-only", TargetNodeId = "agent-1" });
+
+        await db.SaveChangesAsync();
+
+        var realMcpService = new McpClientService(NullLogger<McpClientService>.Instance);
+        var fakeHub = new FakeHubContext();
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["AiProviders:DefaultProvider"] = "Ollama",
+                ["AiProviders:Ollama:Endpoint"] = "http://localhost:11434",
+                ["AiProviders:Ollama:DefaultModel"] = "gemma3:12b"
+            })
+            .Build();
+
+        var engine = new AgentEngine(db, realMcpService, fakeHub, config, NullLogger<AgentEngine>.Instance);
+
+        var result = await engine.ExecuteFlowAsync(
+            flowId,
+            userId,
+            "Użyj narzędzia calculate_expression aby obliczyć: (145 * 28) + 350 i przedstaw wynik po polsku.");
+
+        result.Success.Should().BeTrue(because: $"Error: {result.ErrorMessage}");
+        result.Output.Should().NotBeNullOrWhiteSpace();
+        result.Output.Should().NotContain("TOOL_CALL:");
+    }
 }

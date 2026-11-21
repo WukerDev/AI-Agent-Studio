@@ -13,9 +13,9 @@ public static class OllamaTestHelper
 
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
             using var client = new HttpClient();
-            var response = await client.GetAsync("http://localhost:11434/api/tags", cts.Token);
+            var response = await client.GetAsync("http://127.0.0.1:11434/api/tags", cts.Token);
             if (!response.IsSuccessStatusCode)
             {
                 isOllamaAvailable = false;

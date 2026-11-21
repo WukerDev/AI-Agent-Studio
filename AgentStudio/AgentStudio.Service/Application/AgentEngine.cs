@@ -514,19 +514,22 @@ public class AgentEngine : IAgentEngine
         CancellationToken cancellationToken)
     {
         var toolCatalog = BuildToolCatalogDescription(tools);
+        var toolExamples = BuildToolExamples(tools);
         var reactSystemInstructions = new StringBuilder();
         reactSystemInstructions.AppendLine(systemPrompt);
         reactSystemInstructions.AppendLine();
         reactSystemInstructions.AppendLine("### MCP TOOLS PROTOCOL");
-        reactSystemInstructions.AppendLine("CRITICAL: You ARE connected to the host environment and external tools via Model Context Protocol (MCP). NEVER claim you do not have access to system info, current time, files, or calculations.");
+        reactSystemInstructions.AppendLine("CRITICAL: You ARE connected to executable tools via Model Context Protocol (MCP). You may ONLY invoke tools explicitly listed under 'Available executable MCP tools' below.");
         reactSystemInstructions.AppendLine("Available executable MCP tools:");
         reactSystemInstructions.AppendLine(toolCatalog);
-        reactSystemInstructions.AppendLine("When the user's request involves system info, time/date, math calculations, directory/file inspection, diagnostics, or web search, respond ONLY with a single line starting with TOOL_CALL: followed by a valid JSON object:");
+        reactSystemInstructions.AppendLine("When the user's request requires one of the available executable MCP tools listed above, respond ONLY with a single line starting with TOOL_CALL: followed by a valid JSON object:");
         reactSystemInstructions.AppendLine("TOOL_CALL: {\"name\": \"<tool_name>\", \"arguments\": {\"<param_name>\": \"<value>\"}}");
-        reactSystemInstructions.AppendLine("Examples:");
-        reactSystemInstructions.AppendLine("TOOL_CALL: {\"name\": \"get_system_info\", \"arguments\": {\"category\": \"all\"}}");
-        reactSystemInstructions.AppendLine("TOOL_CALL: {\"name\": \"get_current_time\", \"arguments\": {\"timezone\": \"UTC\"}}");
-        reactSystemInstructions.AppendLine("TOOL_CALL: {\"name\": \"calculate_expression\", \"arguments\": {\"expression\": \"(12 * 5) + 10\"}}");
+        if (!string.IsNullOrWhiteSpace(toolExamples))
+        {
+            reactSystemInstructions.AppendLine("Examples (using your currently attached tools):");
+            reactSystemInstructions.Append(toolExamples);
+        }
+        reactSystemInstructions.AppendLine("NEVER emit TOOL_CALL for any tool that is NOT listed under 'Available executable MCP tools' above. If the user asks for an unattached tool, do NOT emit TOOL_CALL — explain clearly which tools are currently enabled and answer directly if possible.");
         reactSystemInstructions.AppendLine("If the user's request is a simple greeting or general question that does not use any attached MCP tool, answer directly without emitting TOOL_CALL.");
 
         var currentPrompt = userInput;
@@ -558,9 +561,10 @@ public class AgentEngine : IAgentEngine
                 {
                     synthSb.AppendLine("Additional MCP tools available if the user also requested them:");
                     synthSb.AppendLine(BuildToolCatalogDescription(remainingTools));
-                    synthSb.AppendLine("If the user's request ALSO requires one of the additional tools above that has NOT been executed yet, respond ONLY with: TOOL_CALL: {\"name\": \"<tool_name>\", \"arguments\": {...}}");
+                    synthSb.AppendLine("If the user's request ALSO requires one of the additional tools listed above that has NOT been executed yet, respond ONLY with: TOOL_CALL: {\"name\": \"<tool_name>\", \"arguments\": {...}}");
+                    synthSb.AppendLine("NEVER emit TOOL_CALL for any tool not listed above.");
                 }
-                synthSb.AppendLine("Otherwise, provide a direct, confident, and complete final answer to the user's request using the EXACT numbers, versions, dates, and facts from VERIFIED MCP TOOL RESULTS above combined with your own knowledge. NEVER say 'wyniki wyszukiwania nie zawierają' or 'nie mogę podać' — always synthesize the best, most informative answer possible.");
+                synthSb.AppendLine("Otherwise, provide a direct, confident, and complete final answer to the user's request using the EXACT numbers, versions, dates, and facts from VERIFIED MCP TOOL RESULTS above combined with your own knowledge. NEVER output raw TOOL_CALL lines in your final answer.");
                 activeInstructions = synthSb.ToString();
             }
 
@@ -569,14 +573,45 @@ public class AgentEngine : IAgentEngine
             var text = (response.Text ?? string.Empty).Trim();
 
             var parsed = TryParseToolCall(text, tools, out var toolName, out var arguments);
-            if (!parsed && iteration == 0)
+            if (!parsed)
             {
-                parsed = TryDetectImplicitToolCall(userInput, text, tools, invokedTools, out toolName, out arguments);
+                if (TryExtractUnavailableToolCall(text, tools, out var unavailableToolName))
+                {
+                    var enabledNames = string.Join(", ", tools.Select(t => t.Name));
+                    await logEvent(
+                        "warning",
+                        $"[MCP Tool Unavailable] Model requested tool '{unavailableToolName}', which is not enabled on the connected MCP node. Enabled tools: [{enabledNames}].",
+                        new
+                        {
+                            RequestedTool = unavailableToolName,
+                            EnabledTools = tools.Select(t => t.Name).ToArray()
+                        });
+
+                    toolResultsHistory.Add(
+                        $"- Tool '{unavailableToolName}' is NOT enabled on the connected MCP node (currently enabled tools: [{enabledNames}]). Do NOT emit TOOL_CALL for '{unavailableToolName}'.");
+
+                    if (!invokedCallSignatures.Add($"unavailable:{unavailableToolName}"))
+                    {
+                        break;
+                    }
+
+                    currentPrompt =
+                        $"System notice: Tool '{unavailableToolName}' is NOT attached/enabled on this agent's MCP node.\n" +
+                        $"Currently enabled MCP tools: [{enabledNames}].\n\n" +
+                        $"Original user request: {userInput}\n\n" +
+                        "Do NOT emit TOOL_CALL for any unavailable tool. Inform the user clearly that the requested MCP tool is not enabled on the connected MCP node (mentioning which tools are enabled), and provide the best helpful answer directly in the user's language.";
+                    continue;
+                }
+
+                if (iteration == 0)
+                {
+                    parsed = TryDetectImplicitToolCall(userInput, text, tools, invokedTools, out toolName, out arguments);
+                }
             }
 
             if (!parsed)
             {
-                return text;
+                return SanitizeFinalToolOutput(text);
             }
 
             if (arguments.Count == 0 ||
@@ -598,7 +633,7 @@ public class AgentEngine : IAgentEngine
 
             if (matchedTool == null)
             {
-                return text;
+                return SanitizeFinalToolOutput(text);
             }
 
             await logEvent("info", $"[MCP Tool Call] Invoking '{matchedTool.Name}' with arguments: {JsonSerializer.Serialize(arguments)}", new
@@ -620,16 +655,141 @@ public class AgentEngine : IAgentEngine
             currentPrompt =
                 $"Verified MCP Tool Results:\n{string.Join("\n", toolResultsHistory)}\n\n" +
                 $"Original user request: {userInput}\n\n" +
-                "Provide the final answer based on the Verified MCP Tool Results above (combining with your own knowledge if needed for general questions, or emit TOOL_CALL only if another uncalled tool is still needed).";
+                "Provide the final answer based on the Verified MCP Tool Results above (combining with your own knowledge if needed for general questions, or emit TOOL_CALL only if another enabled, uncalled tool is still needed).";
         }
 
         var finalInstructions =
             $"{systemPrompt}\n\n" +
             $"Verified MCP Tool Results:\n{string.Join("\n", toolResultsHistory)}\n\n" +
-            "Provide the final answer to the user using the exact values from Verified MCP Tool Results above (and supplement with your own knowledge if needed).";
+            "Provide the final answer to the user using the exact values from Verified MCP Tool Results above (and supplement with your own knowledge if needed). NEVER emit TOOL_CALL or raw JSON tool calls.";
         var fallbackFinalAgent = chatClient.AsAIAgent(instructions: finalInstructions, name: agentName);
         var fallbackFinalResponse = await fallbackFinalAgent.RunAsync(currentPrompt, cancellationToken: cancellationToken);
-        return (fallbackFinalResponse.Text ?? string.Empty).Trim();
+        return SanitizeFinalToolOutput((fallbackFinalResponse.Text ?? string.Empty).Trim());
+    }
+
+    private static string BuildToolExamples(List<AITool> tools)
+    {
+        var sb = new StringBuilder();
+        foreach (var tool in tools.Take(3))
+        {
+            var example = tool.Name.ToLowerInvariant() switch
+            {
+                "get_system_info" => "TOOL_CALL: {\"name\": \"get_system_info\", \"arguments\": {\"category\": \"all\"}}",
+                "get_current_time" => "TOOL_CALL: {\"name\": \"get_current_time\", \"arguments\": {\"timezone\": \"UTC\"}}",
+                "calculate_expression" => "TOOL_CALL: {\"name\": \"calculate_expression\", \"arguments\": {\"expression\": \"(12 * 5) + 10\"}}",
+                "search_web" => "TOOL_CALL: {\"name\": \"search_web\", \"arguments\": {\"query\": \"latest .NET release\"}}",
+                "fetch_page" => "TOOL_CALL: {\"name\": \"fetch_page\", \"arguments\": {\"url\": \"https://example.com\"}}",
+                "list_dir" => "TOOL_CALL: {\"name\": \"list_dir\", \"arguments\": {\"path\": \".\"}}",
+                "read_file" => "TOOL_CALL: {\"name\": \"read_file\", \"arguments\": {\"path\": \"README.md\"}}",
+                "write_file" => "TOOL_CALL: {\"name\": \"write_file\", \"arguments\": {\"path\": \"notes.txt\", \"content\": \"example\"}}",
+                "execute_query" => "TOOL_CALL: {\"name\": \"execute_query\", \"arguments\": {\"query\": \"telemetry\"}}",
+                _ => BuildGenericToolExample(tool)
+            };
+            sb.AppendLine(example);
+        }
+        return sb.ToString();
+    }
+
+    private static string BuildGenericToolExample(AITool tool)
+    {
+        if (tool is AIFunction fn)
+        {
+            var paramNames = GetFunctionParameterNames(fn);
+            if (paramNames.Count > 0)
+            {
+                return $"TOOL_CALL: {{\"name\": \"{tool.Name}\", \"arguments\": {{\"{paramNames[0]}\": \"value\"}}}}";
+            }
+        }
+        return $"TOOL_CALL: {{\"name\": \"{tool.Name}\", \"arguments\": {{}}}}";
+    }
+
+    public static bool TryExtractUnavailableToolCall(
+        string responseText,
+        List<AITool> availableTools,
+        out string unavailableToolName)
+    {
+        unavailableToolName = string.Empty;
+        if (string.IsNullOrWhiteSpace(responseText))
+        {
+            return false;
+        }
+
+        var markerIdx = responseText.IndexOf("TOOL_CALL:", StringComparison.OrdinalIgnoreCase);
+        if (markerIdx < 0)
+        {
+            return false;
+        }
+
+        var afterMarker = responseText[(markerIdx + "TOOL_CALL:".Length)..].Trim();
+        string? parsedName = null;
+
+        var extractedJson = ExtractBalancedJsonObject(afterMarker);
+        if (!string.IsNullOrWhiteSpace(extractedJson))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(extractedJson);
+                var root = doc.RootElement;
+                if (root.ValueKind == JsonValueKind.Object)
+                {
+                    if (root.TryGetProperty("name", out var nameProp) && nameProp.ValueKind == JsonValueKind.String)
+                    {
+                        parsedName = nameProp.GetString();
+                    }
+                    else if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
+                    {
+                        parsedName = toolProp.GetString();
+                    }
+                    else if (root.TryGetProperty("function", out var fnProp) && fnProp.ValueKind == JsonValueKind.String)
+                    {
+                        parsedName = fnProp.GetString();
+                    }
+                }
+            }
+            catch
+            {
+                // Fall back to identifier regex below
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(parsedName))
+        {
+            var nameMatch = Regex.Match(afterMarker, @"^([A-Za-z0-9_\-\.]+)");
+            if (nameMatch.Success)
+            {
+                parsedName = nameMatch.Groups[1].Value;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(parsedName))
+        {
+            return false;
+        }
+
+        if (availableTools.Any(t => t.Name.Equals(parsedName, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        unavailableToolName = parsedName;
+        return true;
+    }
+
+    public static string SanitizeFinalToolOutput(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text) ||
+            text.IndexOf("TOOL_CALL:", StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return text.Trim();
+        }
+
+        var cleanedLines = text
+            .Split('\n')
+            .Where(line => !line.TrimStart().StartsWith("TOOL_CALL:", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var cleaned = string.Join('\n', cleanedLines).Trim();
+        return string.IsNullOrWhiteSpace(cleaned) ? text.Trim() : cleaned;
     }
 
     private static string BuildToolCatalogDescription(List<AITool> tools)
@@ -745,6 +905,10 @@ public class AgentEngine : IAgentEngine
                 {
                     parsedName = toolProp.GetString();
                 }
+                else if (root.TryGetProperty("function", out var fnProp) && fnProp.ValueKind == JsonValueKind.String)
+                {
+                    parsedName = fnProp.GetString();
+                }
 
                 if (string.IsNullOrWhiteSpace(parsedName))
                 {
@@ -765,6 +929,26 @@ public class AgentEngine : IAgentEngine
                         arguments[p.Name] = ConvertJsonElement(p.Value);
                     }
                 }
+                else if (root.TryGetProperty("arguments", out var argsStrProp) &&
+                         argsStrProp.ValueKind == JsonValueKind.String &&
+                         !string.IsNullOrWhiteSpace(argsStrProp.GetString()))
+                {
+                    try
+                    {
+                        using var nestedDoc = JsonDocument.Parse(argsStrProp.GetString()!);
+                        if (nestedDoc.RootElement.ValueKind == JsonValueKind.Object)
+                        {
+                            foreach (var p in nestedDoc.RootElement.EnumerateObject())
+                            {
+                                arguments[p.Name] = ConvertJsonElement(p.Value);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore malformed stringified arguments
+                    }
+                }
                 else if (root.TryGetProperty("parameters", out var paramsProp) && paramsProp.ValueKind == JsonValueKind.Object)
                 {
                     foreach (var p in paramsProp.EnumerateObject())
@@ -777,7 +961,8 @@ public class AgentEngine : IAgentEngine
                     foreach (var p in root.EnumerateObject())
                     {
                         if (!p.Name.Equals("name", StringComparison.OrdinalIgnoreCase) &&
-                            !p.Name.Equals("tool", StringComparison.OrdinalIgnoreCase))
+                            !p.Name.Equals("tool", StringComparison.OrdinalIgnoreCase) &&
+                            !p.Name.Equals("function", StringComparison.OrdinalIgnoreCase))
                         {
                             arguments[p.Name] = ConvertJsonElement(p.Value);
                         }
