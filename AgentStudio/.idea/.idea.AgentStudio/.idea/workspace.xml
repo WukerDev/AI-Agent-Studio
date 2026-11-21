@@ -17,10 +17,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7a132c9a-813c-4694-8489-24ad8305e937" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/Infrastructure/OllamaTestHelper.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service.Tests/IntegrationTests/SignalREventsTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/IntegrationTests/SignalREventsTests.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AgentStudio.Service.Tests/UnitTests/AgentEngineUnitTests.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Service.Tests/UnitTests/AgentEngineUnitTests.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/Program.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Client/src/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Client/src/auth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Gateway/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Gateway/Program.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/AgentStudio.Gateway/appsettings.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,12 +39,12 @@
     &quot;assignee&quot;: &quot;WukerDev&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/WukerDev/AI-Agent-Studio.git&quot;,
-    &quot;accountId&quot;: &quot;16c92c05-292c-41e3-ae69-6cf4a43cb2f4&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/WukerDev/AI-Agent-Studio.git",
+    "accountId": "0802da18-9278-4d76-a2d2-03de7b99dfdb"
   }
-}</component>
+}]]></component>
   <component name="HighlightingSettingsPerFile">
     <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Service.Tests/IntegrationTests/SignalREventsTests.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock://C:/Users/Wikto/RiderProjects/ProgramowanieZespo-owe/AgentStudio/AgentStudio.Service.Tests/UnitTests/AgentEngineUnitTests.cs" root0="SKIP_HIGHLIGHTING" />
@@ -387,6 +387,7 @@
       <updated>1792520074133</updated>
       <workItem from="1792520076294" duration="9132000" />
       <workItem from="1792559565020" duration="134000" />
+      <workItem from="1795251103267" duration="1989000" />
     </task>
     <task id="LOCAL-00001" summary="Poprawki">
       <option name="closed" value="true" />

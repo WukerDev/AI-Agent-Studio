@@ -29,7 +29,8 @@ app.Use(async (context, next) =>
     if ((HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsHead(context.Request.Method)) &&
         string.Equals(context.Request.Path.Value, "/portal", StringComparison.OrdinalIgnoreCase))
     {
-        context.Response.Redirect("/portal/");
+        var target = "/portal/" + context.Request.QueryString;
+        context.Response.Redirect(target, permanent: false);
         return;
     }
 
@@ -44,7 +45,7 @@ app.MapGet("/alive", () => Results.Ok(new
     timestamp = DateTimeOffset.UtcNow
 }));
 
-app.MapGet("/", () => Results.Redirect("/portal/"));
+app.MapGet("/", (HttpContext context) => Results.Redirect("/portal/" + context.Request.QueryString));
 
 app.MapReverseProxy();
 
